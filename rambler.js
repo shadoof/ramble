@@ -1,12 +1,11 @@
 class Rambler {
 
   constructor(words, pos, opts = {}) {
-
-    this.words = Array.isArray(words) ? words : RiTa.tokenize(words);
+    this.initial = Array.isArray(words) ? words : RiTa.tokenize(words);
+    this.words = this.initial.slice();
     this.history = this.words.map(w => [w]);
     this.stopWords = opts.stopWords || defaultStopWords;
     this.ignores = opts.ignores || defaultIgnores;
-    //this.outgoing = typeof opts.outgoing === 'undefined' || opts.outgoing;
     this.partsOfSpeech = pos;
   }
 
@@ -16,51 +15,53 @@ class Rambler {
       total += this.history[idx].length - 1, 0);
   }
 
+  isReplaceable(word) {
+    return word.length > 3 && !this.stopWords.includes(word);
+  }
+
+  isModified(idx) {
+    return this.words[idx] !== this.initial[idx];
+  }
+
   // take one step either outgoing or incoming
   step(outgoing) {
     return outgoing ? this.replace() : this.restore();
   }
 
+  similars(word, pos) {
+
+    // find related words
+    let rhymes = RiTa.rhymes(word, { pos });
+    let sounds = RiTa.soundsLike(word, { pos });
+    let spells = RiTa.spellsLike(word, { pos });
+    let similars = [...rhymes, ...sounds, ...spells]
+      .filter(next =>
+        next.length > 3 &&
+        !word.includes(next) &&
+        !next.includes(word) &&
+        !this.ignores.includes(next));
+    if (similars.length > 1) return similars;
+  }
+
   // does one new replacement
   replace() {
-    let idx, next, word, pos;
 
-    let r = Math.floor(Math.random() * this.words.length); // RiTa.randi(words.length);
-    //r = 119;
+    let idx, word, pos, next;
+    let ridx = RiTa.randi(this.words.length);
 
     // loop from a random spot
-    for (let i = r; i < this.words.length + r; i++) {
+    for (let i = ridx; i < this.words.length + ridx; i++) {
 
       idx = i % this.words.length;
       word = this.words[idx].toLowerCase();
       pos = this.partsOfSpeech[idx];
 
-      if (word.length < 4) continue; // len >= 4
-
-      // preserve some grammatical words
-      if (this.stopWords.includes(word)) continue;
-
-      // find related words
-      let rhymes = RiTa.rhymes(word, { pos });
-      let sounds = RiTa.soundsLike(word, { pos });
-      let spells = RiTa.spellsLike(word, { pos });
-      let similars = [...rhymes, ...sounds, ...spells];
-
-      // only words with 2 or more similars
-      if (similars.length < 2) continue;
+      if (!this.isReplaceable(word)) continue;
+      let similars = this.similars(word, pos);
+      if (!similars) continue;
 
       // pick a random similar
       next = RiTa.random(similars);
-
-      if (next.length < 4) {
-        continue; // skip if not >= 4 letters long
-      }
-
-      if (next.includes(word) || word.includes(next)) {
-        continue; // skip substrings
-      }
-
-      if (defaultIgnores.includes(next)) continue;
 
       if (/[A-Z]/.test(this.words[idx][0])) {
         next = RiTa.capitalize(next); // keep capitals
@@ -81,29 +82,34 @@ class Rambler {
     // get all possible restorations
     let choices = this.words
       .map((next, idx) => ({ next, idx }))
-      .filter(o => this.history[o.idx].length);
+      .filter(({ next, idx }) =>
+        this.history[idx].length > 1
+        && this.isReplaceable(next));
 
+    //console.log(choices);
     if (!choices.length) return; // nothing to do
+    
+    //choices.forEach(({next,idx}) => console.log(`${idx}) ${this.words[idx]} ${next}`));
 
     // pick a changed word to step back
     let { next, idx } = RiTa.random(choices);
-
-    
+ 
+    let word = next;
+    let pos = this.partsOfSpeech[idx];
     let hist = this.history[idx];
 
     // select last from history
-    next = hist.pop();
-    let pos = this.partsOfSpeech[idx];
-    let word = this.words[idx].toLowerCase();
-    
+    hist.pop();
+    next = hist[hist.length-1];
+
     // do replacement
     this.words[idx] = next;
 
-    if (hist.length === 1 && next !== hist[0]) {
-      hist.push(hist[0]); // hack for last incoming
-      return;
-    }
-
+    /*    if (hist.length === 1 && next !== hist[0]) {
+         hist.push(hist[0]); // hack for last incoming
+         return;
+       }
+    */
     return { idx, word, next, pos };
   }
 }
