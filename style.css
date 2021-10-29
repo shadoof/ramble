@@ -1,0 +1,23 @@
+.container {
+  width: 40vw;
+}
+
+.body {
+  margin: 0px 14px;
+}
+
+#display {
+  font-size: 17px;
+  font-family: "Source Serif Pro", Iowan Old Style, Apple Garamond, Palatino Linotype, Times New Roman, "Droid Serif", Times, serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol;
+  line-height: 1.5;
+  color: #1b1e23
+}
+
+.text {
+  XXopacity: .3;
+  transition: opacity .5s ease-in-out;
+}
+
+.text.visible {
+  opacity: 1;
+}
