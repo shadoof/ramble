@@ -1,6 +1,6 @@
 class Reader {
   constructor(element) {
-    this.index = 10;
+    this.index = 0;
     this.reading = false;
     this.spans = Array.from(element.children);
     this.numVisibleWords = 13;

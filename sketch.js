@@ -15,28 +15,27 @@ const state = {
   shadow: urban,
   updateDelay: 100,
   updating: true,
-  maxSteps: 100,
+  maxSteps: 50,
   maxLegs: 10
 };
 
+
 /////////////////////////// MAIN ///////////////////////////////
 
-initialize("#display");
-new Reader(state.element).start();
+const ele = initialize("#display");
+const reader = new Reader(ele);
+reader.start();
 loop();
 
 /////////////////////////// FUNCS //////////////////////////////
 
 function loop() {
-
+  
   if (state.updating) {
     const { outgoing, current, shadow, updateDelay } = state;
 
     const currentUpdate = current.step(outgoing);
-    if (!currentUpdate) console.warn('No update from:' + current.name, current.numModifications());
-
     const shadowUpdate = shadow.step(outgoing);
-    if (!shadowUpdate) console.warn('No shadow update:' + shadow.name, shadow.numModifications());
 
     updateState(outgoing ? currentUpdate : shadowUpdate);
     setTimeout(loop, updateDelay);
@@ -53,6 +52,8 @@ function updateState(update) {
     + ` -> ${next} [${pos}] ${current.affinity()}`);
 
   updateDOM(next, idx);
+
+  // TODO: logic for legs and domain swap
   if (steps >= maxSteps) {
     state.outgoing = false;
   }
@@ -70,8 +71,10 @@ function updateDOM(next, idx) {
 }
 
 function initialize(selector) {
+  RiTa.SILENCE_LTS = true;
   state.element = document.querySelector(selector);
   validateState() && spanify(state.current.words);
+  return state.element;
 }
 
 function validateState() {
