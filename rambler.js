@@ -8,9 +8,11 @@ class Rambler {
     this.history = this.words.map(w => [w]);
     this.ignores = opts.ignores || defaultIgnores;
     this.stops = opts.stopWords || defaultStopWords;
-    this.repIds = opts.replaceableIndices || this.replaceableIndices();
-    console.log(`[Rambler] ${this.name} ${this.repIds.length}/${this.words.length} replaceable`);
+    this.repIds = opts.replaceableIndexes || this.replaceableIndexes();
+    console.log(`[Rambler] ${this.name} (${this.repIds.length}/${this.words.length} reps)`);
   }
+
+  // ---------------------- API -------------------------
 
   /* take one step either outgoing or incoming */
   step(outgoing) {
@@ -23,65 +25,47 @@ class Rambler {
       total + this.history[idx].length - 1, 0);
   }
 
-  /* total number of words different from initial text */
+  /* total number of words differing from initial text */
   numWordsModified() {
     return this.words.reduce((total, word, idx) => {
-      //console.log(idx, this.initial[idx], word);
       return total + (this.initial[idx] !== word ? 1 : 0)
     }, 0);
   }
 
-  affinity(raw) {
-    //let current = this.words.reduce((t, _, i) => t += this.isModified(i) ? 1 : 0, 0);
+  affinity(raw) { // [JC] ?
     let value = this.numWordsModified() / this.repIds.length;
     return raw ? value : Math.round((value * 10000)) / 100 + '%';
   }
 
+  // -------------------- HELPERS -----------------------
 
-  ///////////////////////// HELPERS ///////////////////////////
-
-  replaceableIndices() {
-    let repids = [];
-    this.initial.forEach((word, idx) => {
-      if (this.isReplaceable(word)) repids.push(idx);
-    });
-    return repids;
-  }
-
+  /* return true if word does not equal its original value */
   isReplaceable(word) {
     return word.length >= Rambler.minWordLength && !this.stops.includes(word);
   }
 
+  /* return true if word does not equal its original value */
   isModified(idx) {
     return this.words[idx] !== this.initial[idx];
   }
 
-  similars(word, pos) {
-
-    // find related words
-    let rhymes = RiTa.rhymes(word, { pos });
-    let sounds = RiTa.soundsLike(word, { pos });
-    let spells = RiTa.spellsLike(word, { pos });
-    let similars = [...rhymes, ...sounds, ...spells]
-      .filter(next =>
-        next.length > 3 &&
-        !word.includes(next) &&
-        !next.includes(word) &&
-        !this.ignores.includes(next));
-    if (similars.length > 1) return similars;
-  }
-
-  // does one new replacement
+  /* does one new word replacement */
   replace() {
 
     let idx, word, pos, next;
+
+    // possible replaceable indexes
     let choices = RiTa.randomOrdering(this.repIds);
+
     for (let i = 0; i < choices.length; i++) {
+
       idx = choices[i];
       pos = this.pos[idx];
       word = this.words[idx].toLowerCase();
 
+      // JC: do we want to accept stop words as replacements?
       if (!this.isReplaceable(word)) continue;
+
       let similars = this.similars(word, pos);
       if (!similars) continue;
 
@@ -89,7 +73,7 @@ class Rambler {
       next = RiTa.random(similars);
 
       if (/[A-Z]/.test(this.words[idx][0])) {
-        next = RiTa.capitalize(next); // keep capitals
+        next = RiTa.capitalize(next); // keep caps
       }
 
       this.words[idx] = next; // do replacement
@@ -98,10 +82,10 @@ class Rambler {
       break; // done
     }
 
-    return { idx, word, next, pos, parent: this };
+    return { idx, word, next, pos };
   }
 
-  // replaces one from history
+  /* restores one word from history */
   restore() {
 
     // get all possible restorations
@@ -112,9 +96,9 @@ class Rambler {
         && this.isReplaceable(next));
 
     if (!choices.length) {
-      console.error('no choices: ' + this.words.filter(
-        (w, i) => this.isModified(i)).map((w, i) => i + ') '
-          + this.initial[i] + '/' + w + '\n'));
+      console.error('[FAIL] no choices: ' + this.words.filter(
+        (_, i) => this.isModified(i)).map((w, i) => i + ') '
+          + ' orig=' + this.initial[i] + ', curr=' + w + '\n'));
       return;
     }
 
@@ -132,50 +116,41 @@ class Rambler {
     // do replacement
     this.words[idx] = next;
 
-    if (hist.length === 1 && next !== hist[0]) console.warn('****INVALID****');
-    /*  if (hist.length === 1 && next !== hist[0]) { // ???
-         hist.push(hist[0]); // hack for last incoming
-         return;
-       }
-    */
-    return { idx, word, next, pos, parent: this };
+    return { idx, word, next, pos };
+  }
+
+  /* find all similars via RiTa */
+  similars(word, pos) {
+
+    let rhymes = RiTa.rhymes(word, { pos });
+    let sounds = RiTa.soundsLike(word, { pos });
+    let spells = RiTa.spellsLike(word, { pos });
+    let similars = [...rhymes, ...sounds, ...spells]
+      .filter(next => next.length >= Rambler.minWordLength &&
+        !word.includes(next) && !next.includes(word) &&
+        !this.ignores.includes(next));
+
+    if (similars.length > 1) return similars;
+  }
+
+  replaceableIndexes() { // [] of replaceable indexes
+    let repids = [];
+    this.initial.forEach((word, idx) => {
+      if (this.isReplaceable(word)) repids.push(idx);
+    });
+    return repids;
   }
 }
 
 Rambler.minWordLength = 4;
 
-const defaultIgnores = [
-  "jerkies",
-  "nary",
-  "outta",
-  "copras",
-  "accomplis",
-  "scad",
-  "silly",
-  "saris",
-  "coca",
-  "durn",
-  "geed",
-  "goted",
-  "denture",
-  "wales"
-];
-
-const defaultStopWords = [
-  "also",
-  "over",
-  "have",
-  "this",
-  "that",
-  "just",
-  "then",
-  "under",
-  "some",
+const defaultIgnores = ["jerkies", "nary", "outta", "copras", "accomplis", "scad", "silly", "saris", "coca", "durn", "geed", "goted", "denture", "wales"];
+const defaultStopWords = ["also", "over", "have", "this", "that", "just", "then", "under", "some",
   // added: DCH
   'these',
   "within",
   "after",
-  // added: DCH, to synch number of replace-able indices in each text
+  // added: DCH, to sync number of replaceable indexes in each text
   "rushed",
   "prayer"
 ]
