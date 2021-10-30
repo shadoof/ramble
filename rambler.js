@@ -1,22 +1,38 @@
 class Rambler {
 
-  constructor(words, pos, opts = {}) {
-    this.initial = Array.isArray(words) ? words : RiTa.tokenize(words);
-    this.words = this.initial.slice();
+  constructor(words, opts = {}) {
+    this.name = opts.name || 'rambler';
+    this.words = Array.isArray(words) ? words : RiTa.tokenize(words);
+    this.pos = opts.pos || RiTa.pos(this.words);
+    this.initial = this.words.slice();
     this.history = this.words.map(w => [w]);
-    this.stopWords = opts.stopWords || defaultStopWords;
     this.ignores = opts.ignores || defaultIgnores;
-    this.partsOfSpeech = pos;
+    this.stops = opts.stopWords || defaultStopWords;
+    this.repidxs = opts.replaceableIndices || this.replaceableIndices();
+    console.log(`[Rambler] ${this.name} ${this.repidxs.length}/${this.words.length} replaceable`);
   }
 
-  // returns number of replacements made
+  replaceableIndices() {
+    let replaceables = [];
+    this.initial.forEach((w, i) => this.isReplaceable(w) && replaceables.push(i));
+    return replaceables;
+  }
+
+  /* number of replacements made */
   replacements() {
     return this.words.reduce((total, _, idx) =>
       total += this.history[idx].length - 1, 0);
   }
 
   isReplaceable(word) {
-    return word.length > 3 && !this.stopWords.includes(word);
+    return word.length >= Rambler.minWordLength && !this.stops.includes(word);
+  }
+
+  affinity(raw) {
+    let total = this.words.reduce((t, w) => t += this.isReplaceable(w) ? 1 : 0, 0);
+    let current = this.words.reduce((t, _, i) => t += this.isModified(i) ? 1 : 0, 0);
+    let value = current / total;
+    return raw ? value : Math.round((value * 10000)) / 100 + '%';
   }
 
   isModified(idx) {
@@ -54,7 +70,7 @@ class Rambler {
 
       idx = i % this.words.length;
       word = this.words[idx].toLowerCase();
-      pos = this.partsOfSpeech[idx];
+      pos = this.pos[idx];
 
       if (!this.isReplaceable(word)) continue;
       let similars = this.similars(word, pos);
@@ -73,7 +89,7 @@ class Rambler {
       break; // done
     }
 
-    return { idx, word, next, pos };
+    return { idx, word, next, pos, parent: this };
   }
 
   // replaces one from history
@@ -86,33 +102,34 @@ class Rambler {
         this.history[idx].length > 1
         && this.isReplaceable(next));
 
-    //console.log(choices);
-    if (!choices.length) return; // nothing to do
-    
-    //choices.forEach(({next,idx}) => console.log(`${idx}) ${this.words[idx]} ${next}`));
+    if (!choices.length) throw Error('no choices: ' + this.words.filter(
+      (w, i) => this.isModified(i)).map((w, i) => i + ') ' + w));
 
     // pick a changed word to step back
     let { next, idx } = RiTa.random(choices);
- 
+
     let word = next;
-    let pos = this.partsOfSpeech[idx];
+    let pos = this.pos[idx];
     let hist = this.history[idx];
 
-    // select last from history
+    // select newest from history
     hist.pop();
-    next = hist[hist.length-1];
+    next = hist[hist.length - 1];
 
     // do replacement
     this.words[idx] = next;
 
-    /*    if (hist.length === 1 && next !== hist[0]) {
+    if (hist.length === 1 && next !== hist[0]) console.warn('NOTICE****');
+    /*  if (hist.length === 1 && next !== hist[0]) { // ???
          hist.push(hist[0]); // hack for last incoming
          return;
        }
     */
-    return { idx, word, next, pos };
+    return { idx, word, next, pos, parent: this };
   }
 }
+
+Rambler.minWordLength = 4;
 
 const defaultIgnores = [
   "jerkies",
@@ -132,6 +149,7 @@ const defaultIgnores = [
 ];
 
 const defaultStopWords = [
+  "also",
   "over",
   "have",
   "this",
@@ -139,5 +157,8 @@ const defaultStopWords = [
   "just",
   "then",
   "under",
-  "some"
+  "some",
+  "within",
+  "rushed", // added to synch number of replacements in each text
+  "prayer"  // added to synch number of replacements in each text
 ]
