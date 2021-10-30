@@ -1,9 +1,9 @@
-.container {
-  width: 40vw;
+body {
+  margin: 24px;
 }
 
-.body {
-  margin: 0px 14px;
+.container {
+  width: 40vw;
 }
 
 #display {
@@ -14,7 +14,7 @@
 }
 
 .text {
-  XXopacity: .3;
+  opacity: .3;
   transition: opacity .5s ease-in-out;
 }
 
