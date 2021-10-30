@@ -96,9 +96,12 @@ class Rambler {
         && this.isReplaceable(next));
 
     if (!choices.length) {
-      console.error('[FAIL] no choices: ' + this.words.filter(
-        (_, i) => this.isModified(i)).map((w, i) => i + ') '
-          + ' orig=' + this.initial[i] + ', curr=' + w + '\n'));
+      let msg = '';
+      for (let i = 0; i < this.words.length; i++) {
+        if (this.isModified(i)) msg += i + ') ' 
+          + ' orig=' + this.initial[i] + ', curr=' + this.words[i] + '\n';
+      }
+      console.error('[FAIL] No choices: ' + msg);
       return;
     }
 
@@ -150,7 +153,8 @@ const defaultStopWords = ["also", "over", "have", "this", "that", "just", "then"
   'these',
   "within",
   "after",
-  // added: DCH, to sync number of replaceable indexes in each text
+  "with",
+  // added: DCH, from 'urban' to sync number of replaceable indexes in each text
   "rushed",
   "prayer"
 ]
