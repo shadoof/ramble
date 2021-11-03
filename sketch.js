@@ -10,16 +10,18 @@ const sources = {
 const rural = new Rambler(sources.rural, { pos: sources.pos, name: 'Rural' });
 const urban = new Rambler(sources.urban, { pos: sources.pos, name: 'Urban' });
 const domEl = document.querySelector("#display");
+//const URBAN = 'urban', RURAL = 'rural';
 
 const state = {
   outgoing: true,
   current: rural,
   shadow: urban,
-  updateDelay: 100,
+  updateDelay: 300,
   updating: true,
-  maxSteps: 50,
+  maxSteps: 10,
   maxLegs: 10,
-  reader: 0
+  reader: 0,
+  legs: 0
 };
 
 ////////////////////////////// MAIN //////////////////////////////
@@ -53,7 +55,7 @@ function updateState(updateData) {
   
   if (!updateData) return;
 
-  const { outgoing, current, maxSteps } = state;
+  const { outgoing, current, maxSteps, legs, maxLegs } = state;
   const { idx, word, next, pos } = updateData;
   
   const steps = current.numModifications();
@@ -62,14 +64,39 @@ function updateState(updateData) {
 
   updateDOM(next, idx); // change span in DOM
 
-  // TODO: logic for legs and domain swap [JC]
-  if (steps >= maxSteps) {
-    state.outgoing = false;
+  // TODO: logic for legs and domain swap
+  if (state.outgoing) {
+    if (steps >= maxSteps) {
+      if (++state.legs > maxLegs) return stop();
+      console.log(`Changes: ${steps}, returning in `
+        + `"urban" after leg #${legs}.\n`);
+      state.outgoing = false;
+      state.current = urban; // swap
+      state.shadow = rural;
+      //state.current.history.filter(h => h.length > 1 && h.push(0));
+      const newsteps = current.numModifications();
+      console.log('shadow:'+newsteps);
+      //stop();
+    }
   }
-  if (steps === 0) {
-    state.updating = false;
-    state.reader.stop();
+  else {   // incoming
+    if (steps === 0) { 
+      if (++state.legs > maxLegs) return stop();
+      console.log(`Changes: ${steps}, heading out in `
+        + `"urban" after leg #${legs}.\n`);
+
+      // JC: seems to me the bug happens here (not when returning home), 
+      // and the first word (here) in each history should be changed 
+      // to the currently displayed word for the urban rambler ?
+      state.outgoing = true;
+    }
   }
+}
+
+/* stop ramblers and reader  */
+function stop() {
+  state.updating = false;
+  state.reader.stop();
 }
 
 /* update exactly one word span in the DOM */

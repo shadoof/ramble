@@ -32,7 +32,7 @@ class Rambler {
     }, 0);
   }
 
-  affinity(raw) { // [JC] ?
+  affinity(raw) { // [JC]: needs to take text and strict (only consider non-shared words)
     let value = this.numWordsModified() / this.repIds.length;
     return raw ? value : Math.round((value * 10000)) / 100 + '%';
   }
@@ -63,7 +63,6 @@ class Rambler {
       pos = this.pos[idx];
       word = this.words[idx].toLowerCase();
 
-      // JC: do we want to accept stop words as replacements?
       if (!this.isReplaceable(word)) continue;
 
       let similars = this.similars(word, pos);
