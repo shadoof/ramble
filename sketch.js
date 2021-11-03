@@ -18,7 +18,7 @@ const state = {
   shadow: urban,
   updateDelay: 300,
   updating: true,
-  maxSteps: 10,
+  maxSteps: 30,
   maxLegs: 10,
   reader: 0,
   legs: 0
