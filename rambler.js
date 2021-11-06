@@ -138,7 +138,10 @@ const defaultStopWords = ["also", "over", "have", "this", "that", "just", "then"
   "after",
   "with",
   "there",
+  "where",
+  "while",
   "from",
+  "whenever",
   // added: DCH, from 'urban' to sync number of replaceable indexes in each text
   "rushed",
   "prayer"

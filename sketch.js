@@ -1,7 +1,7 @@
 
 // Project: two classes (Reader, Rambler) and this file
 
-const stepDebugMode = 1; // step-via-mouse
+let stepDebugMode = 0; // step-via-mouse
 
 const sources = {
   rural: ['by', 'the', 'time', 'the', 'light', 'has', 'faded', ',', 'as', 'the', 'last', 'of', 'the', 'reddish', 'gold', 'illumination', 'comes', 'to', 'rest', ',', 'then', 'imperceptibly', 'spreads', 'out', 'over', 'the', 'moss', 'and', 'floor', 'of', 'the', 'woods', 'on', 'the', 'westerly', 'facing', 'lakeside', 'slopes', ',', 'you', 'or', 'I', 'will', 'have', 'set', 'out', 'on', 'several', 'of', 'yet', 'more', 'circuits', 'at', 'every', 'time', 'and', 'in', 'all', 'directions', ',', 'before', 'or', 'after', 'this', 'or', 'that', 'circadian', ',', 'usually', 'diurnal', ',', 'event', 'on', 'mildly', 'rambling', 'familiar', 'walks', ',', 'as', 'if', 'these', 'exertions', 'might', 'be', 'journeys', 'of', 'adventure', 'whereas', 'always', 'our', 'gestures', ',', 'guided', 'by', 'paths', ',', 'are', 'also', 'more', 'like', 'traces', 'of', 'universal', 'daily', 'ritual', ':', 'just', 'before', 'or', 'with', 'the', 'dawn', ',', 'after', 'a', 'morning', 'dip', ',', 'in', 'anticipation', 'of', 'breakfast', ',', 'whenever', 'the', 'fish', 'are', 'still', 'biting', ',', 'as', 'and', 'when', 'the', 'industrious', 'creatures', 'are', 'building', 'their', 'nests', 'and', 'shelters', ',', 'after', 'our', 'own', 'trials', 'of', 'work', ',', 'while', 'the', 'birds', 'still', 'sing', ',', 'in', 'quiet', 'moments', 'after', 'lunch', ',', 'most', 'particularly', 'after', 'dinner', ',', 'at', 'sunset', ',', 'to', 'escape', ',', 'to', 'avoid', 'being', 'found', ',', 'to', 'seem', 'to', 'be', 'lost', 'right', 'here', 'in', 'this', 'place', 'where', 'you', 'or', 'I', 'have', 'always', 'wanted', 'to', 'be', 'and', 'where', 'we', 'might', 'sometimes', 'now', 'or', 'then', 'have', 'discovered', 'some', 'singular', 'hidden', 'beauty', ',', 'or', 'one', 'another', ',', 'or', 'stumbled', 'and', 'injured', 'ourselves', 'beyond', 'the', 'hearing', 'and', 'call', 'of', 'other', 'voices', ',', 'or', 'met', 'with', 'other', 'danger', ',', 'animal', 'or', 'inhuman', ',', 'the', 'one', 'tearing', 'and', 'rending', 'and', 'opening', 'up', 'the', 'darkness', 'within', 'us', 'to', 'bleed', ',', 'yet', 'we', 'suppress', 'any', 'sound', 'that', 'might', 'have', 'expressed', 'the', 'terror', 'and', 'passion', 'and', 'horror', 'and', 'pain', 'so', 'that', 'I', 'or', 'you', 'may', 'continue', 'on', 'this', 'ramble', ',', 'this', 'before', 'or', 'after', 'walk', ',', 'and', 'still', 'return', ';', 'or', 'the', 'other', ',', 'the', 'quiet', 'evacuation', 'of', 'the', 'light', ',', 'the', 'way', ',', 'as', 'we', 'have', 'kept', 'on', 'walking', ',', 'it', 'falls', 'on', 'us', 'and', 'removes', 'us', 'from', 'existence', 'since', 'in', 'any', 'case', 'we', 'are', 'all', 'but', 'never', 'there', ',', 'always', 'merely', 'passing', 'through', 'and', 'by', 'and', 'over', 'the', 'moss', ',', 'under', 'the', 'limbs', 'of', 'the', 'evergreens', ',', 'beside', 'the', 'lake', ',', 'within', 'the', 'sound', 'of', 'its', 'lapping', 'waves', ',', 'annihilated', ',', 'gone', ',', 'quite', 'gone', ',', 'now', 'simply', 'gone', 'and', ',', 'in', 'being', 'or', 'walking', 'in', 'these', 'ways', ',', 'giving', 'up', 'all', 'living', 'light', 'for', 'settled', ',', 'hearth', 'held', 'fire', 'in', 'its', 'place', ',', 'returned'],
@@ -19,10 +19,10 @@ const state = {
   outgoing: true,
   current: rural,
   shadow: urban,
-  updateDelay: 300,
+  updateDelay: 100,
   updating: true,
-  maxSteps: 30,
-  maxLegs: 10,
+  maxSteps: 50,
+  maxLegs: 20,
   reader: 0,
   legs: 0
 };
@@ -45,8 +45,7 @@ function ramble() {
     const { idx, word, next, pos } = outgoing ? currMod : shadMod;
 
     const steps = current.numMods();
-    console.log(`${steps}${outgoing ? ')' : ']'} @${idx} ${word}`
-      + ` -> ${next} [${pos}] ${strictRepIds.includes(idx)}`);
+    console.log(`${steps}${outgoing ? ')' : ']'} @${idx} ${word}` + ` -> ${next} [${pos}]`);
 
     updateDOM(next, idx);
     updateState(steps);
@@ -59,7 +58,7 @@ function ramble() {
       setTimeout(ramble, updateDelay); // loop
     }
   }
-  despanify()
+  unspanify()
 }
 
 /* update exactly one word span in the DOM */
@@ -93,7 +92,7 @@ function updateState(steps) {
 
       // JC: seems to me the bug happens here (not when returning home), 
       // and the first word (here) in each history should be changed 
-      // to the currently displayed word for the urban rambler ?
+      // to the currently displayed word for the (urban) rambler ?
       state.outgoing = true;
     }
   }
@@ -107,23 +106,27 @@ function stop() {
 }
 
 
-/* update exactly one word span in the DOM */
+/* update stats in debug panel */
 function updateInfo() {
-  const { current, shadow } = state;
+  const { current, shadow, legs, maxLegs, outgoing } = state;
+
   let data = 'Domain: ' + (current === rural ? 'Rural' : 'Urban');
-  data += ' &nbsp; Affinity:';
-  data += ' Rural=' + affinity(current.initial, current.words, current.repIds);
-  data += ' Urban=' + affinity(shadow.initial, current.words, current.repIds);
-  data += ' &nbsp; Strict:';
-  data += ' Rural=' + affinity(current.initial, current.words, strictRepIds);
-  data += ' Urban=' + affinity(shadow.initial, current.words, strictRepIds);
+  data += '&nbsp;' + (state.updating ? (outgoing ? '⟶' : '⟵') : 'X');
+
+  let displayWords = unspanify(); // compare visible text to each ramblers text
+  data += ` &nbsp;Leg: ${legs + 1}/${maxLegs}&nbsp; Affinity:`;
+  data += ' Rural=' + affinity(current.initial, displayWords, current.repIds);
+  data += ' Urban=' + affinity(shadow.initial, displayWords, current.repIds);
+
+  data += ' &nbsp;Strict:'; // and considering words originally different
+  data += ' Rural=' + affinity(current.initial, displayWords, strictRepIds);
+  data += ' Urban=' + affinity(shadow.initial, displayWords, strictRepIds);
   stats.innerHTML = data;
 }
 
 function affinity(textA, textB, idsToCheck) {
   let matches = idsToCheck.reduce((total, idx) =>
     total + (textA[idx] === textB[idx] ? 1 : 0), 0);
-  //  console.log(matches, idsToCheck.length);
   let raw = matches / idsToCheck.length;
   let fmt = (raw * 100).toFixed(2);
   while (fmt.length < 5) fmt = '0' + fmt; // pad
@@ -141,22 +144,28 @@ function spanify(data) {
 }
 
 /* create all the initial spans for text */
-function despanify() {
+function unspanify() {
   return Array.from(document.getElementsByClassName
     ("word")).map(e => e.textContent);
 }
 
 /* throw an error if anything is not as expected */
 function validate() {
-  const { current, shadow } = state;
-  let invalid = false; // check basic assumptions
-  if (display === null) invalid = true;
-  if (stepDebugMode) display.onclick = ramble;
-  if (current.words.length !== shadow.words.length) invalid = true;
-  if (current.words.length !== current.pos.length) invalid = true;
-  if (shadow.words.length !== shadow.pos.length) invalid = true;
-  if (current.repIds.length !== shadow.repIds.length) invalid = true;
-  if (invalid) throw Error('Invalid setup');
+  const { current, shadow, reader } = state;
+  let invalid = 0; // check basic assumptions
+  if (display === null) invalid += 1;
+  display.onclick = (function () {
+    if (!stepDebugMode) {
+      stepDebugMode = true;
+      state.reader.stop();
+    }
+    ramble();
+  });
+  if (current.words.length !== shadow.words.length) invalid += 2;
+  if (current.words.length !== current.pos.length) invalid += 4;
+  if (shadow.words.length !== shadow.pos.length) invalid += 8;
+  if (current.repIds.length !== shadow.repIds.length) invalid += 16;
+  if (invalid) throw Error('Invalid setup: error#' + invalid);
   console.log(`[INIT] ${strictRepIds.length}/${current.repIds.length} `
     + `replaceables, ${current.words.length} total words`);
 }
