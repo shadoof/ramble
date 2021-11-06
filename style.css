@@ -24,11 +24,11 @@ body {
   margin-bottom: 15px;
 }
 
-.text {
+.word {
   opacity: .3;
   transition: opacity .5s ease-in-out;
 }
 
-.text.visible {
+.word.visible {
   opacity: 1;
 }

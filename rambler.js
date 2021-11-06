@@ -19,33 +19,11 @@ class Rambler {
   }
 
   /* total number of replacements made */
-  numModifications() {
+  numMods() {
     return this.repIds.reduce((total, idx) =>
       total + this.history[idx].length - 1, 0);
   }
 
-  /* number of replaceable words differing from a baseline text (distance?) */
-/*   numWordsDiffering(text, tmp) {
-    text = text || this.initial;
-    console.log(this.name, 'numWordsDiffering', tmp);
-    return this.repIds.reduce((total, idx) => {
-      let x = total + (text[idx] === this.words[idx] ? 0 : 1);
-      if (tmp === 53 && this.name === 'Urban' && text[idx] !== this.words[idx]) console.log(idx, text[idx], this.words[idx], text[idx] === this.words[idx], x);
-      return x;
-    }, 0);
-  }
-
-  affinity(opts = { // text, total }) {
-    let text = opts.text || this.initial;
-    let total = opts.total || this.repIds.length;
-    let nwdiff = this.numWordsDiffering(text, total);
-    let value = 1 - (nwdiff / total);
-    opts.total && console.log(nwdiff, 'of', total)
-    let str = (value * 100).toFixed(2);
-    while (str.length < 5) str = '0' + str;
-    return str;
-  }
- */
   // -------------------- HELPERS -----------------------
 
   /* return true if word does not equal its original value */
