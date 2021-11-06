@@ -74,7 +74,7 @@ function updateState(steps) {
 
   if (state.outgoing) {
     if (steps >= maxSteps) {
-      if (++state.legs > maxLegs) return stop();
+      if (++state.legs >= maxLegs) return stop();
       console.log(`Changes: ${steps}, returning in `
         + `"urban" after leg #${legs}.\n`);
       state.outgoing = false;
@@ -85,7 +85,7 @@ function updateState(steps) {
   }
   else {   // incoming
     if (steps === 0) {
-      if (++state.legs > maxLegs) return stop();
+      if (++state.legs >= maxLegs) return stop();
       console.log(`Changes: ${steps}, heading out in `
         + `"urban" after leg #${legs}.\n`);
 
