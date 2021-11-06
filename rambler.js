@@ -1,11 +1,11 @@
 class Rambler {
 
   constructor(words, opts = {}) {
-    this.words = words;
+    this.initial = words; // const
+    this.words = this.initial.slice();
     this.name = opts.name || 'Rambler';
-    this.pos = opts.pos || RiTa.pos(this.words);
-    this.initial = this.words.slice();
     this.history = this.words.map(w => [w]);
+    this.pos = opts.pos || RiTa.pos(this.words);
     this.ignores = opts.ignores || defaultIgnores;
     this.stops = opts.stopWords || defaultStopWords;
     this.repIds = opts.replaceableIndexes || this.replaceableIndexes();

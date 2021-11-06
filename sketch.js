@@ -112,14 +112,14 @@ function updateInfo() {
   let data = 'Domain: ' + (current === rural ? 'Rural' : 'Urban');
   data += '&nbsp;' + (state.updating ? (outgoing ? '⟶' : '⟵') : 'X');
 
-  let displayWords = unspanify(); // compare visible text to each ramblers text
+  let displayWords = unspanify(); // compare visible text to each source text
   data += ` &nbsp;Leg: ${legs + 1}/${maxLegs}&nbsp; Affinity:`;
-  data += ' Rural=' + affinity(current.initial, displayWords, current.repIds);
-  data += ' Urban=' + affinity(shadow.initial, displayWords, current.repIds);
+  data += ' Rural=' + affinity(sources.rural, displayWords, current.repIds);
+  data += ' Urban=' + affinity(sources.urban, displayWords, current.repIds);
 
-  data += ' &nbsp;Strict:'; // and considering words originally different
-  data += ' Rural=' + affinity(current.initial, displayWords, strictRepIds);
-  data += ' Urban=' + affinity(shadow.initial, displayWords, strictRepIds);
+  data += ' &nbsp;Strict:'; // and now in strict mode
+  data += ' Rural=' + affinity(sources.rural, displayWords, strictRepIds);
+  data += ' Urban=' + affinity(sources.urban, displayWords, strictRepIds);
   stats.innerHTML = data;
 }
 
