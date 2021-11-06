@@ -3,7 +3,7 @@ body {
 }
 
 .container {
-  width: 40vw;
+  max-width: 800px;
 }
 
 #display {
@@ -11,6 +11,17 @@ body {
   font-family: "Source Serif Pro", Iowan Old Style, Apple Garamond, Palatino Linotype, Times New Roman, "Droid Serif", Times, serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol;
   line-height: 1.5;
   color: #1b1e23
+}
+
+#stats {
+  font-size: 14px;
+  font-family: "lucida console", monospace;
+  line-height: 1.5;
+  color: #697486;
+  border: solid #ccc;
+  border-width: thin;
+  padding: 5px;
+  margin-bottom: 15px;
 }
 
 .text {

@@ -9,7 +9,6 @@ class Rambler {
     this.ignores = opts.ignores || defaultIgnores;
     this.stops = opts.stopWords || defaultStopWords;
     this.repIds = opts.replaceableIndexes || this.replaceableIndexes();
-    console.log(`[Rambler] ${this.name} (${this.repIds.length}/${this.words.length} reps)`);
   }
 
   // ---------------------- API -------------------------
@@ -21,22 +20,32 @@ class Rambler {
 
   /* total number of replacements made */
   numModifications() {
-    return this.words.reduce((total, _, idx) =>
+    return this.repIds.reduce((total, idx) =>
       total + this.history[idx].length - 1, 0);
   }
 
-  /* total number of words differing from initial text */
-  numWordsModified() {
-    return this.words.reduce((total, word, idx) => {
-      return total + (this.initial[idx] !== word ? 1 : 0)
+  /* number of replaceable words differing from a baseline text (distance?) */
+/*   numWordsDiffering(text, tmp) {
+    text = text || this.initial;
+    console.log(this.name, 'numWordsDiffering', tmp);
+    return this.repIds.reduce((total, idx) => {
+      let x = total + (text[idx] === this.words[idx] ? 0 : 1);
+      if (tmp === 53 && this.name === 'Urban' && text[idx] !== this.words[idx]) console.log(idx, text[idx], this.words[idx], text[idx] === this.words[idx], x);
+      return x;
     }, 0);
   }
 
-  affinity(raw) { // [JC]: needs to take text and strict (only consider non-shared words)
-    let value = this.numWordsModified() / this.repIds.length;
-    return raw ? value : Math.round((value * 10000)) / 100 + '%';
+  affinity(opts = { // text, total }) {
+    let text = opts.text || this.initial;
+    let total = opts.total || this.repIds.length;
+    let nwdiff = this.numWordsDiffering(text, total);
+    let value = 1 - (nwdiff / total);
+    opts.total && console.log(nwdiff, 'of', total)
+    let str = (value * 100).toFixed(2);
+    while (str.length < 5) str = '0' + str;
+    return str;
   }
-
+ */
   // -------------------- HELPERS -----------------------
 
   /* return true if word does not equal its original value */
@@ -56,14 +65,11 @@ class Rambler {
 
     // possible replaceable indexes
     let choices = RiTa.randomOrdering(this.repIds);
-
     for (let i = 0; i < choices.length; i++) {
 
       idx = choices[i];
       pos = this.pos[idx];
       word = this.words[idx].toLowerCase();
-
-      if (!this.isReplaceable(word)) continue;
 
       let similars = this.similars(word, pos);
       if (!similars) continue;
@@ -97,7 +103,7 @@ class Rambler {
     if (!choices.length) {
       let msg = '';
       for (let i = 0; i < this.words.length; i++) {
-        if (this.isModified(i)) msg += i + ') ' 
+        if (this.isModified(i)) msg += i + ') '
           + ' orig=' + this.initial[i] + ', curr=' + this.words[i] + '\n';
       }
       console.error('[FAIL] No choices: ' + msg);
@@ -130,7 +136,7 @@ class Rambler {
     let similars = [...rhymes, ...sounds, ...spells]
       .filter(next => next.length >= Rambler.minWordLength &&
         !word.includes(next) && !next.includes(word) &&
-        !this.ignores.includes(next));
+        !this.ignores.includes(next) && !this.stops.includes(next));
 
     if (similars.length > 1) return similars;
   }
@@ -153,6 +159,8 @@ const defaultStopWords = ["also", "over", "have", "this", "that", "just", "then"
   "within",
   "after",
   "with",
+  "there",
+  "from",
   // added: DCH, from 'urban' to sync number of replaceable indexes in each text
   "rushed",
   "prayer"

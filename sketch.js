@@ -9,8 +9,10 @@ const sources = {
 
 const rural = new Rambler(sources.rural, { pos: sources.pos, name: 'Rural' });
 const urban = new Rambler(sources.urban, { pos: sources.pos, name: 'Urban' });
-const domEl = document.querySelector("#display");
-//const URBAN = 'urban', RURAL = 'rural';
+const display = document.querySelector("#display");
+const stats = document.querySelector('#stats');
+const strictRepIds = strictReplaceables();
+const stepDebugMode = 0; // debug
 
 const state = {
   outgoing: true,
@@ -30,57 +32,52 @@ validate();
 spanify();
 ramble();
 
-
 /* loop over ramblers, calling step on each */
 function ramble() {
-  
-  if (!state.reader) {
-    state.reader = new Reader(domEl);
-    state.reader.start();
-  }
 
-  let { outgoing, current, shadow, updateDelay, updating } = state;
-  if (updating) {
-  
-    const currentUpdate = current.step(outgoing);
-    const shadowUpdate = shadow.step(outgoing);
+  let { outgoing, current, shadow, updateDelay } = state;
 
-    updateState(outgoing ? currentUpdate : shadowUpdate);
-    setTimeout(ramble, updateDelay);
+  if (state.updating) {
+
+    const currMod = current.step(outgoing);
+    const shadMod = shadow.step(outgoing);
+    const { idx, word, next, pos } = outgoing ? currMod : shadMod;
+
+    const steps = current.numModifications();
+    console.log(`${steps}${outgoing ? ')' : ']'} @${idx} ${word}`
+      + ` -> ${next} [${pos}] ${strictRepIds.includes(idx)}`);
+
+    updateDOM(next, idx);
+    updateState(steps);
+
+    if (!stepDebugMode) {
+      if (!state.reader) {
+        state.reader = new Reader(display);
+        state.reader.start();
+      }
+      setTimeout(ramble, updateDelay); // loop
+    }
   }
 }
 
-/* update DOM, handle domain/outgoing switches, log */
-function updateState(updateData) {
-  
-  if (!updateData) return;
+/* logic for steps, legs and domain swapping */
+function updateState(steps) {
 
-  const { outgoing, current, maxSteps, legs, maxLegs } = state;
-  const { idx, word, next, pos } = updateData;
-  
-  const steps = current.numModifications();
-  console.log(`${steps}${outgoing ? ')' : ']'} @${idx} ${word}`
-    + ` -> ${next} [${pos}] ${current.affinity()}`);
+  const { maxSteps, legs, maxLegs } = state;
 
-  updateDOM(next, idx); // change span in DOM
-
-  // TODO: logic for legs and domain swap
   if (state.outgoing) {
     if (steps >= maxSteps) {
       if (++state.legs > maxLegs) return stop();
       console.log(`Changes: ${steps}, returning in `
         + `"urban" after leg #${legs}.\n`);
       state.outgoing = false;
+
       state.current = urban; // swap
       state.shadow = rural;
-      //state.current.history.filter(h => h.length > 1 && h.push(0));
-      const newsteps = current.numModifications();
-      console.log('shadow:'+newsteps);
-      //stop();
     }
   }
   else {   // incoming
-    if (steps === 0) { 
+    if (steps === 0) {
       if (++state.legs > maxLegs) return stop();
       console.log(`Changes: ${steps}, heading out in `
         + `"urban" after leg #${legs}.\n`);
@@ -91,6 +88,7 @@ function updateState(updateData) {
       state.outgoing = true;
     }
   }
+  updateInfo();
 }
 
 /* stop ramblers and reader  */
@@ -106,23 +104,55 @@ function updateDOM(next, idx) {
   ele.style.backgroundColor = (state.outgoing ? '#fbb' : '#bbf');
 }
 
+/* update exactly one word span in the DOM */
+function updateInfo() {
+  const { current, shadow } = state;
+  let data = 'Domain: ' + (current === rural ? 'Rural' : 'Urban');
+  data += ' &nbsp; Affinity:';
+  data += ' Rural=' + affinity(current.initial, current.words, current.repIds);
+  data += ' Urban=' + affinity(shadow.initial, current.words, current.repIds);
+  data += ' &nbsp; Strict:';
+  data += ' Rural=' + affinity(current.initial, current.words, strictRepIds);
+  data += ' Urban=' + affinity(shadow.initial, current.words, strictRepIds);
+  stats.innerHTML = data;
+}
+
+function affinity(textA, textB, idsToCheck) {
+  let matches = idsToCheck.reduce((total, idx) =>
+    total + (textA[idx] === textB[idx] ? 1 : 0), 0);
+  //  console.log(matches, idsToCheck.length);
+  let raw = matches / idsToCheck.length;
+  let fmt = (raw * 100).toFixed(2);
+  while (fmt.length < 5) fmt = '0' + fmt; // pad
+  return fmt;
+}
+
+
 /* create all the initial spans for text */
 function spanify(data) {
   data = data || state.current.words;
   const spans = data.reduce((html, word, i) => html
     + (`<span id='w${i}' class='text'>${word}</span>`
       + (RiTa.isPunct(data[i + 1]) ? '' : ' ')), '');
-  domEl.innerHTML = spans;
+  display.innerHTML = spans;
 }
 
 /* throw an error if anything is not as expected */
 function validate() {
   const { current, shadow } = state;
   let invalid = false; // check basic assumptions
-  if (domEl === null) invalid = true;
+  if (display === null) invalid = true;
+  if (stepDebugMode) display.onclick = ramble;
   if (current.words.length !== shadow.words.length) invalid = true;
   if (current.words.length !== current.pos.length) invalid = true;
   if (shadow.words.length !== shadow.pos.length) invalid = true;
   if (current.repIds.length !== shadow.repIds.length) invalid = true;
   if (invalid) throw Error('Invalid setup');
+  console.log(`[INIT] ${strictRepIds.length}/${current.repIds.length} `
+    + `replaceables, ${current.words.length} total words`);
+}
+
+function strictReplaceables() {
+  return rural.repIds.filter(idx =>
+    rural.initial[idx] !== urban.initial[idx]);
 }
