@@ -164,8 +164,9 @@ function validate() {
 
   // add mouse-handler
   display.onclick = (function () {
-    if (!stepDebug) {
-      stepDebug = true;
+    if (!state.stepDebug) {
+      state.stepDebug = true;
+      console.log('** stepMode enabled');
       state.reader.stop();
     }
     ramble();

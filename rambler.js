@@ -42,7 +42,7 @@ class Rambler {
     let choices, startMs = +new Date();
 
     if (typeof inIdx !== 'undefined') {
-      choices = [ inIdx ]; // single index
+      choices = [inIdx]; // single index
     }
     else {
       // all possible replaceable indexes
@@ -56,7 +56,8 @@ class Rambler {
       idx = choices[i];
       pos = this.pos[idx];
       word = this.words[idx];
-      if (!word) throw Error('Replace Error: '+this.idx+'\n'+JSON.stringify(choices));
+      if (!word) throw Error('Replace Error: ' + this.name
+        + ' for index=' + this.idx + '\n' + JSON.stringify(choices));
       word = word.toLowerCase();
 
       let similars = this.similars(word, pos);
@@ -74,7 +75,7 @@ class Rambler {
 
       break; // done
     }
-    
+
     let ms = +new Date() - startMs; // tmp: for perf
 
     return { idx, word, next, pos, ms };
