@@ -1,7 +1,7 @@
 # ramble
 Ramble v2.0
 
-## Current setup
+### spec
 
 - 2 texts [rural, urban]
 - 2 histories: [rural, urban]
