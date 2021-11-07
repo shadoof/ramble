@@ -81,7 +81,7 @@ function updateState(steps) {
         + `"urban" after leg #${legs + 1}.\n`);
       state.outgoing = false;
 
-      state.destination = 'urban'
+      if (state.legs < 10) state.destination = 'urban'
 
       // state.current = urban; // swap
       // state.shadow = rural;
@@ -97,6 +97,7 @@ function updateState(steps) {
       // and the first word (here) in each history should be changed 
       // to the currently displayed word for the (urban) rambler ?
       state.outgoing = true;
+      if (state.legs >= 10) state.destination = 'rural'
     }
   }
   updateInfo();
