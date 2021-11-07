@@ -96,6 +96,7 @@ function updateState(steps) {
       // JC: seems to me the bug happens here (not when returning home), 
       // and the first word (here) in each history should be changed 
       // to the currently displayed word for the (urban) rambler ?
+      rambler.initHistory();
       state.outgoing = true;
       if (state.legs >= 10) state.destination = 'rural'
     }
