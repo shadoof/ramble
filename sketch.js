@@ -39,12 +39,14 @@ function ramble() {
 
   if (state.updating) {
 
-    const currMod = current.step(outgoing);
-    const shadMod = shadow.step(outgoing);
-    const { idx, word, next, pos } = outgoing ? currMod : shadMod;
+    const currentData = current.step(outgoing);
+    const shadowData = shadow.step(outgoing, currentData.idx);
+
+    const { idx, word, next, pos, ms } = outgoing ? currentData : shadowData;
 
     const steps = current.numMods();
-    console.log(`${steps}${outgoing ? ')' : ']'} @${idx} ${word}` + ` -> ${next} [${pos}]`);
+    console.log(`${steps}${outgoing ? ')' : ']'} @${idx} `
+      + `${word} -> ${next} [${pos}] ${outgoing ? ms + 'ms' : ''}`);
 
     updateDOM(next, idx);
     updateState(steps);
@@ -57,14 +59,6 @@ function ramble() {
       setTimeout(ramble, updateDelay); // loop
     }
   }
-  unspanify()
-}
-
-/* update exactly one word span in the DOM */
-function updateDOM(next, idx) {
-  const ele = document.querySelector(`#w${idx}`);
-  ele.textContent = next;
-  ele.style.backgroundColor = (state.outgoing ? '#fbb' : '#bbf');
 }
 
 /* logic for steps, legs and domain swapping */
@@ -75,8 +69,8 @@ function updateState(steps) {
   if (state.outgoing) {
     if (steps >= maxSteps) {
       if (++state.legs >= maxLegs) return stop();
-      console.log(`Changes: ${steps}, returning in `
-        + `"urban" after leg #${legs}.\n`);
+      console.log(`Reverse: incoming in `
+        + `"urban" after leg #${legs + 1}.\n`);
       state.outgoing = false;
 
       state.current = urban; // swap
@@ -86,8 +80,8 @@ function updateState(steps) {
   else {   // incoming
     if (steps === 0) {
       if (++state.legs >= maxLegs) return stop();
-      console.log(`Changes: ${steps}, heading out in `
-        + `"urban" after leg #${legs}.\n`);
+      console.log(`Reverse: outgoing in `
+        + `"urban" after leg #${legs + 1}.\n`);
 
       // JC: seems to me the bug happens here (not when returning home), 
       // and the first word (here) in each history should be changed 
@@ -98,12 +92,29 @@ function updateState(steps) {
   updateInfo();
 }
 
+/* compute the affinity over 2 text arrays for a set of word-ids */
+function affinity(textA, textB, idsToCheck) {
+
+  let matches = idsToCheck.reduce((total, idx) =>
+    total + (textA[idx] === textB[idx] ? 1 : 0), 0);
+  let raw = matches / idsToCheck.length;
+  let fmt = (raw * 100).toFixed(2);
+  while (fmt.length < 5) fmt = '0' + fmt; // pad
+  return fmt;
+}
+
+/* update exactly one word span in the DOM */
+function updateDOM(next, idx) {
+  const ele = document.querySelector(`#w${idx}`);
+  ele.textContent = next;
+  ele.style.backgroundColor = (state.outgoing ? '#fbb' : '#bbf');
+}
+
 /* stop ramblers and reader  */
 function stop() {
   state.updating = false;
   state.reader.stop();
 }
-
 
 /* update stats in debug panel */
 function updateInfo() {
@@ -123,16 +134,6 @@ function updateInfo() {
   stats.innerHTML = data;
 }
 
-function affinity(textA, textB, idsToCheck) {
-  let matches = idsToCheck.reduce((total, idx) =>
-    total + (textA[idx] === textB[idx] ? 1 : 0), 0);
-  let raw = matches / idsToCheck.length;
-  let fmt = (raw * 100).toFixed(2);
-  while (fmt.length < 5) fmt = '0' + fmt; // pad
-  return fmt;
-}
-
-
 /* create all the initial spans for text */
 function spanify(data) {
   data = data || state.current.words;
@@ -142,17 +143,26 @@ function spanify(data) {
   display.innerHTML = spans;
 }
 
-/* create all the initial spans for text */
+/* collect text array from visible spans */
 function unspanify() {
   return Array.from(document.getElementsByClassName
     ("word")).map(e => e.textContent);
 }
 
+/* compute id set for strict replacements */
+function strictReplaceables() {
+  return rural.repIds.filter(idx =>
+    rural.initial[idx] !== urban.initial[idx]);
+}
+
 /* throw an error if anything is not as expected */
 function validate() {
-  const { current, shadow, reader } = state;
+  const { current, shadow } = state;
+
   let invalid = 0; // check basic assumptions
   if (display === null) invalid += 1;
+
+  // add mouse-handler
   display.onclick = (function () {
     if (!stepDebug) {
       stepDebug = true;
@@ -160,16 +170,13 @@ function validate() {
     }
     ramble();
   });
+
   if (current.words.length !== shadow.words.length) invalid += 2;
   if (current.words.length !== current.pos.length) invalid += 4;
   if (shadow.words.length !== shadow.pos.length) invalid += 8;
   if (current.repIds.length !== shadow.repIds.length) invalid += 16;
   if (invalid) throw Error('Invalid setup: error#' + invalid);
-  console.log(`[INIT] ${strictRepIds.length}/${current.repIds.length} `
-    + `replaceables, ${current.words.length} total words`);
-}
 
-function strictReplaceables() {
-  return rural.repIds.filter(idx =>
-    rural.initial[idx] !== urban.initial[idx]);
+  console.log(`[INIT] ${strictRepIds.length}/${current.repIds.length}`
+    + ` replaceables, ${current.words.length} total words`);
 }

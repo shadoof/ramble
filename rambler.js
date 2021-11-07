@@ -14,8 +14,8 @@ class Rambler {
   // ---------------------- API -------------------------
 
   /* take one step either outgoing or incoming */
-  step(outgoing) {
-    return outgoing ? this.replace() : this.restore();
+  step(outgoing, idx) {
+    return outgoing ? this.replace(idx) : this.restore(idx);
   }
 
   /* total number of replacements made */
@@ -26,7 +26,7 @@ class Rambler {
 
   // -------------------- HELPERS -----------------------
 
-  /* return true if word does not equal its original value */
+  /* return true if word can be replaced */
   isReplaceable(word) {
     return word.length >= Rambler.minWordLength && !this.stops.includes(word);
   }
@@ -37,17 +37,27 @@ class Rambler {
   }
 
   /* does one new word replacement */
-  replace() {
+  replace(inIdx) {
+
+    let choices, startMs = +new Date();
+
+    if (typeof inIdx !== 'undefined') {
+      choices = [ inIdx ]; // single index
+    }
+    else {
+      // all possible replaceable indexes
+      choices = RiTa.randomOrdering(this.repIds);
+    }
 
     let idx, word, pos, next;
 
-    // possible replaceable indexes
-    let choices = RiTa.randomOrdering(this.repIds);
     for (let i = 0; i < choices.length; i++) {
 
       idx = choices[i];
       pos = this.pos[idx];
-      word = this.words[idx].toLowerCase();
+      word = this.words[idx];
+      if (!word) throw Error('Replace Error: '+this.idx+'\n'+JSON.stringify(choices));
+      word = word.toLowerCase();
 
       let similars = this.similars(word, pos);
       if (!similars) continue;
@@ -64,28 +74,35 @@ class Rambler {
 
       break; // done
     }
+    
+    let ms = +new Date() - startMs; // tmp: for perf
 
-    return { idx, word, next, pos };
+    return { idx, word, next, pos, ms };
   }
 
   /* restores one word from history */
-  restore() {
+  restore(inIdx) {
 
-    // get all possible restorations
-    let choices = this.repIds
-      .map(idx => ({ idx, next: this.words[idx] }))
-      .filter(({ next, idx }) =>
-        this.history[idx].length > 1
-        && this.isReplaceable(next));
+    let choices;
 
-    if (!choices.length) {
+    if (typeof inIdx !== 'undefined') {
+      choices = [{ next: this.words[inIdx], idx: inIdx }];
+    }
+    else {
+      // get all possible restorations
+      choices = this.repIds
+        .map(idx => ({ idx, next: this.words[idx] }))
+        .filter(({ next, idx }) =>
+          this.history[idx].length > 1
+          && this.isReplaceable(next));
+    }
+
+    if (!choices.length) { // tmp-remove
       let msg = '';
       for (let i = 0; i < this.words.length; i++) {
         if (this.isModified(i)) msg += i + ') '
           + ' orig=' + this.initial[i] + ', curr=' + this.words[i] + '\n';
-      }
-      console.error('[FAIL] No choices: ' + msg);
-      return;
+      } console.error('[FAIL] No choices: ' + msg);
     }
 
     // pick a changed word to step back
