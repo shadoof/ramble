@@ -8,13 +8,12 @@ Ramble v2.0
  - 2 copies of sources: `words = { rural: [words], urban: [words] }`
  - 2 histories: `history = { rural: [history], urban: [history] }`
  - outgoing/incoming state
- - destination, one of: `const destinations = ['rural', 'urban']`
+ - destination, one of ['rural', 'urban']
 
 #### Rambler Behavior
-- OUTGOING: add replaced words to both histories: rural and urban; also keep the copied words arrays up-to-date.
+- OUTGOING: add replaced words to both histories: rural and urban; also keep the copied words arrays up-to-date (these are changing, and the display is changing?)
 - INCOMING: pull from history for current destination only
-- ON_RETURN after each even leg:
- -  simply reinitialize both words and histories from source
+- ON_RETURN after each even leg, simply reinitialize both words and histories from source
 
 ----
 
