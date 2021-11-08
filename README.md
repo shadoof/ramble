@@ -4,15 +4,17 @@ Ramble v2.0
 ### Spec
 
 - 2 texts
-- 2 histories
-- 1 Rambler
-  - outgoing/incoming state
-  - current destination
+- 1 rambler (one instance of Rambler)
+ - 2 copies of sources: `words = { rural: [words], urban: [words] }`
+ - 2 histories: `history = { rural: [history], urban: [history] }`
+ - outgoing/incoming state
+ - destination, one of: `const destinations = ['rural', 'urban']`
 
 #### Rambler Behavior
-- OUTGOING: add replaced words to both histories (current, shadow)
+- OUTGOING: add replaced words to both histories: rural and urban; also keep the copied words arrays up-to-date.
 - INCOMING: pull from history for current destination only
-- ON_RETURN (*needs clarification*): should detect where it has 'arrived' (urban or rural) so that when it sets out again it collects an alternate history 'as if' (in that alternative) is was setting out from that alternate destinatination. so a rambler (at any index point) it will always be able get back to either possible desitination (which might have changed). So, in operations:
-    - detect 'where', which desitination urban or rural a rambler has returned to
-    - set initial word of its 'shadow'/'alternate' history to the *other* possible destination
+- ON_RETURN after each even leg:
+ -  simply reinitialize both words and histories from source
+
+----
 
