@@ -11,16 +11,23 @@ class Rambler {
     this.repIds = opts.replaceableIndexes || this.replaceableIndexes();
     this.words = {};
     this.history = {};
+    this.initWords();
     this.initHistory();
   }
 
   // ---------------------- API -------------------------
 
-  /* initialize words and histories */
+  /* initialize histories */
   initHistory() {
     for (let dest of destinations) {
-      this.words[dest] = this.sources[dest].slice();
       this.history[dest] = this.sources[dest].map(w => [w]);
+    }
+  }
+
+  /* initialize words */
+  initWords(dests = destinations) {
+    for (let dest of dests) {
+      this.words[dest] = this.sources[dest].slice();
     }
   }
 

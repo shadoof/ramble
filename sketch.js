@@ -81,6 +81,7 @@ function updateState(steps) {
         + `"urban" after leg #${legs + 1}.\n`);
       state.outgoing = false;
 
+      // for test stick with urban for ten legs:
       if (state.legs < 10) state.destination = 'urban'
 
       // state.current = urban; // swap
@@ -96,9 +97,19 @@ function updateState(steps) {
       // JC: seems to me the bug happens here (not when returning home), 
       // and the first word (here) in each history should be changed 
       // to the currently displayed word for the (urban) rambler ?
+      
+      // for test: change destination back to 'rural'
+      if (state.legs === 10) {
+        state.destination = 'rural'
+        // and do this before any reinitialization
+      }
+      // reinitialize all histtories
       rambler.initHistory();
+      // put displayed words into rambler.words[state.destination]
+      rambler.words[state.destination] = unspanify();
+      // reinitialize rambler.words for any other destinations
+      rambler.initWords(destinations.filter(dest => dest !== state.destination));
       state.outgoing = true;
-      if (state.legs >= 10) state.destination = 'rural'
     }
   }
   updateInfo();
