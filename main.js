@@ -30,11 +30,11 @@ const state = {
 
 let similarCache = {
   neighbors: ['brothers', 'brethren', 'fellows'],
-  avoid: ['dodge', 'elude', 'escape', 'evade'],
+  avoid: ['elude', 'escape', 'evade'],
   inhuman: ['grievous', 'grim', 'hard', 'heavy', 'onerous', 'oppressive', 'rough', 'rugged', 'severe', 'austere', ' inclement', 'intemperate'],
   sometimes: ['occasionally', 'intermittently', 'periodically', 'recurrently', 'infrequently', 'rarely', 'irregularly', 'sporadically', 'variously'],
-  adventure: ['experience', 'exploit', 'happening', 'episode', 'occasion', 'ordeal', 'tribulation', 'enterprise', 'venture', 'expedition', 'exploration', 'mission', 'quest'],
-  unfamiliar: ['nontraditional', 'unconventional', 'pioneering', 'trailblazing', 'unaccustomed', ' unprecedented'],
+  adventure: ['experience', 'exploit', 'occasion', 'ordeal', 'venture', 'expedition', 'mission'],
+  unfamiliar: ['unconventional', 'pioneering', 'unaccustomed', ' unprecedented'],
 };
 
 ////////////////////////////////////////////////////////
