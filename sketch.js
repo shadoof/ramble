@@ -14,11 +14,11 @@ function setup() {
 function draw() {
   background(245);
   noFill();
+  stroke(0, 85);
   circle(cx, cy, radius * 2);
 
   if (!animate) {
     layout = circleLayout(words.join(' '), cx, cy, radius, minFontSize);
-    //console.log(layout);
     noLoop();
   }
   else {
@@ -32,12 +32,10 @@ function draw() {
       noLoop();
     }
   }
+  noStroke();
   textSize(layout[0].fontSize);
   layout.forEach(r => {
-    //noFill();
-    //rect(...r.bounds);
-    fill(0);
-    //textSize(r.fontSize);
+    fill(0, 85);
     text(r.text, cx, r.bounds[1] + r.bounds[3] / 2);
   });
 }
