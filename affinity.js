@@ -14,20 +14,22 @@ let lines = maxFontSizeForCircle(words, cx, cy, radius, fontFamily);
 //console.log(lines.map(l => l.text));
 ele.innerHTML = lines.reduce((acc, l) => {
   let ypos = l.bounds[1] - l.bounds[3] / 2;
-  return acc + `<span style="top: ${ypos}px; font-size:${l.fontSize}px" class="text">${l.text}</span>\n`;
+  let opacity = Math.random() < .1 ? 1 : 0.3;
+  return acc + `<span style="top: ${ypos}px; font-size:${l.fontSize}px;`
+    + ` opacity:${opacity}" class="text">${l.text}</span>\n`;
 }, '');
 
 let circle = new ProgressBar.Circle('#progress', {
   duration: 3000,
   strokeWidth: 1.1,
   easing: 'easeOut',
-  trailColor: '#fff',
-  color: '#a7cfdf'
+  trailColor: '#fafafa',
+  color: '#ddd',
 });
 
 let d = 50;
 function go() {
-  circle.animate((d += Math.random()<.5?5:-5)/100, {
+  circle.animate((d += Math.random() < .5 ? 5 : -5) / 100, {
     duration: 3000
   }, function () {
     console.log('Animation has finished');
@@ -35,97 +37,97 @@ function go() {
   });
 }
 
-  go();
+go();
 
-  function maxFontSizeForCircle(words, cx, cy, radius, fontName = 'sans-serif', minFontSize = 10) {
-    let fontSize = radius / 4, result;
-    do {
-      fontSize *= .99;
-      result = fitToLineWidths(cx, cy, radius, words, Math.max(minFontSize, fontSize), fontName);
+function maxFontSizeForCircle(words, cx, cy, radius, fontName = 'sans-serif', minFontSize = 10) {
+  let fontSize = radius / 4, result;
+  do {
+    fontSize *= .99;
+    result = fitToLineWidths(cx, cy, radius, words, Math.max(minFontSize, fontSize), fontName);
+  }
+  while (result.words.length);
+  console.log('ok:', fontSize);//, result.rects.length, result.text.length);
+  return result.rects.map((r, i) => ({ fontSize, bounds: r, text: result.text[i] }));
+}
+
+function circleLayout(txt, cx, cy, radius, fontSize, fontName = 'sans-serif') {
+  let result = fitToLineWidths(cx, cy, radius, txt.split(' '), fontSize, fontName);
+  return result.rects.map((r, i) => ({ fontSize, bounds: r, text: result.text[i] }));
+}
+
+function fitToLineWidths(cx, cy, radius, words, fontSize, fontName = 'sans-serif') {
+  //console.log('fitToLineWidths', fontSize);
+  let tokens = words.slice(), lh = fontSize * 1.2;
+  let text = [], rects = lineWidths(cx, cy, radius, lh);
+  rects.forEach(([x, y, w, h], i) => {
+    let data = fitToBox(tokens, w, fontSize, fontName);
+    if (!data) { // fail to fit even one word
+      //console.log(i, 'fail', fontSize, w, tokens.length);
+      return { words, rects, texts: [] };
     }
-    while (result.words.length);
-    console.log('ok:', fontSize);//, result.rects.length, result.text.length);
-    return result.rects.map((r, i) => ({ fontSize, bounds: r, text: result.text[i] }));
-  }
+    text.push(data.text);
+    tokens = data.words;
+  });
+  return { text, rects, words: tokens };
+}
 
-  function circleLayout(txt, cx, cy, radius, fontSize, fontName = 'sans-serif') {
-    let result = fitToLineWidths(cx, cy, radius, txt.split(' '), fontSize, fontName);
-    return result.rects.map((r, i) => ({ fontSize, bounds: r, text: result.text[i] }));
+function fitToBox(words, width, fontSize, fontName = 'sans-serif') {
+  //console.log('fitToBox', words, width, fontSize);
+  //if (!words.length) return {text: '', words};
+  let i = 1, line = {
+    text: words[0],
+    width: measureWidth(words[0], fontSize, fontName)
+  };
+  if (line.width > width) {
+    return; // can't fit first word
   }
-
-  function fitToLineWidths(cx, cy, radius, words, fontSize, fontName = 'sans-serif') {
-    //console.log('fitToLineWidths', fontSize);
-    let tokens = words.slice(), lh = fontSize * 1.2;
-    let text = [], rects = lineWidths(cx, cy, radius, lh);
-    rects.forEach(([x, y, w, h], i) => {
-      let data = fitToBox(tokens, w, fontSize, fontName);
-      if (!data) { // fail to fit even one word
-        //console.log(i, 'fail', fontSize, w, tokens.length);
-        return { words, rects, texts: [] };
-      }
-      text.push(data.text);
-      tokens = data.words;
-    });
-    return { text, rects, words: tokens };
+  for (let n = words.length; i < n; ++i) {
+    let next = ' ' + words[i];
+    let nextWidth = measureWidth(next, fontSize, fontName);
+    if (line.width + nextWidth > width) break; // done
+    line.text += next;
+    line.width += nextWidth;
   }
+  return { text: line.text || '', words: words.slice(i) };
+}
 
-  function fitToBox(words, width, fontSize, fontName = 'sans-serif') {
-    //console.log('fitToBox', words, width, fontSize);
-    //if (!words.length) return {text: '', words};
-    let i = 1, line = {
-      text: words[0],
-      width: measureWidth(words[0], fontSize, fontName)
-    };
-    if (line.width > width) {
-      return; // can't fit first word
+function lineWidths(cx, cy, r, lh) {
+  //console.log('lineWidths', cx, cy, r, lh);
+  let result = [];
+  let num = Math.floor((r * 2) / lh);
+  for (let i = 0; i < num; i++) {
+    let d = (i + 1) * lh - lh / 3; // ?
+    let cl = chordLength(r, d > r ? d + lh : d);
+    let x = cx - cl / 2;
+    let y = cy - (r - d);
+    if (cl) {
+      //console.log(i, d, d > r, cl);
+      result.push([x, y, cl, lh]);
     }
-    for (let n = words.length; i < n; ++i) {
-      let next = ' ' + words[i];
-      let nextWidth = measureWidth(next, fontSize, fontName);
-      if (line.width + nextWidth > width) break; // done
-      line.text += next;
-      line.width += nextWidth;
-    }
-    return { text: line.text || '', words: words.slice(i) };
   }
+  return result;
+}
 
-  function lineWidths(cx, cy, r, lh) {
-    //console.log('lineWidths', cx, cy, r, lh);
-    let result = [];
-    let num = Math.floor((r * 2) / lh);
-    for (let i = 0; i < num; i++) {
-      let d = (i + 1) * lh - lh / 3; // ?
-      let cl = chordLength(r, d > r ? d + lh : d);
-      let x = cx - cl / 2;
-      let y = cy - (r - d);
-      if (cl) {
-        //console.log(i, d, d > r, cl);
-        result.push([x, y, cl, lh]);
-      }
-    }
-    return result;
-  }
+// at distance d from top of circle with radius r
+function chordLength(r, d) {
+  return 2 * Math.sqrt(r * r - (r - d) * (r - d));
+}
 
-  // at distance d from top of circle with radius r
-  function chordLength(r, d) {
-    return 2 * Math.sqrt(r * r - (r - d) * (r - d));
-  }
+function measureWidthX(text, fontSizePx = 12, fontName = 'sans-serif') {
+  //let f = `${fontSizePx}px ${fontName}`;
+  let o = $('<span></span>').text(text)
+    //.css({ 'position': 'absolute', 'float': 'left', 'white-space': 'nowrap', 'visibility': 'hidden', 'font-size': fontSizePx, 'font-family': fontName })
+    .css({ 'class': 'text', 'visibility': 'hidden' })
+    .appendTo($('body'));
+  let w = o.width();
+  o.remove();
+  console.log(w, measureWidthCanvas(...arguments));
+  return w;
+}
 
-  function measureWidthX(text, fontSizePx = 12, fontName = 'sans-serif') {
-    //let f = `${fontSizePx}px ${fontName}`;
-    let o = $('<span></span>').text(text)
-      //.css({ 'position': 'absolute', 'float': 'left', 'white-space': 'nowrap', 'visibility': 'hidden', 'font-size': fontSizePx, 'font-family': fontName })
-      .css({ 'class': 'text', 'visibility': 'hidden' })
-      .appendTo($('body'));
-    let w = o.width();
-    o.remove();
-    console.log(w, measureWidthCanvas(...arguments));
-    return w;
-  }
-
-  function measureWidth(text, fontSizePx = 12, fontName = fontFamily) {
-    const context = document.createElement("canvas").getContext("2d");
-    context.font = fontSizePx + 'px ' + fontName;
-    //console.log(context.font);
-    return context.measureText(text).width;
-  }
+function measureWidth(text, fontSizePx = 12, fontName = fontFamily) {
+  const context = document.createElement("canvas").getContext("2d");
+  context.font = fontSizePx + 'px ' + fontName;
+  //console.log(context.font);
+  return context.measureText(text).width;
+}
