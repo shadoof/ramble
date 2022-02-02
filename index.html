@@ -2,18 +2,31 @@
 <html lang="en">
 
 <head>
-    <!-- <script src="lib/rita.js"></script> -->
+    <script src="lib/rita.js"></script>
     <script src="lib/progressbar.js"></script>
     <meta charset="utf-8">
     <style>
         #container {
             width: 910px;
             height: 910px;
-            position:absolute; 
+            position: absolute;
+        }
+
+        #stats {
+            font-size: 12px;
+            font-family: "lucida console", monospace;
+            line-height: 1.5;
+            color: #697486;
+            border: solid #ccc;
+            border-width: thin;
+            padding: 5px;
+            padding-left: 15px;
+            margin-top: 15px;
+            max-width: 900px;
         }
 
         #progress {
-            height:100%;
+            height: 100%;
             width: 100%;
             top: 0;
             left: 0;
@@ -21,12 +34,11 @@
         }
 
         #circle {
-            height:98%;
+            height: 98%;
             width: 98%;
             margin: 1%;
-            
             border-radius: 50%;
-            background: #fff;
+            background: #ccc;
             /* background: linear-gradient(135deg, #a7cfdf 0%, #275d9b 100%);
             box-shadow: inset -16px -14px 8px 0px rgba(0, 0, 0, 0.3); */
             position: relative;
@@ -44,12 +56,18 @@
 </head>
 
 <body>
+    <!-- <div id="stats" class="container">&nbsp;</div>
+    <div id="display" class="container"></div> -->
+
     <div id="container">
         <div id="circle">
         </div>
         <div id="progress">
         </div>
+        <div id="stats">&nbsp;</div>
     </div>
+    <script src="circle-layout.js"></script>
+    <script src="reader.js"></script>
     <script src="affinity.js"></script>
 </body>
 
