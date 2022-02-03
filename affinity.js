@@ -20,10 +20,10 @@ const strictRepIds = strictReplaceables();
 const history = { rural: [], urban: [] };
 
 let fontFamily = window.getComputedStyle(domDisplay).fontFamily;
-let circleBounds = domDisplay.getBoundingClientRect();
-let cy = circleBounds.y + circleBounds.height / 2;
-let cx = circleBounds.x + circleBounds.width / 2;
-let radius = circleBounds.width / 2;
+let displayBounds = domDisplay.getBoundingClientRect();
+let cy = displayBounds.y + displayBounds.height / 2;
+let cx = displayBounds.x + displayBounds.width / 2;
+let radius = displayBounds.width / 2;
 
 // setup the history
 Object.keys(history).map(k => sources[k].map((w, i) => history[k][i] = [w]));
@@ -51,11 +51,10 @@ let similarCache = {
 };
 
 ////////////////////////////////////////////////////////
-//console.log(JSON.stringify(RiTa.untokenize(sources.rural).split(' ')).replace(/"/g,"'"));
 let lines = 1 ? circleLayout(sources[state.destination], cx, cy, radius, 22.7, fontFamily, 13)
   : maxFontSizeForCircle(sources[state.destination], cx, cy, radius, fontFamily, 10);
-spanify(lines);
-//ramble();
+let spans = spanify(lines);
+ramble(spans);
 
 // let progress = createProgressBar('#progress'); d = 50;
 // let ani = () => progress.animate((d += Math.random() < .5 ? 5 : -5) / 100,
@@ -63,14 +62,14 @@ spanify(lines);
 
 /////////////////////////////////////////////////////////
 
-function ramble() {
+function ramble(spans) {
 
   if (state.updating) {
     state.outgoing ? replace() : restore();
     updateState();
     if (!state.stepDebug) {
       if (!state.reader) {
-        state.reader = new Reader(document.getElementsByClassName("word"));
+        state.reader = new Reader(spans);
         state.reader.start();
       }
       if (state.updating) {
@@ -284,15 +283,24 @@ function spanify(lines) {
     let line = '-';
     let ypos = l.bounds[1] - l.bounds[3] / 2;
     if (l.text) {
-      let words = l.text.split(' ')
-      line = words.reduce((line, word) => line +
-        (`<span id="w${wordIdx}" class="word">${word}</span>`
-          + (RiTa.isPunct(words[++wordIdx]) ? '' : ' ')), '');
+      let words = RiTa.tokenize(l.text);
+      line = words.reduce((line, word, j) => {
+        return line +
+          `<span id="w${wordIdx++}" class="word">${word}</span>`
+            + (j < words.length-1 && RiTa.isPunct(words[j+1]) ? '' : ' ');
+
+      }, '');
     }
     return html + `<div id="l${i}"class="line" style="top: ${ypos}px;`
       + ` font-size:${l.fontSize}px;">${line}</div>`;
   }, '');
   domDisplay.innerHTML = html;
+  
+  let spans = document.getElementsByClassName("word"); // double-check
+  if (spans.length != sources[state.destination].length) throw Error
+    ('Invalid spanify: ' + spans.length + '!==' + sources[state.destination].length);
+
+  return spans;
 }
 
 function unspanify() {
@@ -306,7 +314,10 @@ function shadowTextName() {
 
 function updateDOM(next, idx) {
   const ele = document.querySelector(`#w${idx}`);
-  if (!ele) throw Error(`no node for #w${idx} -> ${next}`);
+  if (!ele) {
+    console.log(stop());
+    throw Error(`no node for #w${idx} -> ${next}`);
+  }
   ele.textContent = next;
   ele.style.backgroundColor = (state.outgoing ? '#fbb' : '#bbf');
 }
