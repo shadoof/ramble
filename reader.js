@@ -15,16 +15,17 @@ class Reader {
   }
 
   selection() {
-    return this.spans.slice(this.index, this.index+this.numVisibleWords);
+    return this.spans.slice(this.index, this.index + this.numVisibleWords);
   }
 
   step() {
     if (!this.reading) return;
     let delayTime = this.timeToRead(this.spans[this.index].textContent);
-    this.spans.forEach((ele,i) => {
-      let endIdx = (this.index + this.numVisibleWords) % this.spans.length;
-      let func = (i >= this.index && i < endIdx) ? 'add' : 'remove';
-      ele.classList[func]('visible');
+    this.spans.forEach(e => e.classList.remove('visible'));
+    this.selection().forEach(e => {
+      e.classList.add('visible');
+      e.classList.remove('outgoing'); // reset color
+      e.classList.remove('incoming'); // reset color
     });
     this.index = (this.index + 1) % this.spans.length;
     this.timeoutId = setTimeout(() => this.step(), delayTime);
@@ -36,7 +37,8 @@ class Reader {
   }
 
   timeToRead(word, basetime = 150) {
-    const syltime = basetime / 2; // most significant accumulator: these ms per syllable
+    // most significant accumulator: these ms per syllable
+    const syltime = basetime / 2;
     if (!RiTa.isPunct(word)) {
       let syls = RiTa.syllables(word); // array of syllables
       let time = basetime + syls.split('/').length * syltime; // syls * basic unit

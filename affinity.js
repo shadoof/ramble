@@ -1,7 +1,8 @@
 
 /* NEXT: 
+  -- finish worker: awaiting john's reply
+  -- OR do progress bars
   -- ? circle should split empty lines btwn top/bottom (not easy)
-  -- ramble-bug
 */
 
 const sources = {
@@ -10,22 +11,19 @@ const sources = {
   pos: ['in', 'dt', 'nn', 'dt', 'jj', 'vbz', 'vbn', ',', 'in', 'dt', 'jj', 'in', 'dt', 'jj', 'jj', 'nn', 'vbz', 'to', 'nn', ',', 'rb', 'rb', 'nns', 'in', 'in', 'dt', 'nn', 'cc', 'nn', 'in', 'dt', 'nns', 'in', 'dt', 'rb', 'vbg', 'nn', 'vbz', ',', 'prp', 'cc', 'prp', 'md', 'vbp', 'vbn', 'in', 'in', 'jj', 'in', 'rb', 'jjr', 'nns', 'in', 'dt', 'nn', 'cc', 'in', 'dt', 'nns', ',', 'in', 'cc', 'in', 'dt', 'cc', 'in', 'nn', ',', 'rb', 'jj', ',', 'nn', 'in', 'rb', 'jj', 'jj', 'nns', ',', 'in', 'in', 'dt', 'nns', 'md', 'vb', 'nns', 'in', 'nn', 'in', 'rb', 'prp$', 'nns', ',', 'vbn', 'in', 'nns', ',', 'vbp', 'rb', 'jjr', 'vb', 'nns', 'in', 'jj', 'rb', 'jj', ':', 'rb', 'in', 'cc', 'in', 'dt', 'nn', ',', 'in', 'dt', 'nn', 'nn', ',', 'in', 'nn', 'in', 'nn', ',', 'wrb', 'dt', 'nns', 'vbp', 'rb', 'vbg', ',', 'in', 'cc', 'wrb', 'dt', 'jj', 'nns', 'vbp', 'vbg', 'prp$', 'nns', 'cc', 'vbz', ',', 'in', 'prp$', 'jj', 'nns', 'in', 'nn', ',', 'in', 'dt', 'nns', 'rb', 'vb', ',', 'in', 'jj', 'nns', 'in', 'nn', ',', 'rbs', 'rb', 'in', 'nn', ',', 'in', 'nn', ',', 'to', 'vb', ',', 'to', 'vb', 'vbg', 'vbd', ',', 'to', 'vb', 'to', 'vb', 'vbd', 'jj', 'rb', 'in', 'dt', 'nn', 'wrb', 'prp', 'cc', 'prp', 'vbp', 'rb', 'vbd', 'to', 'vb', 'cc', 'wrb', 'prp', 'md', 'rb', 'rb', 'cc', 'rb', 'vbp', 'vbn', 'dt', 'jj', 'vbn', 'nn', ',', 'cc', 'cd', 'dt', ',', 'cc', 'vbd', 'cc', 'vbn', 'prp', 'in', 'dt', 'vbg', 'cc', 'vb', 'in', 'jj', 'nns', ',', 'cc', 'vbd', 'in', 'jj', 'nn', ',', 'jj', 'cc', 'jj', ',', 'dt', 'cd', 'vbg', 'cc', 'nn', 'cc', 'vbg', 'in', 'dt', 'nn', 'in', 'prp', 'to', 'vb', ',', 'rb', 'prp', 'vbp', 'dt', 'jj', 'in', 'md', 'vbp', 'vbn', 'dt', 'nn', 'cc', 'nn', 'cc', 'nn', 'cc', 'nn', 'rb', 'in', 'prp', 'cc', 'prp', 'md', 'vb', 'in', 'dt', 'nn', ',', 'dt', 'in', 'cc', 'in', 'vb', ',', 'cc', 'rb', 'jj', ';', 'cc', 'dt', 'jj', ',', 'dt', 'jj', 'nn', 'in', 'dt', 'jj', ',', 'dt', 'nn', ',', 'in', 'prp', 'vbp', 'vbd', 'in', 'vbg', ',', 'prp', 'vbz', 'in', 'prp', 'cc', 'vbz', 'prp', 'in', 'nn', 'in', 'in', 'dt', 'nn', 'prp', 'vbp', 'dt', 'cc', 'rb', 'rb', ',', 'rb', 'rb', 'vbg', 'in', 'cc', 'in', 'cc', 'in', 'dt', 'nn', ',', 'in', 'dt', 'nns', 'in', 'dt', 'nns', ',', 'in', 'dt', 'nn', ',', 'in', 'dt', 'jj', 'in', 'prp$', 'nn', 'vbz', ',', 'vbd', ',', 'vbn', ',', 'rb', 'vbn', ',', 'rb', 'rb', 'vbn', 'cc', ',', 'in', 'vbg', 'cc', 'vbg', 'in', 'dt', 'nns', ',', 'vbg', 'in', 'dt', 'vbg', 'jj', 'in', 'vbd', ',', 'nn', 'vbn', 'nn', 'in', 'prp$', 'nn', ',', 'vbd']
 };
 
-const similarCache = {
+const similarCache = { // tmp-delete
   avoid: ['elude', 'escape', 'evade'],
   neighbors: ['brothers', 'brethren', 'fellows'],
   inhuman: ['grievous', 'grim', 'hard', 'heavy', 'onerous', 'oppressive', 'rough', 'rugged', 'severe', 'austere', ' inclement', 'intemperate'],
   sometimes: ['occasionally', 'intermittently', 'periodically', 'recurrently', 'infrequently', 'rarely', 'irregularly', 'sporadically', 'variously'],
   adventure: ['experience', 'exploit', 'occasion', 'ordeal', 'venture', 'expedition', 'mission'],
   unfamiliar: ['unconventional', 'pioneering', 'unaccustomed', ' unprecedented'],
-};
-
-const ignores = ["jerkies", "nary", "outta", "copras", "accomplis", "scad", "silly", "saris", "coca", "durn", "geed", "goted", "denture", "wales"];
-
+};const ignores = ["jerkies", "nary", "outta", "copras", "accomplis", "scad", "silly", "saris", "coca", "durn", "geed", "goted", "denture", "wales"];
 
 const minWordLength = 4;
 const domStats = document.querySelector('#stats');
 const domDisplay = document.querySelector('#display');
-const stops = ["also", "over", "have", "this", "that", "just", "then", "under", "some", /* added: DCH */ "their", "when", "these", "within", "after", "with", "there", "where", "while", "from", "whenever", /* added: DCH, from 'urban' to sync number of replaceable indexes in each text*/ "rushed", "prayer"];
+const stops = ["also", "over", "have", "this", "that", "just", "then", "under", "some", /* added: DCH */ "their", "when", "these", "within", "after", "with", "there", "where", "while", "from", "whenever", "every", /* added: DCH, from 'urban' to sync number of replaceable indexes in each text*/ "rushed", "prayer"];
 const repIds = replaceables();
 const strictRepIds = strictReplaceables();
 const history = { rural: [], urban: [] };
@@ -35,7 +33,7 @@ let displayBounds = domDisplay.getBoundingClientRect();
 let cy = displayBounds.y + displayBounds.height / 2;
 let cx = displayBounds.x + displayBounds.width / 2;
 let radius = displayBounds.width / 2;
-
+let displaySims, shadowSims;
 
 // setup the history
 Object.keys(history).map(k => sources[k].map((w, i) => history[k][i] = [w]));
@@ -53,15 +51,17 @@ const state = {
   legs: 0
 };
 
+
+
 ////////////////////////////////////////////////////////
 
 
-let opts = { xOffset: cx, yOffset: cy, padding: 13, font, fontSize: 22.7 };
+let opts = { xOffset: cx, yOffset: cy, padding: 20, font, fontSize: 22.35 };
 let lines = circleLayout(sources[state.destination], radius, opts);
 //let lines = bestCircleLayout(sources[state.destination], radius, opts);
 let spans = spanify(lines);
-// let worker = new Worker("similars.js");
-// worker.onmessage = (e) => ({word, similars} = e.data);
+let worker = new Worker("similars.js");
+worker.onmessage = completeReplace;
 ramble(spans);
 
 // let progress = createProgressBar('#progress'); d = 50;
@@ -114,46 +114,75 @@ function updateState() {
 }
 
 /* selects an index with which to replace a word in each text */
+function prepareReplace() {
+
+  // to do a replacement we need: idx, destination, sources, isReplaceable
+  let beingRead = state.reader ? state.reader.selection() : [];
+  let ids = repIds.filter(id => !beingRead.includes(sources[destination][id]));
+  let idx = RiTa.random(ids);
+  worker.postMessage({ idx, sources, isReplaceable, destination: state.destination });
+}
+
+function completeReplace(e) {
+
+  const { outgoing, destination } = state;
+
+  let {idx, displaySims, shadowSims } = e.data;
+  let displayWord = sources[destination][idx];
+  let shadowWord = sources[shadow][idx];
+  let pos = sources.pos[idx];
+
+   // pick a random similar to replace in display text
+   let displayNext = RiTa.random(displaySims);
+   history[destination][idx].push(displayNext);
+   updateDOM(displayNext, idx);
+ 
+   let shadowNext = RiTa.random(displaySims); // shadowSims?
+   history[shadow][idx].push(shadowNext);
+ 
+   let ms = +new Date() - startMs; // tmp: for perf
+   console.log(`${numMods()}${outgoing ? ')' : ']'} @${idx} `
+     + `${destination}: ${displayWord} -> ${displayNext}, ${shadow}: `
+     + `${shadowWord} -> ${shadowNext} [${pos}] ${outgoing ? ms + 'ms' : ''}`);
+
+   // add setTimeout call here ***
+}
+
+
+/* selects an index with which to replace a word in each text */
 function replace() {
 
   const { outgoing, destination } = state;
 
-  let choices = RiTa.randomOrdering(repIds);
-  let shadow = shadowTextName();
+  let beingRead = state.reader ? state.reader.selection() : [];
+  let ids = repIds.filter(id => !beingRead.includes(sources[destination][id]));
+  let idx = RiTa.random(ids);
+  let pos = sources.pos[idx];
   let startMs = +new Date();
+  let shadow = shadowTextName();
+  let displayWord = sources[destination][idx];
+  let shadowWord = sources[shadow][idx];
 
-  for (let i = 0; i < choices.length; i++) {
-
-    let idx = choices[i];
-    let pos = sources.pos[idx];
-
-    let displayWord = sources[destination][idx];
-    let shadowWord = sources[shadow][idx];
-
-    // get similars for both words
-    let displaySims = similars(displayWord.toLowerCase(), pos);
-    let shadowSims = similars(shadowWord.toLowerCase(), pos);
-    if (!displaySims || !shadowSims) {
-      console.warn('FAILED TO REPLACE: \n' + displayWord + ': ' + displaySims + '\n' + shadowWord + ': ' + shadowSims);
-      continue;
-    }
-
-    // pick a random similar to replace in display text
-    let displayNext = RiTa.random(displaySims);
-    history[destination][idx].push(displayNext);
-    updateDOM(displayNext, idx);
-
-    // pick a random similar to replace in hidden text
-    let shadowNext = RiTa.random(displaySims);
-    history[shadow][idx].push(shadowNext);
-
-    let ms = +new Date() - startMs; // tmp: for perf
-    console.log(`${numMods()}${outgoing ? ')' : ']'} @${idx} `
-      + `${destination}: ${displayWord} -> ${displayNext}, ${shadow}: `
-      + `${shadowWord} -> ${shadowNext} [${pos}] ${outgoing ? ms + 'ms' : ''}`);
-
-    break; // done
+  // get similars for both words
+  let displaySims = similars(displayWord.toLowerCase(), pos);
+  let shadowSims = similars(shadowWord.toLowerCase(), pos);
+  if (!displaySims || !shadowSims) {
+    //return; // tmp
+    throw Error('FAILED TO REPLACE: \n' + displayWord + ': ' + displaySims + '\n' + shadowWord + ': ' + shadowSims);
   }
+
+  // pick a random similar to replace in display text
+  let displayNext = RiTa.random(displaySims);
+  history[destination][idx].push(displayNext);
+  updateDOM(displayNext, idx);
+
+  let shadowNext = RiTa.random(displaySims);
+  history[shadow][idx].push(shadowNext);
+
+  let ms = +new Date() - startMs; // tmp: for perf
+  console.log(`${numMods()}${outgoing ? ')' : ']'} @${idx} `
+    + `${destination}: ${displayWord} -> ${displayNext}, ${shadow}: `
+    + `${shadowWord} -> ${shadowNext} [${pos}] ${outgoing ? ms + 'ms' : ''}`);
 }
 
 /* selects an index to restore (from history) in displayed text */
@@ -214,7 +243,7 @@ function numMods() {
 function stop() {
   clearTimeout(state.loopId);
   state.updating = false;
-  state.reader.stop();
+  state.reader && state.reader.stop();
 }
 
 /* update stats in debug panel */
@@ -325,11 +354,12 @@ function shadowTextName() {
 
 function updateDOM(next, idx) {
   const ele = document.querySelector(`#w${idx}`);
-  if (!ele) {
+  if (!ele) { // shouldn't happen
     console.log(stop());
     throw Error(`no node for #w${idx} -> ${next}`);
   }
   ele.textContent = next;
-  ele.style.backgroundColor = (state.outgoing ? '#fbb' : '#bbf');
+  //ele.style.backgroundColor = state.outgoing ? '#fbb' : '#bbf';
+  ele.classList.add(state.outgoing ? 'outgoing' : 'incoming');
 }
 
