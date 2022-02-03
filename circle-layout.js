@@ -3,7 +3,6 @@ function maxFontSizeForCircle(words, cx, cy, radius, fontName = 'sans-serif', pa
   let fontSize = radius / 4, result;
   do {
     fontSize *= .99;
-    console.log('try: ' + fontSize);
     result = fitToLineWidths(cx, cy, radius, words, fontSize, fontName);
   }
   while (result.words.length);

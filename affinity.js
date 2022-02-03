@@ -1,8 +1,7 @@
 
 /* NEXT: 
-1. circle should warn if not all text is shown
-2. ? circle should split empty lines btwn top/bottom (not easy)
-3. ramble-bug
+  -- ? circle should split empty lines btwn top/bottom (not easy)
+  -- ramble-bug
 */
 
 const sources = {
@@ -13,7 +12,7 @@ const sources = {
 
 const minWordLength = 4;
 const domStats = document.querySelector('#stats');
-const domDisplay = document.querySelector('#circle');
+const domDisplay = document.querySelector('#display');
 const ignores = ["jerkies", "nary", "outta", "copras", "accomplis", "scad", "silly", "saris", "coca", "durn", "geed", "goted", "denture", "wales"];
 const stops = ["also", "over", "have", "this", "that", "just", "then", "under", "some", /* added: DCH */ "their", "when", "these", "within", "after", "with", "there", "where", "while", "from", "whenever", /* added: DCH, from 'urban' to sync number of replaceable indexes in each text*/ "rushed", "prayer"];
 const repIds = replaceables();
@@ -43,8 +42,8 @@ const state = {
 };
 
 let similarCache = {
-  neighbors: ['brothers', 'brethren', 'fellows'],
   avoid: ['elude', 'escape', 'evade'],
+  neighbors: ['brothers', 'brethren', 'fellows'],
   inhuman: ['grievous', 'grim', 'hard', 'heavy', 'onerous', 'oppressive', 'rough', 'rugged', 'severe', 'austere', ' inclement', 'intemperate'],
   sometimes: ['occasionally', 'intermittently', 'periodically', 'recurrently', 'infrequently', 'rarely', 'irregularly', 'sporadically', 'variously'],
   adventure: ['experience', 'exploit', 'occasion', 'ordeal', 'venture', 'expedition', 'mission'],
@@ -53,37 +52,16 @@ let similarCache = {
 
 ////////////////////////////////////////////////////////
 //console.log(JSON.stringify(RiTa.untokenize(sources.rural).split(' ')).replace(/"/g,"'"));
-let lines = 1 ? circleLayout(sources[state.destination], cx, cy, radius, 22, fontFamily)
-  : maxFontSizeForCircle(sources[state.destination], cx, cy, radius, fontFamily, 30);
+let lines = 1 ? circleLayout(sources[state.destination], cx, cy, radius, 22.7, fontFamily, 13)
+  : maxFontSizeForCircle(sources[state.destination], cx, cy, radius, fontFamily, 10);
 spanify(lines);
 //ramble();
 
-// let circle = createProgressBar('#progress'); d = 50;
-// let ani = () => circle.animate((d += Math.random() < .5 ? 5 : -5) / 100,
+// let progress = createProgressBar('#progress'); d = 50;
+// let ani = () => progress.animate((d += Math.random() < .5 ? 5 : -5) / 100,
 //   { duration: 3000 }, () => setTimeout(ani, 1)); ani(); // animate
 
 /////////////////////////////////////////////////////////
-
-function spanify(lines) {
-  console.log(lines);
-  let wordIdx = 0;
-  let html = lines.reduce((html, l, i) => {
-    let line = '-';
-    let ypos = l.bounds[1] - l.bounds[3] / 2;
-    if (l.text) {
-      let words = l.text.split(' ')
-      line = words.reduce((acc, word) => {
-        return acc + (`<span id="w${wordIdx}" class="word"`
-          + ` style="opacity:${1};">${word}</span>`
-          + (RiTa.isPunct(words[++wordIdx]) ? '' : ' '));
-      }, '');
-    }
-    return html + `<div class="text" style="top: ${ypos}px;`
-      + ` font-size:${l.fontSize}px;">${line}</div>`;
-  }, '');
-  domDisplay.innerHTML = html;
-}
-
 
 function ramble() {
 
@@ -92,7 +70,7 @@ function ramble() {
     updateState();
     if (!state.stepDebug) {
       if (!state.reader) {
-        state.reader = new Reader(domDisplay);
+        state.reader = new Reader(document.getElementsByClassName("word"));
         state.reader.start();
       }
       if (state.updating) {
@@ -298,6 +276,23 @@ function isReplaceable(word) {
 function strictReplaceables() {
   return repIds.filter(idx =>
     sources.rural[idx] !== sources.urban[idx]);
+}
+
+function spanify(lines) {
+  let wordIdx = 0;
+  let html = lines.reduce((html, l, i) => {
+    let line = '-';
+    let ypos = l.bounds[1] - l.bounds[3] / 2;
+    if (l.text) {
+      let words = l.text.split(' ')
+      line = words.reduce((line, word) => line +
+        (`<span id="w${wordIdx}" class="word">${word}</span>`
+          + (RiTa.isPunct(words[++wordIdx]) ? '' : ' ')), '');
+    }
+    return html + `<div id="l${i}"class="line" style="top: ${ypos}px;`
+      + ` font-size:${l.fontSize}px;">${line}</div>`;
+  }, '');
+  domDisplay.innerHTML = html;
 }
 
 function unspanify() {

@@ -1,9 +1,10 @@
 class Reader {
 
-  constructor(element) {
+  constructor(elements) {
     this.index = 0;
     this.reading = false;
-    this.spans = Array.from(element.children);
+    this.spans = Array.from(elements);
+    console.log(this.spans.map(s => s.textContent));
     this.numVisibleWords = 13;
     RiTa.SILENCE_LTS = true; // no logging of lts
   }

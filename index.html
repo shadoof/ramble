@@ -33,24 +33,32 @@
             position: absolute;
         }
 
-        #circle {
+        #display {
             height: 98%;
             width: 98%;
             margin: 1%;
             border-radius: 50%;
             background: #ccc;
             /* background: linear-gradient(135deg, #a7cfdf 0%, #275d9b 100%);
-            box-shadow: inset -16px -14px 8px 0px rgba(0, 0, 0, 0.3); */
+            box-shadow: inset -8px -7px 4px 0px rgba(0, 0, 0, 0.3);  */
             position: relative;
             font-family: "Source Serif Pro", Iowan Old Style, Apple Garamond, Palatino Linotype, Times New Roman, "Droid Serif", Times, serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol;
         }
 
-        .text {
+        .line {
             width: 100%;
-            opacity: 0.3;
             position: absolute;
             text-align: center;
             white-space: nowrap;
+        }
+
+        .word {
+            opacity: .3;
+            transition: opacity .5s ease-in-out;
+        }
+
+        .word.visible {
+            opacity: 1;
         }
     </style>
 </head>
@@ -60,7 +68,7 @@
     <div id="display" class="container"></div> -->
 
     <div id="container">
-        <div id="circle">
+        <div id="display">
         </div>
         <div id="progress">
         </div>
