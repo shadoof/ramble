@@ -4,7 +4,6 @@ class Reader {
     this.index = 0;
     this.reading = false;
     this.spans = Array.from(elements);
-    console.log(this.spans.map(s => s.textContent));
     this.numVisibleWords = 13;
     RiTa.SILENCE_LTS = true; // no logging of lts
   }
@@ -13,6 +12,10 @@ class Reader {
     clearTimeout(this.timeoutId);
     this.reading = true;
     this.step();
+  }
+
+  selection() {
+    return this.spans.slice(this.index, this.index+this.numVisibleWords);
   }
 
   step() {

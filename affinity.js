@@ -10,20 +10,32 @@ const sources = {
   pos: ['in', 'dt', 'nn', 'dt', 'jj', 'vbz', 'vbn', ',', 'in', 'dt', 'jj', 'in', 'dt', 'jj', 'jj', 'nn', 'vbz', 'to', 'nn', ',', 'rb', 'rb', 'nns', 'in', 'in', 'dt', 'nn', 'cc', 'nn', 'in', 'dt', 'nns', 'in', 'dt', 'rb', 'vbg', 'nn', 'vbz', ',', 'prp', 'cc', 'prp', 'md', 'vbp', 'vbn', 'in', 'in', 'jj', 'in', 'rb', 'jjr', 'nns', 'in', 'dt', 'nn', 'cc', 'in', 'dt', 'nns', ',', 'in', 'cc', 'in', 'dt', 'cc', 'in', 'nn', ',', 'rb', 'jj', ',', 'nn', 'in', 'rb', 'jj', 'jj', 'nns', ',', 'in', 'in', 'dt', 'nns', 'md', 'vb', 'nns', 'in', 'nn', 'in', 'rb', 'prp$', 'nns', ',', 'vbn', 'in', 'nns', ',', 'vbp', 'rb', 'jjr', 'vb', 'nns', 'in', 'jj', 'rb', 'jj', ':', 'rb', 'in', 'cc', 'in', 'dt', 'nn', ',', 'in', 'dt', 'nn', 'nn', ',', 'in', 'nn', 'in', 'nn', ',', 'wrb', 'dt', 'nns', 'vbp', 'rb', 'vbg', ',', 'in', 'cc', 'wrb', 'dt', 'jj', 'nns', 'vbp', 'vbg', 'prp$', 'nns', 'cc', 'vbz', ',', 'in', 'prp$', 'jj', 'nns', 'in', 'nn', ',', 'in', 'dt', 'nns', 'rb', 'vb', ',', 'in', 'jj', 'nns', 'in', 'nn', ',', 'rbs', 'rb', 'in', 'nn', ',', 'in', 'nn', ',', 'to', 'vb', ',', 'to', 'vb', 'vbg', 'vbd', ',', 'to', 'vb', 'to', 'vb', 'vbd', 'jj', 'rb', 'in', 'dt', 'nn', 'wrb', 'prp', 'cc', 'prp', 'vbp', 'rb', 'vbd', 'to', 'vb', 'cc', 'wrb', 'prp', 'md', 'rb', 'rb', 'cc', 'rb', 'vbp', 'vbn', 'dt', 'jj', 'vbn', 'nn', ',', 'cc', 'cd', 'dt', ',', 'cc', 'vbd', 'cc', 'vbn', 'prp', 'in', 'dt', 'vbg', 'cc', 'vb', 'in', 'jj', 'nns', ',', 'cc', 'vbd', 'in', 'jj', 'nn', ',', 'jj', 'cc', 'jj', ',', 'dt', 'cd', 'vbg', 'cc', 'nn', 'cc', 'vbg', 'in', 'dt', 'nn', 'in', 'prp', 'to', 'vb', ',', 'rb', 'prp', 'vbp', 'dt', 'jj', 'in', 'md', 'vbp', 'vbn', 'dt', 'nn', 'cc', 'nn', 'cc', 'nn', 'cc', 'nn', 'rb', 'in', 'prp', 'cc', 'prp', 'md', 'vb', 'in', 'dt', 'nn', ',', 'dt', 'in', 'cc', 'in', 'vb', ',', 'cc', 'rb', 'jj', ';', 'cc', 'dt', 'jj', ',', 'dt', 'jj', 'nn', 'in', 'dt', 'jj', ',', 'dt', 'nn', ',', 'in', 'prp', 'vbp', 'vbd', 'in', 'vbg', ',', 'prp', 'vbz', 'in', 'prp', 'cc', 'vbz', 'prp', 'in', 'nn', 'in', 'in', 'dt', 'nn', 'prp', 'vbp', 'dt', 'cc', 'rb', 'rb', ',', 'rb', 'rb', 'vbg', 'in', 'cc', 'in', 'cc', 'in', 'dt', 'nn', ',', 'in', 'dt', 'nns', 'in', 'dt', 'nns', ',', 'in', 'dt', 'nn', ',', 'in', 'dt', 'jj', 'in', 'prp$', 'nn', 'vbz', ',', 'vbd', ',', 'vbn', ',', 'rb', 'vbn', ',', 'rb', 'rb', 'vbn', 'cc', ',', 'in', 'vbg', 'cc', 'vbg', 'in', 'dt', 'nns', ',', 'vbg', 'in', 'dt', 'vbg', 'jj', 'in', 'vbd', ',', 'nn', 'vbn', 'nn', 'in', 'prp$', 'nn', ',', 'vbd']
 };
 
+const similarCache = {
+  avoid: ['elude', 'escape', 'evade'],
+  neighbors: ['brothers', 'brethren', 'fellows'],
+  inhuman: ['grievous', 'grim', 'hard', 'heavy', 'onerous', 'oppressive', 'rough', 'rugged', 'severe', 'austere', ' inclement', 'intemperate'],
+  sometimes: ['occasionally', 'intermittently', 'periodically', 'recurrently', 'infrequently', 'rarely', 'irregularly', 'sporadically', 'variously'],
+  adventure: ['experience', 'exploit', 'occasion', 'ordeal', 'venture', 'expedition', 'mission'],
+  unfamiliar: ['unconventional', 'pioneering', 'unaccustomed', ' unprecedented'],
+};
+
+const ignores = ["jerkies", "nary", "outta", "copras", "accomplis", "scad", "silly", "saris", "coca", "durn", "geed", "goted", "denture", "wales"];
+
+
 const minWordLength = 4;
 const domStats = document.querySelector('#stats');
 const domDisplay = document.querySelector('#display');
-const ignores = ["jerkies", "nary", "outta", "copras", "accomplis", "scad", "silly", "saris", "coca", "durn", "geed", "goted", "denture", "wales"];
 const stops = ["also", "over", "have", "this", "that", "just", "then", "under", "some", /* added: DCH */ "their", "when", "these", "within", "after", "with", "there", "where", "while", "from", "whenever", /* added: DCH, from 'urban' to sync number of replaceable indexes in each text*/ "rushed", "prayer"];
 const repIds = replaceables();
 const strictRepIds = strictReplaceables();
 const history = { rural: [], urban: [] };
 
-let fontFamily = window.getComputedStyle(domDisplay).fontFamily;
+let font = window.getComputedStyle(domDisplay).fontFamily;
 let displayBounds = domDisplay.getBoundingClientRect();
 let cy = displayBounds.y + displayBounds.height / 2;
 let cx = displayBounds.x + displayBounds.width / 2;
 let radius = displayBounds.width / 2;
+
 
 // setup the history
 Object.keys(history).map(k => sources[k].map((w, i) => history[k][i] = [w]));
@@ -41,19 +53,15 @@ const state = {
   legs: 0
 };
 
-let similarCache = {
-  avoid: ['elude', 'escape', 'evade'],
-  neighbors: ['brothers', 'brethren', 'fellows'],
-  inhuman: ['grievous', 'grim', 'hard', 'heavy', 'onerous', 'oppressive', 'rough', 'rugged', 'severe', 'austere', ' inclement', 'intemperate'],
-  sometimes: ['occasionally', 'intermittently', 'periodically', 'recurrently', 'infrequently', 'rarely', 'irregularly', 'sporadically', 'variously'],
-  adventure: ['experience', 'exploit', 'occasion', 'ordeal', 'venture', 'expedition', 'mission'],
-  unfamiliar: ['unconventional', 'pioneering', 'unaccustomed', ' unprecedented'],
-};
-
 ////////////////////////////////////////////////////////
-let lines = 1 ? circleLayout(sources[state.destination], cx, cy, radius, 22.7, fontFamily, 13)
-  : maxFontSizeForCircle(sources[state.destination], cx, cy, radius, fontFamily, 10);
+
+
+let opts = { xOffset: cx, yOffset: cy, padding: 13, font, fontSize: 22.7 };
+let lines = circleLayout(sources[state.destination], radius, opts);
+//let lines = bestCircleLayout(sources[state.destination], radius, opts);
 let spans = spanify(lines);
+// let worker = new Worker("similars.js");
+// worker.onmessage = (e) => ({word, similars} = e.data);
 ramble(spans);
 
 // let progress = createProgressBar('#progress'); d = 50;
@@ -125,7 +133,10 @@ function replace() {
     // get similars for both words
     let displaySims = similars(displayWord.toLowerCase(), pos);
     let shadowSims = similars(shadowWord.toLowerCase(), pos);
-    if (!displaySims || !shadowSims) continue;
+    if (!displaySims || !shadowSims) {
+      console.warn('FAILED TO REPLACE: \n' + displayWord + ': ' + displaySims + '\n' + shadowWord + ': ' + shadowSims);
+      continue;
+    }
 
     // pick a random similar to replace in display text
     let displayNext = RiTa.random(displaySims);
@@ -253,9 +264,9 @@ function similars(word, pos) {
     sims = [...rhymes, ...sounds, ...spells];
   }
 
-  sims = sims.filter(next => next.length >= minWordLength
+  sims = sims.filter(next => isReplaceable(next)
     && !word.includes(next) && !next.includes(word)
-    && !ignores.includes(next) && !stops.includes(next));
+    && !ignores.includes(next));
 
   if (sims.length > 1) {
     similarCache[word] = sims; // store in cache
@@ -287,7 +298,7 @@ function spanify(lines) {
       line = words.reduce((line, word, j) => {
         return line +
           `<span id="w${wordIdx++}" class="word">${word}</span>`
-            + (j < words.length-1 && RiTa.isPunct(words[j+1]) ? '' : ' ');
+          + (j < words.length - 1 && RiTa.isPunct(words[j + 1]) ? '' : ' ');
 
       }, '');
     }
@@ -295,7 +306,7 @@ function spanify(lines) {
       + ` font-size:${l.fontSize}px;">${line}</div>`;
   }, '');
   domDisplay.innerHTML = html;
-  
+
   let spans = document.getElementsByClassName("word"); // double-check
   if (spans.length != sources[state.destination].length) throw Error
     ('Invalid spanify: ' + spans.length + '!==' + sources[state.destination].length);

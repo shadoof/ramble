@@ -1,4 +1,28 @@
-function maxFontSizeForCircle(words, cx, cy, radius, fontName = 'sans-serif', padding = 0) {
+
+function circleLayout(words, radius, opts = {}) {
+  let cx = opts.xOffset || 0;
+  let cy = opts.yOffset || 0;
+  let padding = opts.padding || 0;
+  let fontName = opts.font || 'sans-serif';
+  let fontSize = opts.fontSize || 10;
+  
+  let result = fitToLineWidths(cx, cy, radius - padding, words, fontSize, fontName);
+  
+  let excess = result.words.length;
+  let blanks = result.text.filter(t => t.length <= 1).length;
+  if (blanks > 2) console.warn('[WARN] ' + blanks + ' blank lines');
+  if (excess) console.warn('[WARN] ' + excess + ' words not included');
+  
+  return result.rects.map((r, i) => ({ fontSize, bounds: r, text: result.text[i] }));
+}
+
+function bestCircleLayout(words, radius, opts = {}) {
+
+  let cx = opts.xOffset || 0;
+  let cy = opts.yOffset || 0;
+  let padding = opts.padding || 0;
+  let fontName = opts.font || 'sans-serif';
+
   radius -= padding;
   let fontSize = radius / 4, result;
   do {
@@ -6,20 +30,9 @@ function maxFontSizeForCircle(words, cx, cy, radius, fontName = 'sans-serif', pa
     result = fitToLineWidths(cx, cy, radius, words, fontSize, fontName);
   }
   while (result.words.length);
-  console.log('fontSize:', fontSize);
-  return result.rects.map((r, i) => (
-    { fontSize, bounds: r, text: result.text[i] }
-  ));
-}
-
-function circleLayout(words, cx, cy, radius, fontSize, fontName = 'sans-serif', padding = 0) {
-  let result = fitToLineWidths(cx, cy, radius - padding, words, fontSize, fontName);
-  let blanks = result.text.filter(t => t.length <= 1).length;
-  if (blanks > 2) console.warn('[WARN] ' + blanks + ' blank lines');
-  if (result.words.length) console.warn('[WARN] ' + result.words.length + ' words not included');
-  return result.rects.map((r, i) => (
-    { fontSize, bounds: r, text: result.text[i] }
-  ));
+  console.log('Computed fontSize:', fontSize);
+  
+  return result.rects.map((r, i) => ({ fontSize, bounds: r, text: result.text[i] }));
 }
 
 function fitToLineWidths(cx, cy, radius, words, fontSize, fontName = 'sans-serif') {
@@ -88,7 +101,7 @@ function chordLength(rad, d) {
 }
 
 let context;
-function measureWidth(text, fontSizePx = 12, fontName = fontFamily) {
+function measureWidth(text, fontSizePx = 12, fontName = font) {
   context = context || document.createElement("canvas").getContext("2d");
   context.font = fontSizePx + 'px ' + fontName;
   return context.measureText(text).width;
