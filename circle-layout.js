@@ -7,18 +7,19 @@ function maxFontSizeForCircle(words, cx, cy, radius, fontName = 'sans-serif', pa
     result = fitToLineWidths(cx, cy, radius, words, fontSize, fontName);
   }
   while (result.words.length);
-
-  console.log('computed:', fontSize);
-
+  console.log('fontSize:', fontSize);
   return result.rects.map((r, i) => (
-    { fontSize, bounds: r, padding, text: result.text[i] }
+    { fontSize, bounds: r, text: result.text[i] }
   ));
 }
 
 function circleLayout(words, cx, cy, radius, fontSize, fontName = 'sans-serif', padding = 0) {
   let result = fitToLineWidths(cx, cy, radius - padding, words, fontSize, fontName);
+  let blanks = result.text.filter(t => t.length <= 1).length;
+  if (blanks > 2) console.warn('[WARN] ' + blanks + ' blank lines');
+  if (result.words.length) console.warn('[WARN] ' + result.words.length + ' words not included');
   return result.rects.map((r, i) => (
-    { fontSize, bounds: r, padding, text: result.text[i] }
+    { fontSize, bounds: r, text: result.text[i] }
   ));
 }
 
@@ -28,13 +29,14 @@ function fitToLineWidths(cx, cy, radius, words, fontSize, fontName = 'sans-serif
   let text = [], rects = lineWidths(cx, cy, radius, lh);
   rects.forEach(([x, y, w, h], i) => {
     let data = fitToBox(tokens, w, fontSize, fontName);
-    if (!data) { // fail to fit even one word
-      //console.log(i, 'fail', fontSize, w, tokens.length);
-      return { words, rects, texts: [] };
+    if (!data) { // fail to fit any words
+      text.push('');
+      return;
     }
     text.push(data.text);
     tokens = data.words;
   });
+  if (rects.length !== text.length) throw Error('mismatch in fitToLineWidths')//tmp
   return { text, rects, words: tokens };
 }
 
@@ -44,7 +46,6 @@ function fitToBox(words, width, fontSize, fontName = 'sans-serif') {
     text: words[0],
     width: measureWidth(words[0], fontSize, fontName)
   };
-
   if (line.width > width) return; // can't fit first word
 
   for (let n = words.length; i < n; ++i) {
@@ -57,7 +58,7 @@ function fitToBox(words, width, fontSize, fontName = 'sans-serif') {
     line.width += nextWidth;
   }
   words = words.slice(i);
-  if (RiTa.isPunct(words[0])) { // punct cant start a line
+  if (RiTa.isPunct(words[0])) { // punct can't start a line
     line.text += words.shift();
   }
   return {
