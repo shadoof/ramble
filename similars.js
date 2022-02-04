@@ -14,14 +14,14 @@ const similarCache = {
 const ignores = ["jerkies", "nary", "outta", "copras", "accomplis", "scad", "silly", "saris", "coca", "durn", "geed", "goted", "denture", "wales"];
 
 this.onmessage = function (e) {
-  let { idx, destination, sources, isReplaceable } = e.data;
+  let { idx, destination, sources, isReplaceable, time } = e.data;
   let shadow = destination === 'rural' ? 'urban' : 'rural';
   let displayWord = sources[destination][idx];
   let shadowWord = sources[shadow][idx];
   let pos = sources.pos[idx];
   let displaySims = findSimilars(displayWord, pos, sources, isReplaceable);
   let shadowSims = findSimilars(shadowWord, pos, sources, isReplaceable);
-  this.postMessage({idx, displaySims, shadowSims });
+  this.postMessage({idx, displaySims, shadowSims, time });
 };
 
 function findSimilars(word, pos, sources, isReplaceable) {

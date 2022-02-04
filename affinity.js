@@ -18,7 +18,7 @@ const similarCache = { // tmp-delete
   sometimes: ['occasionally', 'intermittently', 'periodically', 'recurrently', 'infrequently', 'rarely', 'irregularly', 'sporadically', 'variously'],
   adventure: ['experience', 'exploit', 'occasion', 'ordeal', 'venture', 'expedition', 'mission'],
   unfamiliar: ['unconventional', 'pioneering', 'unaccustomed', ' unprecedented'],
-};const ignores = ["jerkies", "nary", "outta", "copras", "accomplis", "scad", "silly", "saris", "coca", "durn", "geed", "goted", "denture", "wales"];
+}; const ignores = ["jerkies", "nary", "outta", "copras", "accomplis", "scad", "silly", "saris", "coca", "durn", "geed", "goted", "denture", "wales"];
 
 const minWordLength = 4;
 const domStats = document.querySelector('#stats');
@@ -51,17 +51,14 @@ const state = {
   legs: 0
 };
 
-
-
 ////////////////////////////////////////////////////////
-
 
 let opts = { xOffset: cx, yOffset: cy, padding: 20, font, fontSize: 22.35 };
 let lines = circleLayout(sources[state.destination], radius, opts);
 //let lines = bestCircleLayout(sources[state.destination], radius, opts);
 let spans = spanify(lines);
 let worker = new Worker("similars.js");
-worker.onmessage = completeReplace;
+worker.onmessage = replace;
 ramble(spans);
 
 // let progress = createProgressBar('#progress'); d = 50;
@@ -72,17 +69,22 @@ ramble(spans);
 
 function ramble(spans) {
 
-  if (state.updating) {
-    state.outgoing ? replace() : restore();
-    updateState();
-    if (!state.stepDebug) {
-      if (!state.reader) {
-        state.reader = new Reader(spans);
-        state.reader.start();
-      }
-      if (state.updating) {
-        loopId = setTimeout(ramble, state.updateDelay); // loop
-      }
+  const { updating, outgoing, destination, updateDelay } = state;
+
+  if (!state.reader) {
+    state.reader = new Reader(spans);
+    state.reader.start();
+  }
+  if (updating) {
+    if (outgoing) {
+      // tell worker to do similar search
+      let idx = RiTa.random(repIds.filter(
+        id => !state.reader.selection().includes(sources[destination][id])));
+      worker.postMessage({ idx, sources, destination, isReplaceable, time: Date.now() });
+      // worker calls replace() when done
+    }
+    else {
+      restore();
     }
   }
 }
@@ -113,44 +115,34 @@ function updateState() {
   updateInfo();
 }
 
-/* selects an index with which to replace a word in each text */
-function prepareReplace() {
+function replace(e) {
 
-  // to do a replacement we need: idx, destination, sources, isReplaceable
-  let beingRead = state.reader ? state.reader.selection() : [];
-  let ids = repIds.filter(id => !beingRead.includes(sources[destination][id]));
-  let idx = RiTa.random(ids);
-  worker.postMessage({ idx, sources, isReplaceable, destination: state.destination });
-}
+  const { outgoing, destination, updateDelay } = state;
 
-function completeReplace(e) {
-
-  const { outgoing, destination } = state;
-
-  let {idx, displaySims, shadowSims } = e.data;
+  let { idx, displaySims, shadowSims, time } = e.data;
   let displayWord = sources[destination][idx];
   let shadowWord = sources[shadow][idx];
   let pos = sources.pos[idx];
 
-   // pick a random similar to replace in display text
-   let displayNext = RiTa.random(displaySims);
-   history[destination][idx].push(displayNext);
-   updateDOM(displayNext, idx);
- 
-   let shadowNext = RiTa.random(displaySims); // shadowSims?
-   history[shadow][idx].push(shadowNext);
- 
-   let ms = +new Date() - startMs; // tmp: for perf
-   console.log(`${numMods()}${outgoing ? ')' : ']'} @${idx} `
-     + `${destination}: ${displayWord} -> ${displayNext}, ${shadow}: `
-     + `${shadowWord} -> ${shadowNext} [${pos}] ${outgoing ? ms + 'ms' : ''}`);
+  // pick a random similar to replace in display text
+  let displayNext = RiTa.random(displaySims);
+  history[destination][idx].push(displayNext);
+  updateDOM(displayNext, idx);
 
-   // add setTimeout call here ***
+  let shadowNext = RiTa.random(shadowSims); // displaySims?
+  history[shadow][idx].push(shadowNext);
+
+  console.log(`${numMods()}${outgoing ? ')' : ']'} @${idx} `
+    + `${destination}: ${displayWord} -> ${displayNext}, ${shadow}: `
+    + `${shadowWord} -> ${shadowNext} [${pos}] ${outgoing ? ms + 'ms' : ''}`);
+
+  updateState();
+  setTimeout(ramble, Math.max(1, updateDelay - (Date.now - time)));
 }
 
 
 /* selects an index with which to replace a word in each text */
-function replace() {
+function replaceOrig() {
 
   const { outgoing, destination } = state;
 
@@ -197,11 +189,6 @@ function restore() {
     .map(idx => ({ idx, word: displayWords[idx] }))
     .filter(({ word, idx }) => history[destination][idx].length > 1
       && isReplaceable(word));
-
-  if (!choices.length) { // tmp remove
-    console.error('[FAIL] No choices: ' + displayWords);
-    return;
-  }
 
   // pick a changed word to step back
   let { word, idx } = RiTa.random(choices);
