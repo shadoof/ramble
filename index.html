@@ -27,12 +27,36 @@
             text-align: center;
         }
 
-        #progress {
+        .progress {
+            position: absolute;
+        }
+
+        #progress0 {
             height: 100%;
             width: 100%;
             top: 0;
             left: 0;
-            position: absolute;
+        }
+
+        #progress1 {
+            height: 100%;
+            width: 100%;
+            top: 0;
+            left: 0;
+        }
+
+        #progress2 {
+            height: 100%;
+            width: 100%;
+            top: 0;
+            left: 0;
+        }
+
+        #progress3 {
+            height: 100%;
+            width: 100%;
+            top: 0;
+            left: 0;
         }
 
         #display {
@@ -76,11 +100,14 @@
 
 <body>
     <div id="container">
-        <div id="display">
-        </div>
-        <div id="progress">
-        </div>
-        <div id="stats">&nbsp;</div>
+        <div id="display"></div>
+        <div id="progress0" class="progress"></div>
+        <!--
+        <div id="progress1" class="progress"></div> 
+        <div id="progress2" class="progress"></div>
+        <div id="progress3" class="progress"></div> 
+        -->
+        <div id="stats"></div>
     </div>
     <script src="circle-layout.js"></script>
     <script src="shared.js"></script>

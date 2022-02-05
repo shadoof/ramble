@@ -31,7 +31,7 @@ function bestCircleLayout(words, radius, opts = {}) {
   }
   while (result.words.length);
   console.log('Computed fontSize:', fontSize);
-  
+
   return result.rects.map((r, i) => ({ fontSize, bounds: r, text: result.text[i] }));
 }
 
@@ -105,14 +105,4 @@ function measureWidth(text, fontSizePx = 12, fontName = font) {
   context = context || document.createElement("canvas").getContext("2d");
   context.font = fontSizePx + 'px ' + fontName;
   return context.measureText(text).width;
-}
-
-function createProgressBar(ele, opts = {}) {
-  return new ProgressBar.Circle(ele, {
-    duration: opts.duration || 3000,
-    strokeWidth: opts.strokeWidth || 1.1,
-    easing: opts.easing || 'easeOut',
-    trailColor: opts.trailColor || '#fafafa',
-    color: opts.color || '#ddd'
-  });
 }

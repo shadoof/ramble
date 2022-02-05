@@ -54,15 +54,5 @@ function findSimilars(word, pos, sources) {
   console.warn('no similars for: "' + word + '"/' + pos
     + ((sources.rural.includes(word) || sources.rural.includes(word))
       ? ' *** [In Source]' : ''));
+  return [];
 }
-
-/*function getSimilars(word, pos) {
-  let limit = -1;
-  let rhymes = RiTa.rhymes(word, { pos, limit });
-  let sounds = RiTa.soundsLike(word, { pos, limit });
-  let spells = RiTa.spellsLike(word, { pos, limit });
-  let result = [...rhymes, ...sounds, ...spells];
-  console.log(RiTa.VERSION, word + ':', result);
-  let similars = result.slice(0, 13).join("\n");
-  return { word, similars };
-}*/

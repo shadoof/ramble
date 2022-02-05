@@ -1,15 +1,15 @@
 
 /* NEXT: 
-  -- finish worker: awaiting john's reply
-  -- OR do progress bars
-  -- ? circle should split empty lines btwn top/bottom (not easy)
+  -- CSS: 
+  -- circle should split empty lines btwn top/bottom (?diff)
 */
 
+const repIds = replaceables();
+const strictRepIds = strictReplaceables(repIds);
+const history = { rural: [], urban: [] };
 const domStats = document.querySelector('#stats');
 const domDisplay = document.querySelector('#display');
-const repIds = replaceables();
-const strictRepIds = strictReplaceables();
-const history = { rural: [], urban: [] };
+const progressBars = createProgressBars();
 
 let font = window.getComputedStyle(domDisplay).fontFamily;
 let displayBounds = domDisplay.getBoundingClientRect();
@@ -27,8 +27,8 @@ const state = {
   stepDebug: false,
   outgoing: true,
   updating: true,
-  maxSteps: 5, // 50
-  maxLegs: 2, // 20
+  maxSteps: 50,
+  maxLegs: 20,
   reader: 0,
   loopId: 0,
   legs: 0
@@ -36,7 +36,7 @@ const state = {
 
 ////////////////////////////////////////////////////////
 
-let opts = { xOffset: cx, yOffset: cy, padding: 20, font, fontSize: 22.35 };
+let opts = { xOffset: cx, yOffset: cy, padding: 40, font, fontSize: 21.335 };
 let lines = circleLayout(sources[state.destination], radius, opts);
 //let lines = bestCircleLayout(sources[state.destination], radius, opts);
 let spans = spanify(lines);
@@ -44,15 +44,11 @@ let worker = new Worker("similars.js");
 worker.onmessage = replace;
 ramble(spans);
 
-// let progress = createProgressBar('#progress'); d = 50;
-// let ani = () => progress.animate((d += Math.random() < .5 ? 5 : -5) / 100,
-//   { duration: 3000 }, () => setTimeout(ani, 1)); ani(); // animate
-
 /////////////////////////////////////////////////////////
 
 function ramble(spans) {
 
-  const { updating, outgoing, destination } = state;
+  let { updating, outgoing, destination } = state;
 
   if (!state.reader) {
     state.reader = new Reader(spans);
@@ -76,7 +72,7 @@ function ramble(spans) {
 /* logic for steps, legs and domain swapping */
 function updateState() {
 
-  const { maxSteps, legs, maxLegs } = state;
+  let { maxSteps, legs, maxLegs } = state;
 
   let steps = numMods();
   if (state.outgoing) {
@@ -99,78 +95,67 @@ function updateState() {
   updateInfo();
 }
 
+function createProgressBars() {
+  let makeProgressBar = function (ele, opts = {}) {
+    return new ProgressBar.Circle(ele, {
+      duration: opts.duration || 3000,
+      strokeWidth: opts.strokeWidth || 1.1,
+      easing: opts.easing || 'easeOut',
+      trailColor: opts.trailColor || '#fafafa',
+      color: opts.color || '#ddd'
+    });
+  }
+  let numProgressBars = 1; // change to 4;
+  let pbars = [...Array(numProgressBars).keys()]
+    .map(i => makeProgressBar('#progress' + i));
+  pbars.forEach((p, i) => p.set((i + 1) * .20));
+  return pbars;
+}
+
 function replace(e) {
 
-  const { outgoing, destination, updateDelay } = state;
-
-  // isn't this always outgoing?
-
+  let { destination, updateDelay } = state;
   let { idx, displaySims, shadowSims } = e.data;
 
   let shadow = destination === 'rural' ? 'urban' : 'rural';
   let displayWord = sources[destination][idx];
   let shadowWord = sources[shadow][idx];
   let pos = sources.pos[idx];
-  let ms = Date.now() - startMs;
+  let delayMs = 1;
 
-  // pick a random similar to replace in display text
-  let displayNext = RiTa.random(displaySims);
-  history[destination][idx].push(displayNext);
-  updateDOM(displayNext, idx);
+  if (displaySims.length && shadowSims.length) {
 
-  let shadowNext = RiTa.random(shadowSims); // displaySims?
-  history[shadow][idx].push(shadowNext);
+    // pick a random similar to replace in display text
+    let displayNext = RiTa.random(displaySims);
+    history[destination][idx].push(displayNext);
+    updateDOM(displayNext, idx);
 
-  console.log(`${numMods()}) @${idx} `
-    + `${destination}: ${displayWord} -> ${displayNext}, ${shadow}: `
-    + `${shadowWord} -> ${shadowNext} [${pos}] ${ms}ms  ${Math.max(1, updateDelay - ms)}`);
+    let shadowNext = RiTa.random(shadowSims); // displaySims?
+    history[shadow][idx].push(shadowNext);
 
-  updateState();
+    updateState();
 
-  state.loopId = setTimeout(ramble, Math.max(1, updateDelay - ms));
-}
+    let ms = Date.now() - startMs;
+    delayMs = Math.max(1, updateDelay - ms);
 
+    console.log(`${numMods()}) @${idx} `
+      + `${destination}: ${displayWord} -> ${displayNext}, ${shadow}: `
+      + `${shadowWord} -> ${shadowNext} [${pos}] ${ms}ms  ${Math.max(1, updateDelay - ms)}`);
+  }
+  else {
 
-/* selects an index with which to replace a word in each text */
-/*function replaceOrig() {
-
-  const { outgoing, destination } = state;
-
-  let beingRead = state.reader ? state.reader.selection() : [];
-  let ids = repIds.filter(id => !beingRead.includes(sources[destination][id]));
-  let idx = RiTa.random(ids);
-  let pos = sources.pos[idx];
-  let startMs = +new Date();
-  let shadow = shadowTextName();
-  let displayWord = sources[destination][idx];
-  let shadowWord = sources[shadow][idx];
-
-  // get similars for both words
-  let displaySims = similars(displayWord.toLowerCase(), pos);
-  let shadowSims = similars(shadowWord.toLowerCase(), pos);
-  if (!displaySims || !shadowSims) {
-    //return; // tmp
-    throw Error('FAILED TO REPLACE: \n' + displayWord + ': ' + displaySims + '\n' + shadowWord + ': ' + shadowSims);
+    console.warn(`[FAIL] @${idx} `
+      + `${displayWord} -> ${displaySims.length}, ${shadowWord} `
+      + `-> ${shadowSims.length} [${pos}] in ${Date.now() - startMs}ms`);
   }
 
-  // pick a random similar to replace in display text
-  let displayNext = RiTa.random(displaySims);
-  history[destination][idx].push(displayNext);
-  updateDOM(displayNext, idx);
-
-  let shadowNext = RiTa.random(displaySims);
-  history[shadow][idx].push(shadowNext);
-
-  let ms = +new Date() - startMs; // tmp: for perf
-  console.log(`${numMods()}${outgoing ? ')' : ']'} @${idx} `
-    + `${destination}: ${displayWord} -> ${displayNext}, ${shadow}: `
-    + `${shadowWord} -> ${shadowNext} [${pos}] ${outgoing ? ms + 'ms' : ''}`);
-}*/
+  state.loopId = setTimeout(ramble, delayMs);
+}
 
 /* selects an index to restore (from history) in displayed text */
 function restore() {
 
-  const { outgoing, destination, updateDelay } = state;
+  let { destination, updateDelay } = state;
 
   let displayWords = unspanify();
 
@@ -200,7 +185,8 @@ function restore() {
       + `${destination}: ${word} -> ${next} [${pos}]`);
   }
   else {
-    console.warn('numMods:' + numMods(), repIds, repIds.map(i => sources[destination][i]));
+    console.warn('[WARN] Invalid-state, numMods:' + numMods(),
+      repIds, repIds.map(i => sources[destination][i]));
   }
 
   updateState();
@@ -231,28 +217,38 @@ function stop() {
   state.updating = false;
   state.reader && state.reader.stop();
   Array.from(document.querySelectorAll('.word')).forEach(e => {
-    e.classList.remove('incoming')
-    e.classList.remove('outgoing')
+    e.classList.remove('incoming');
+    e.classList.remove('outgoing');
   });
 }
 
 /* update stats in debug panel */
 function updateInfo() {
-  const { updating, destination, outgoing, legs, maxLegs } = state;
+  let { updating, destination, outgoing, legs, maxLegs } = state;
 
+  let displayWords = unspanify(); // get words
+
+  // compare visible text to each source text
+  let affinities = [
+    affinity(sources.rural, displayWords, repIds),
+    affinity(sources.urban, displayWords, repIds),
+    affinity(sources.rural, displayWords, strictRepIds),
+    affinity(sources.urban, displayWords, strictRepIds)
+  ];
+
+  // Update the #stat panel
   let data = 'Domain: ' + destination;
   data += '&nbsp;' + (updating ? (outgoing ? '⟶' : '⟵') : 'X');
-
-  let displayWords = unspanify(); // compare visible text to each source text
   data += ` &nbsp;Leg: ${legs + 1}/${maxLegs}&nbsp; Affinity:`;
-  data += ' Rural=' + affinity(sources.rural, displayWords, repIds);
-  data += ' Urban=' + affinity(sources.urban, displayWords, repIds);
-
+  data += ' Rural=' + affinities[0] + ' Urban=' + affinities[1];
   data += ' &nbsp;Strict:'; // and now in strict mode
-  data += ' Rural=' + affinity(sources.rural, displayWords, strictRepIds);
-  data += ' Urban=' + affinity(sources.urban, displayWords, strictRepIds);
+  data += ' Rural=' + affinities[2] + ' Urban=' + affinities[3];
 
   domStats.innerHTML = data;
+
+  progressBars.forEach((p, i) =>
+    p.animate(affinities[i] / 100,
+      { duration: 3000 }, () => 0/*console.log('done0')*/ ));
 }
 
 function replaceables() { // [] of replaceable indexes
@@ -271,32 +267,6 @@ function replaceables() { // [] of replaceable indexes
   return repids;
 }
 
-/*function similars(word, pos) {
-  let sims;
-  if (word in similarCache) {
-    sims = similarCache[word]; // cache
-  }
-  else {
-    let rhymes = RiTa.rhymes(word, { pos });
-    let sounds = RiTa.soundsLike(word, { pos });
-    let spells = RiTa.spellsLike(word, { pos });
-    sims = [...rhymes, ...sounds, ...spells];
-  }
- 
-  sims = sims.filter(next => isReplaceable(next)
-    && !word.includes(next) && !next.includes(word)
-    && !ignores.includes(next));
- 
-  if (sims.length > 1) {
-    similarCache[word] = sims; // store in cache
-    return sims;
-  }
- 
-  console.warn('no similars for: "' + word + '"/' + pos
-    + ((sources.rural.includes(word) || sources.rural.includes(word))
-      ? ' *** [In Source]' : ''));
-}*/
-
 function isReplaceable(word) {
   return word.length >= minWordLength && !stops.includes(word);
 }
@@ -310,7 +280,7 @@ function strictReplaceables() {
 function spanify(lines) {
   let wordIdx = 0;
   let html = lines.reduce((html, l, i) => {
-    let line = '-';
+    let line = '';
     let ypos = l.bounds[1] - l.bounds[3] / 2;
     if (l.text) {
       let words = RiTa.tokenize(l.text);
