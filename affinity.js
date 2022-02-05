@@ -5,25 +5,8 @@
   -- ? circle should split empty lines btwn top/bottom (not easy)
 */
 
-const sources = {
-  rural: ['by', 'the', 'time', 'the', 'light', 'has', 'faded', ',', 'as', 'the', 'last', 'of', 'the', 'reddish', 'gold', 'illumination', 'comes', 'to', 'rest', ',', 'then', 'imperceptibly', 'spreads', 'out', 'over', 'the', 'moss', 'and', 'floor', 'of', 'the', 'woods', 'on', 'the', 'westerly', 'facing', 'lakeside', 'slopes', ',', 'you', 'or', 'I', 'will', 'have', 'set', 'out', 'on', 'several', 'of', 'yet', 'more', 'circuits', 'at', 'every', 'time', 'and', 'in', 'all', 'directions', ',', 'before', 'or', 'after', 'this', 'or', 'that', 'circadian', ',', 'usually', 'diurnal', ',', 'event', 'on', 'mildly', 'rambling', 'familiar', 'walks', ',', 'as', 'if', 'these', 'exertions', 'might', 'be', 'journeys', 'of', 'adventure', 'whereas', 'always', 'our', 'gestures', ',', 'guided', 'by', 'paths', ',', 'are', 'also', 'more', 'like', 'traces', 'of', 'universal', 'daily', 'ritual', ':', 'just', 'before', 'or', 'with', 'the', 'dawn', ',', 'after', 'a', 'morning', 'dip', ',', 'in', 'anticipation', 'of', 'breakfast', ',', 'whenever', 'the', 'fish', 'are', 'still', 'biting', ',', 'as', 'and', 'when', 'the', 'industrious', 'creatures', 'are', 'building', 'their', 'nests', 'and', 'shelters', ',', 'after', 'our', 'own', 'trials', 'of', 'work', ',', 'while', 'the', 'birds', 'still', 'sing', ',', 'in', 'quiet', 'moments', 'after', 'lunch', ',', 'most', 'particularly', 'after', 'dinner', ',', 'at', 'sunset', ',', 'to', 'escape', ',', 'to', 'avoid', 'being', 'found', ',', 'to', 'seem', 'to', 'be', 'lost', 'right', 'here', 'in', 'this', 'place', 'where', 'you', 'or', 'I', 'have', 'always', 'wanted', 'to', 'be', 'and', 'where', 'we', 'might', 'sometimes', 'now', 'or', 'then', 'have', 'discovered', 'some', 'singular', 'hidden', 'beauty', ',', 'or', 'one', 'another', ',', 'or', 'stumbled', 'and', 'injured', 'ourselves', 'beyond', 'the', 'hearing', 'and', 'call', 'of', 'other', 'voices', ',', 'or', 'met', 'with', 'other', 'danger', ',', 'animal', 'or', 'inhuman', ',', 'the', 'one', 'tearing', 'and', 'rending', 'and', 'opening', 'up', 'the', 'darkness', 'within', 'us', 'to', 'bleed', ',', 'yet', 'we', 'suppress', 'any', 'sound', 'that', 'might', 'have', 'expressed', 'the', 'terror', 'and', 'passion', 'and', 'horror', 'and', 'pain', 'so', 'that', 'I', 'or', 'you', 'may', 'continue', 'on', 'this', 'ramble', ',', 'this', 'before', 'or', 'after', 'walk', ',', 'and', 'still', 'return', ';', 'or', 'the', 'other', ',', 'the', 'quiet', 'evacuation', 'of', 'the', 'light', ',', 'the', 'way', ',', 'as', 'we', 'have', 'kept', 'on', 'walking', ',', 'it', 'falls', 'on', 'us', 'and', 'removes', 'us', 'from', 'existence', 'since', 'in', 'any', 'case', 'we', 'are', 'all', 'but', 'never', 'there', ',', 'always', 'merely', 'passing', 'through', 'and', 'by', 'and', 'over', 'the', 'moss', ',', 'under', 'the', 'limbs', 'of', 'the', 'evergreens', ',', 'beside', 'the', 'lake', ',', 'within', 'the', 'sound', 'of', 'its', 'lapping', 'waves', ',', 'annihilated', ',', 'gone', ',', 'quite', 'gone', ',', 'now', 'simply', 'gone', 'and', ',', 'in', 'being', 'or', 'walking', 'in', 'these', 'ways', ',', 'giving', 'up', 'all', 'living', 'light', 'for', 'settled', ',', 'hearth', 'held', 'fire', 'in', 'its', 'place', ',', 'returned'],
-  urban: ['by', 'the', 'time', 'the', 'light', 'has', 'faded', ',', 'as', 'the', 'last', 'of', 'the', 'reddish', 'gold', 'illumination', 'comes', 'to', 'rest', ',', 'then', 'imperceptibly', 'spreads', 'out', 'over', 'the', 'dust', 'and', 'rubble', 'of', 'the', 'craters', 'on', 'the', 'easterly', 'facing', 'bankside', 'heights', ',', 'you', 'or', 'I', 'will', 'have', 'rushed', 'out', 'on', 'several', 'of', 'yet', 'more', 'circuits', 'at', 'every', 'time', 'and', 'in', 'all', 'directions', ',', 'before', 'or', 'after', 'this', 'or', 'that', 'violent', ',', 'usually', 'nocturnal', ',', 'event', 'on', 'desperately', 'hurried', 'unfamiliar', 'flights', ',', 'as', 'if', 'these', 'panics', 'might', 'be', 'movements', 'of', 'desire', 'whereas', 'always', 'our', 'gestures', ',', 'constrained', 'by', 'obstacles', ',', 'are', 'also', 'more', 'like', 'scars', 'of', 'universal', 'daily', 'terror', ':', 'just', 'before', 'or', 'with', 'the', 'dawn', ',', 'after', 'a', 'morning', 'prayer', ',', 'in', 'anticipation', 'of', 'hunger', ',', 'while', 'the', 'neighbors', 'are', 'still', 'breathing', ',', 'as', 'and', 'when', 'the', 'diligent', 'authorities', 'are', 'marshaling', 'their', 'cronies', 'and', 'thugs', ',', 'after', 'our', 'own', 'trials', 'of', 'loss', ',', 'while', 'the', 'mortars', 'still', 'fall', ',', 'in', 'quiet', 'moments', 'after', 'shock', ',', 'most', 'particularly', 'after', 'curfew', ',', 'at', 'sunset', ',', 'to', 'escape', ',', 'to', 'avoid', 'being', 'found', ',', 'to', 'seem', 'to', 'be', 'lost', 'right', 'here', 'in', 'this', 'place', 'where', 'you', 'or', 'I', 'have', 'always', 'wanted', 'to', 'be', 'and', 'where', 'we', 'might', 'sometimes', 'now', 'or', 'then', 'have', 'discovered', 'some', 'singular', 'hidden', 'beauty', ',', 'or', 'one', 'another', ',', 'or', 'stumbled', 'and', 'injured', 'ourselves', 'beyond', 'the', 'hearing', 'and', 'call', 'of', 'other', 'voices', ',', 'or', 'met', 'with', 'other', 'danger', ',', 'venal', 'or', 'military', ',', 'the', 'one', 'tearing', 'and', 'rending', 'and', 'opening', 'up', 'the', 'darkness', 'within', 'us', 'to', 'bleed', ',', 'yet', 'we', 'suppress', 'any', 'sound', 'that', 'might', 'have', 'expressed', 'the', 'terror', 'and', 'longing', 'and', 'horror', 'and', 'pain', 'so', 'that', 'I', 'or', 'you', 'may', 'continue', 'on', 'this', 'expedition', ',', 'this', 'before', 'or', 'after', 'assault', ',', 'and', 'still', 'return', ';', 'or', 'the', 'other', ',', 'the', 'quiet', 'evacuation', 'of', 'the', 'light', ',', 'the', 'way', ',', 'as', 'we', 'have', 'kept', 'on', 'struggling', ',', 'it', 'falls', 'on', 'us', 'and', 'removes', 'us', 'from', 'existence', 'since', 'in', 'any', 'case', 'we', 'are', 'all', 'but', 'never', 'there', ',', 'always', 'merely', 'passing', 'through', 'and', 'by', 'and', 'over', 'the', 'dust', ',', 'within', 'the', 'shadows', 'of', 'our', 'ruins', ',', 'beneath', 'the', 'wall', ',', 'within', 'the', 'razor', 'of', 'its', 'coiled', 'wire', ',', 'annihilated', ',', 'gone', ',', 'quite', 'gone', ',', 'now', 'simply', 'gone', 'and', ',', 'in', 'being', 'or', 'advancing', 'in', 'these', 'ways', ',', 'giving', 'up', 'all', 'living', 'light', 'for', 'unsettled', ',', 'heart', 'felt', 'fire', 'in', 'our', 'veins', ',', 'exiled'],
-  pos: ['in', 'dt', 'nn', 'dt', 'jj', 'vbz', 'vbn', ',', 'in', 'dt', 'jj', 'in', 'dt', 'jj', 'jj', 'nn', 'vbz', 'to', 'nn', ',', 'rb', 'rb', 'nns', 'in', 'in', 'dt', 'nn', 'cc', 'nn', 'in', 'dt', 'nns', 'in', 'dt', 'rb', 'vbg', 'nn', 'vbz', ',', 'prp', 'cc', 'prp', 'md', 'vbp', 'vbn', 'in', 'in', 'jj', 'in', 'rb', 'jjr', 'nns', 'in', 'dt', 'nn', 'cc', 'in', 'dt', 'nns', ',', 'in', 'cc', 'in', 'dt', 'cc', 'in', 'nn', ',', 'rb', 'jj', ',', 'nn', 'in', 'rb', 'jj', 'jj', 'nns', ',', 'in', 'in', 'dt', 'nns', 'md', 'vb', 'nns', 'in', 'nn', 'in', 'rb', 'prp$', 'nns', ',', 'vbn', 'in', 'nns', ',', 'vbp', 'rb', 'jjr', 'vb', 'nns', 'in', 'jj', 'rb', 'jj', ':', 'rb', 'in', 'cc', 'in', 'dt', 'nn', ',', 'in', 'dt', 'nn', 'nn', ',', 'in', 'nn', 'in', 'nn', ',', 'wrb', 'dt', 'nns', 'vbp', 'rb', 'vbg', ',', 'in', 'cc', 'wrb', 'dt', 'jj', 'nns', 'vbp', 'vbg', 'prp$', 'nns', 'cc', 'vbz', ',', 'in', 'prp$', 'jj', 'nns', 'in', 'nn', ',', 'in', 'dt', 'nns', 'rb', 'vb', ',', 'in', 'jj', 'nns', 'in', 'nn', ',', 'rbs', 'rb', 'in', 'nn', ',', 'in', 'nn', ',', 'to', 'vb', ',', 'to', 'vb', 'vbg', 'vbd', ',', 'to', 'vb', 'to', 'vb', 'vbd', 'jj', 'rb', 'in', 'dt', 'nn', 'wrb', 'prp', 'cc', 'prp', 'vbp', 'rb', 'vbd', 'to', 'vb', 'cc', 'wrb', 'prp', 'md', 'rb', 'rb', 'cc', 'rb', 'vbp', 'vbn', 'dt', 'jj', 'vbn', 'nn', ',', 'cc', 'cd', 'dt', ',', 'cc', 'vbd', 'cc', 'vbn', 'prp', 'in', 'dt', 'vbg', 'cc', 'vb', 'in', 'jj', 'nns', ',', 'cc', 'vbd', 'in', 'jj', 'nn', ',', 'jj', 'cc', 'jj', ',', 'dt', 'cd', 'vbg', 'cc', 'nn', 'cc', 'vbg', 'in', 'dt', 'nn', 'in', 'prp', 'to', 'vb', ',', 'rb', 'prp', 'vbp', 'dt', 'jj', 'in', 'md', 'vbp', 'vbn', 'dt', 'nn', 'cc', 'nn', 'cc', 'nn', 'cc', 'nn', 'rb', 'in', 'prp', 'cc', 'prp', 'md', 'vb', 'in', 'dt', 'nn', ',', 'dt', 'in', 'cc', 'in', 'vb', ',', 'cc', 'rb', 'jj', ';', 'cc', 'dt', 'jj', ',', 'dt', 'jj', 'nn', 'in', 'dt', 'jj', ',', 'dt', 'nn', ',', 'in', 'prp', 'vbp', 'vbd', 'in', 'vbg', ',', 'prp', 'vbz', 'in', 'prp', 'cc', 'vbz', 'prp', 'in', 'nn', 'in', 'in', 'dt', 'nn', 'prp', 'vbp', 'dt', 'cc', 'rb', 'rb', ',', 'rb', 'rb', 'vbg', 'in', 'cc', 'in', 'cc', 'in', 'dt', 'nn', ',', 'in', 'dt', 'nns', 'in', 'dt', 'nns', ',', 'in', 'dt', 'nn', ',', 'in', 'dt', 'jj', 'in', 'prp$', 'nn', 'vbz', ',', 'vbd', ',', 'vbn', ',', 'rb', 'vbn', ',', 'rb', 'rb', 'vbn', 'cc', ',', 'in', 'vbg', 'cc', 'vbg', 'in', 'dt', 'nns', ',', 'vbg', 'in', 'dt', 'vbg', 'jj', 'in', 'vbd', ',', 'nn', 'vbn', 'nn', 'in', 'prp$', 'nn', ',', 'vbd']
-};
-
-const similarCache = { // tmp-delete
-  avoid: ['elude', 'escape', 'evade'],
-  neighbors: ['brothers', 'brethren', 'fellows'],
-  inhuman: ['grievous', 'grim', 'hard', 'heavy', 'onerous', 'oppressive', 'rough', 'rugged', 'severe', 'austere', ' inclement', 'intemperate'],
-  sometimes: ['occasionally', 'intermittently', 'periodically', 'recurrently', 'infrequently', 'rarely', 'irregularly', 'sporadically', 'variously'],
-  adventure: ['experience', 'exploit', 'occasion', 'ordeal', 'venture', 'expedition', 'mission'],
-  unfamiliar: ['unconventional', 'pioneering', 'unaccustomed', ' unprecedented'],
-}; const ignores = ["jerkies", "nary", "outta", "copras", "accomplis", "scad", "silly", "saris", "coca", "durn", "geed", "goted", "denture", "wales"];
-
-const minWordLength = 4;
 const domStats = document.querySelector('#stats');
 const domDisplay = document.querySelector('#display');
-const stops = ["also", "over", "have", "this", "that", "just", "then", "under", "some", /* added: DCH */ "their", "when", "these", "within", "after", "with", "there", "where", "while", "from", "whenever", "every", /* added: DCH, from 'urban' to sync number of replaceable indexes in each text*/ "rushed", "prayer"];
 const repIds = replaceables();
 const strictRepIds = strictReplaceables();
 const history = { rural: [], urban: [] };
@@ -44,8 +27,8 @@ const state = {
   stepDebug: false,
   outgoing: true,
   updating: true,
-  maxSteps: 50,
-  maxLegs: 20,
+  maxSteps: 5, // 50
+  maxLegs: 2, // 20
   reader: 0,
   loopId: 0,
   legs: 0
@@ -69,7 +52,7 @@ ramble(spans);
 
 function ramble(spans) {
 
-  const { updating, outgoing, destination, updateDelay } = state;
+  const { updating, outgoing, destination } = state;
 
   if (!state.reader) {
     state.reader = new Reader(spans);
@@ -78,9 +61,10 @@ function ramble(spans) {
   if (updating) {
     if (outgoing) {
       // tell worker to do similar search
-      let idx = RiTa.random(repIds.filter(
-        id => !state.reader.selection().includes(sources[destination][id])));
-      worker.postMessage({ idx, sources, destination, isReplaceable, time: Date.now() });
+      let idx = RiTa.random(repIds.filter(id =>
+        !state.reader.selection().includes(sources[destination][id])));
+      startMs = Date.now();
+      worker.postMessage({ idx, destination });
       // worker calls replace() when done
     }
     else {
@@ -119,10 +103,15 @@ function replace(e) {
 
   const { outgoing, destination, updateDelay } = state;
 
-  let { idx, displaySims, shadowSims, time } = e.data;
+  // isn't this always outgoing?
+
+  let { idx, displaySims, shadowSims } = e.data;
+
+  let shadow = destination === 'rural' ? 'urban' : 'rural';
   let displayWord = sources[destination][idx];
   let shadowWord = sources[shadow][idx];
   let pos = sources.pos[idx];
+  let ms = Date.now() - startMs;
 
   // pick a random similar to replace in display text
   let displayNext = RiTa.random(displaySims);
@@ -132,17 +121,18 @@ function replace(e) {
   let shadowNext = RiTa.random(shadowSims); // displaySims?
   history[shadow][idx].push(shadowNext);
 
-  console.log(`${numMods()}${outgoing ? ')' : ']'} @${idx} `
+  console.log(`${numMods()}) @${idx} `
     + `${destination}: ${displayWord} -> ${displayNext}, ${shadow}: `
-    + `${shadowWord} -> ${shadowNext} [${pos}] ${outgoing ? ms + 'ms' : ''}`);
+    + `${shadowWord} -> ${shadowNext} [${pos}] ${ms}ms  ${Math.max(1, updateDelay - ms)}`);
 
   updateState();
-  setTimeout(ramble, Math.max(1, updateDelay - (Date.now - time)));
+
+  state.loopId = setTimeout(ramble, Math.max(1, updateDelay - ms));
 }
 
 
 /* selects an index with which to replace a word in each text */
-function replaceOrig() {
+/*function replaceOrig() {
 
   const { outgoing, destination } = state;
 
@@ -175,12 +165,12 @@ function replaceOrig() {
   console.log(`${numMods()}${outgoing ? ')' : ']'} @${idx} `
     + `${destination}: ${displayWord} -> ${displayNext}, ${shadow}: `
     + `${shadowWord} -> ${shadowNext} [${pos}] ${outgoing ? ms + 'ms' : ''}`);
-}
+}*/
 
 /* selects an index to restore (from history) in displayed text */
 function restore() {
 
-  const { outgoing, destination } = state;
+  const { outgoing, destination, updateDelay } = state;
 
   let displayWords = unspanify();
 
@@ -190,23 +180,32 @@ function restore() {
     .filter(({ word, idx }) => history[destination][idx].length > 1
       && isReplaceable(word));
 
-  // pick a changed word to step back
-  let { word, idx } = RiTa.random(choices);
-  let pos = sources.pos[idx];
-  let hist = history[destination][idx];
+  if (choices.length) {
 
-  // select newest from history
-  hist.pop();
-  let next = hist[hist.length - 1];
+    // pick a changed word to step back
+    let { word, idx } = RiTa.random(choices);
+    let pos = sources.pos[idx];
+    let hist = history[destination][idx];
 
-  history[shadowTextName()][idx].pop(); // stay in sync?
+    // select newest from history
+    hist.pop();
+    let next = hist[hist.length - 1];
 
-  // do replacement
-  updateDOM(next, idx);
+    history[shadowTextName()][idx].pop(); // stay in sync?
 
-  console.log(`${numMods()}${outgoing ? ')' : ']'} @${idx} `
-    + `${destination}: ${word} -> ${next} [${pos}]`
-    + ` ${outgoing ? ms + 'ms' : ''}`);
+    // do replacement
+    updateDOM(next, idx);
+
+    console.log(`${numMods()}] @${idx} `
+      + `${destination}: ${word} -> ${next} [${pos}]`);
+  }
+  else {
+    console.warn('numMods:' + numMods(), repIds, repIds.map(i => sources[destination][i]));
+  }
+
+  updateState();
+
+  state.loopId = setTimeout(ramble, updateDelay);
 }
 
 /* compute the affinity over 2 text arrays for a set of word-ids */
@@ -231,6 +230,10 @@ function stop() {
   clearTimeout(state.loopId);
   state.updating = false;
   state.reader && state.reader.stop();
+  Array.from(document.querySelectorAll('.word')).forEach(e => {
+    e.classList.remove('incoming')
+    e.classList.remove('outgoing')
+  });
 }
 
 /* update stats in debug panel */
@@ -268,7 +271,7 @@ function replaceables() { // [] of replaceable indexes
   return repids;
 }
 
-function similars(word, pos) {
+/*function similars(word, pos) {
   let sims;
   if (word in similarCache) {
     sims = similarCache[word]; // cache
@@ -279,20 +282,20 @@ function similars(word, pos) {
     let spells = RiTa.spellsLike(word, { pos });
     sims = [...rhymes, ...sounds, ...spells];
   }
-
+ 
   sims = sims.filter(next => isReplaceable(next)
     && !word.includes(next) && !next.includes(word)
     && !ignores.includes(next));
-
+ 
   if (sims.length > 1) {
     similarCache[word] = sims; // store in cache
     return sims;
   }
-
+ 
   console.warn('no similars for: "' + word + '"/' + pos
     + ((sources.rural.includes(word) || sources.rural.includes(word))
       ? ' *** [In Source]' : ''));
-}
+}*/
 
 function isReplaceable(word) {
   return word.length >= minWordLength && !stops.includes(word);
@@ -341,12 +344,7 @@ function shadowTextName() {
 
 function updateDOM(next, idx) {
   const ele = document.querySelector(`#w${idx}`);
-  if (!ele) { // shouldn't happen
-    console.log(stop());
-    throw Error(`no node for #w${idx} -> ${next}`);
-  }
   ele.textContent = next;
-  //ele.style.backgroundColor = state.outgoing ? '#fbb' : '#bbf';
   ele.classList.add(state.outgoing ? 'outgoing' : 'incoming');
 }
 

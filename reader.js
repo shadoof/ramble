@@ -23,9 +23,9 @@ class Reader {
     let delayTime = this.timeToRead(this.spans[this.index].textContent);
     this.spans.forEach(e => e.classList.remove('visible'));
     this.selection().forEach(e => {
-      e.classList.add('visible');
-      e.classList.remove('outgoing'); // reset color
-      e.classList.remove('incoming'); // reset color
+      e.classList.remove('outgoing'); // remove color
+      e.classList.remove('incoming'); // remove color
+      e.classList.add('visible'); // add dark color
     });
     this.index = (this.index + 1) % this.spans.length;
     this.timeoutId = setTimeout(() => this.step(), delayTime);
@@ -34,6 +34,7 @@ class Reader {
   stop() {
     this.reading = false;
     clearTimeout(this.timeoutId);
+    this.spans.forEach(e => e.classList.remove('visible'));
   }
 
   timeToRead(word, basetime = 150) {

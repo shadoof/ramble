@@ -57,11 +57,11 @@
         .word {
             opacity: .3;
             transition: opacity .5s ease-in-out;
+            transition: background-color .5s linear;
         }
 
         .word.visible {
             opacity: 1;
-            /* background: none; */
         }
 
         .word.outgoing {
@@ -75,9 +75,6 @@
 </head>
 
 <body>
-    <!-- <div id="stats" class="container">&nbsp;</div>
-    <div id="display" class="container"></div> -->
-
     <div id="container">
         <div id="display">
         </div>
@@ -86,6 +83,7 @@
         <div id="stats">&nbsp;</div>
     </div>
     <script src="circle-layout.js"></script>
+    <script src="shared.js"></script>
     <script src="reader.js"></script>
     <script src="affinity.js"></script>
 </body>
