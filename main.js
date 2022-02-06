@@ -1,9 +1,3 @@
-
-/* NEXT: 
-  -- CSS: 
-  -- circle should split empty lines btwn top/bottom (?diff)
-*/
-
 const repIds = replaceables();
 const strictRepIds = strictReplaceables(repIds);
 const history = { rural: [], urban: [] };
@@ -17,10 +11,6 @@ let cy = displayBounds.y + displayBounds.height / 2;
 let cx = displayBounds.x + displayBounds.width / 2;
 let radius = displayBounds.width / 2;
 let displaySims, shadowSims, worker;
-
-// setup history and click handler
-Object.keys(history).map(k => sources[k].map((w, i) => history[k][i] = [w]));
-document.querySelector('#container').onclick = stop;
 
 const state = {
   destination: 'rural',
@@ -37,12 +27,18 @@ const state = {
 
 ////////////////////////////////////////////////////////
 
+// setup history and click handler
+Object.keys(history).map(k => sources[k].map((w, i) => history[k][i] = [w]));
+document.querySelector('#container').onclick = stop;
+
+// layout lines in circular display
 let opts = { xOffset: cx, yOffset: cy, padding: 0, font, fontSize: 22.55, lineHeightScale: 1.28 };
 let lines = circleLayout(sources[state.destination], radius, opts);
 // let lines = bestCircleLayout(sources[state.destination], radius, opts);
 // console.log(JSON.stringify(lines));
 let spans = spanify(lines);
-ramble(spans);
+
+ramble(spans); // go
 
 /////////////////////////////////////////////////////////
 
