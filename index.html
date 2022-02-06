@@ -4,98 +4,8 @@
 <head>
     <script src="lib/rita.js"></script>
     <script src="lib/progressbar.js"></script>
+    <link rel="stylesheet" href="style.css">
     <meta charset="utf-8">
-    <style>
-        #container {
-            width: 910px;
-            height: 910px;
-            position: absolute;
-        }
-
-        #stats {
-            font-size: 14px;
-            font-family: "lucida console", monospace;
-            line-height: 1.5;
-            color: #697486;
-            border: solid #eee;
-            border-width: thin;
-            padding: 5px;
-            padding-left: 15px;
-            margin: 1%;
-            margin-top: 35px;
-            max-width: 98%;
-            text-align: center;
-        }
-
-        .progress {
-            position: absolute;
-        }
-
-        #progress0 {
-            height: 100%;
-            width: 100%;
-            top: 0;
-            left: 0;
-        }
-
-        #progress1 {
-            height: 100%;
-            width: 100%;
-            top: 0;
-            left: 0;
-        }
-
-        #progress2 {
-            height: 100%;
-            width: 100%;
-            top: 0;
-            left: 0;
-        }
-
-        #progress3 {
-            height: 100%;
-            width: 100%;
-            top: 0;
-            left: 0;
-        }
-
-        #display {
-            height: 98%;
-            width: 98%;
-            margin: 1%;
-            border-radius: 50%;
-            background: #eee;
-            /* background: linear-gradient(135deg, #a7cfdf 0%, #275d9b 100%);
-            box-shadow: inset -8px -7px 4px 0px rgba(0, 0, 0, 0.3);  */
-            position: relative;
-            font-family: "Source Serif Pro", Iowan Old Style, Apple Garamond, Palatino Linotype, Times New Roman, "Droid Serif", Times, serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol;
-        }
-
-        .line {
-            width: 100%;
-            position: absolute;
-            text-align: center;
-            white-space: nowrap;
-        }
-
-        .word {
-            opacity: .3;
-            transition: opacity .5s ease-in-out;
-            transition: background-color .5s linear;
-        }
-
-        .word.visible {
-            opacity: 1;
-        }
-
-        .word.outgoing {
-            background-color: #fbb;
-        }
-
-        .word.incoming {
-            background-color: #bbf;
-        }
-    </style>
 </head>
 
 <body>
@@ -112,7 +22,7 @@
     <script src="circle-layout.js"></script>
     <script src="shared.js"></script>
     <script src="reader.js"></script>
-    <script src="affinity.js"></script>
+    <script src="main.js"></script>
 </body>
 
 </html>
