@@ -16,7 +16,7 @@ let displayBounds = domDisplay.getBoundingClientRect();
 let cy = displayBounds.y + displayBounds.height / 2;
 let cx = displayBounds.x + displayBounds.width / 2;
 let radius = displayBounds.width / 2;
-let displaySims, shadowSims;
+let displaySims, shadowSims, worker;
 
 // setup history and click handler
 Object.keys(history).map(k => sources[k].map((w, i) => history[k][i] = [w]));
@@ -37,12 +37,11 @@ const state = {
 
 ////////////////////////////////////////////////////////
 
-let opts = { xOffset: cx, yOffset: cy, padding: 40, font, fontSize: 21.335 };
+let opts = { xOffset: cx, yOffset: cy, padding: 0, font, fontSize: 22.55, lineHeightScale: 1.28 };
 let lines = circleLayout(sources[state.destination], radius, opts);
-//let lines = bestCircleLayout(sources[state.destination], radius, opts);
+// let lines = bestCircleLayout(sources[state.destination], radius, opts);
+// console.log(JSON.stringify(lines));
 let spans = spanify(lines);
-let worker = new Worker("similars.js");
-worker.onmessage = replace;
 ramble(spans);
 
 /////////////////////////////////////////////////////////
@@ -54,6 +53,10 @@ function ramble(spans) {
   if (!state.reader) {
     state.reader = new Reader(spans);
     state.reader.start();
+  }
+  if (!worker) {
+    worker = new Worker("similars.js");
+    worker.onmessage = replace;
   }
   if (updating) {
     if (outgoing) {
@@ -217,11 +220,12 @@ function stop() {
   clearTimeout(state.loopId);
   state.updating = false;
   state.reader && state.reader.stop();
-  Array.from(document.querySelectorAll('.word')).forEach(e => {
-    e.classList.remove('incoming');
-    e.classList.remove('outgoing');
-  });
-  console.log('stopped');
+  setTimeout(_ =>
+    Array.from(document.querySelectorAll('.word')).forEach(e => {
+      e.classList.remove('incoming');
+      e.classList.remove('outgoing');
+    }), 1000);
+  console.log('done');
 }
 
 /* update stats in debug panel */
@@ -250,7 +254,7 @@ function updateInfo() {
 
   progressBars.forEach((p, i) =>
     p.animate(affinities[i] / 100,
-      { duration: 3000 }, () => 0/*console.log('done0')*/ ));
+      { duration: 3000 }, () => 0/*console.log('done0')*/));
 }
 
 function replaceables() { // [] of replaceable indexes

@@ -5,14 +5,17 @@ function circleLayout(words, radius, opts = {}) {
   let padding = opts.padding || 0;
   let fontName = opts.font || 'sans-serif';
   let fontSize = opts.fontSize || 10;
-  
-  let result = fitToLineWidths(cx, cy, radius - padding, words, fontSize, fontName);
-  
+  let lineHeightScale = opts.lineHeightScale || 1.3;
+  let lineHeight = opts.lineHeight || opts.fontSize * lineHeightScale;
+
+  let result = fitToLineWidths
+    (cx, cy, radius - padding, words, fontSize, lineHeight, fontName);
+
   let excess = result.words.length;
   let blanks = result.text.filter(t => t.length <= 1).length;
   if (blanks > 2) console.warn('[WARN] ' + blanks + ' blank lines');
   if (excess) console.warn('[WARN] ' + excess + ' words not included');
-  
+
   return result.rects.map((r, i) => ({ fontSize, bounds: r, text: result.text[i] }));
 }
 
@@ -22,23 +25,26 @@ function bestCircleLayout(words, radius, opts = {}) {
   let cy = opts.yOffset || 0;
   let padding = opts.padding || 0;
   let fontName = opts.font || 'sans-serif';
+  let lineHeightScale = opts.lineHeightScale || 1.2;
 
   radius -= padding;
   let fontSize = radius / 4, result;
   do {
     fontSize *= .99;
-    result = fitToLineWidths(cx, cy, radius, words, fontSize, fontName);
+    result = fitToLineWidths
+      (cx, cy, radius, words, fontSize, fontSize * lineHeightScale, fontName);
   }
   while (result.words.length);
+
   console.log('Computed fontSize:', fontSize);
 
   return result.rects.map((r, i) => ({ fontSize, bounds: r, text: result.text[i] }));
 }
 
-function fitToLineWidths(cx, cy, radius, words, fontSize, fontName = 'sans-serif') {
+function fitToLineWidths(cx, cy, radius, words, fontSize, lineHeight, fontName = 'sans-serif') {
   //console.log('fitToLineWidths', fontSize);
-  let tokens = words.slice(), lh = fontSize * 1.2;
-  let text = [], rects = lineWidths(cx, cy, radius, lh);
+  let tokens = words.slice();
+  let text = [], rects = lineWidths(cx, cy, radius, lineHeight);
   rects.forEach(([x, y, w, h], i) => {
     let data = fitToBox(tokens, w, fontSize, fontName);
     if (!data) { // fail to fit any words
@@ -48,8 +54,24 @@ function fitToLineWidths(cx, cy, radius, words, fontSize, fontName = 'sans-serif
     text.push(data.text);
     tokens = data.words;
   });
-  if (rects.length !== text.length) throw Error('mismatch in fitToLineWidths')//tmp
   return { text, rects, words: tokens };
+}
+
+function lineWidths(cx, cy, r, lh) {
+  //console.log('lineWidths', cx, cy, r, lh);
+  let result = [];
+  let num = Math.floor((r * 2) / lh);
+  for (let i = 0; i < num; i++) {
+    let d = (i + 1) * lh - lh / 3; // ?
+    let cl = chordLength(r, d > r ? d + lh : d);
+    let x = cx - cl / 2;
+    let y = cy - (r - d);
+    if (cl) {
+      //console.log(i, d, d > r, cl);
+      result.push([x, y, cl, lh]);
+    }
+  }
+  return result;
 }
 
 function fitToBox(words, width, fontSize, fontName = 'sans-serif') {
@@ -76,23 +98,6 @@ function fitToBox(words, width, fontSize, fontName = 'sans-serif') {
   return {
     words, text: RiTa.untokenize((line.text || '').split(' ')),
   };
-}
-
-function lineWidths(cx, cy, r, lh) {
-  //console.log('lineWidths', cx, cy, r, lh);
-  let result = [];
-  let num = Math.floor((r * 2) / lh);
-  for (let i = 0; i < num; i++) {
-    let d = (i + 1) * lh - lh / 3; // ?
-    let cl = chordLength(r, d > r ? d + lh : d);
-    let x = cx - cl / 2;
-    let y = cy - (r - d);
-    if (cl) {
-      //console.log(i, d, d > r, cl);
-      result.push([x, y, cl, lh]);
-    }
-  }
-  return result;
 }
 
 // at distance 'd' from top of circle with radius 'rad'
