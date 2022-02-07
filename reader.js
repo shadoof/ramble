@@ -33,8 +33,10 @@ class Reader {
 
   timeToRead(word, basetime = 150) {
     const syltime = basetime / 2; // most significant accumulator: these ms per syllable
+    if (digitsRE.test(word)) return basetime + word.length * syltime; // word is all number
     if (!RiTa.isPunct(word)) {
-      let syls = RiTa.syllables(word); // array of syllables
+      // the following handles 'word's such as "well-illustrated"
+      let syls = RiTa.syllables(word.replaceAll(hyphensRE, " ")).replaceAll(" ", "/");
       let time = basetime + syls.split('/').length * syltime; // syls * basic unit
       time += syls.split(splitRE).length * (syltime / 12); // add 1/12 of a syltime for each phoneme
       time += word.match(punctRE) ? basetime : 0; // add basetime to a punctuated word
@@ -45,4 +47,4 @@ class Reader {
   }
 }
 
-const endsRE = /[.?!]/, punctRE = /[,;:—]/, splitRE = /[\/-]/;
+const endsRE = /[.?!]$/, punctRE = /[,;:—]$/, hyphensRE = /[-–—]/g, splitRE = /[\/-]/, digitsRE = /^\d*[\d+.:,]*\d+$/;
