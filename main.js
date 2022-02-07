@@ -21,7 +21,7 @@ const state = {
   outgoing: true,
   updating: true,
   maxSteps: 50,
-  maxLegs: 20,
+  maxLegs: 10,
   reader: 0,
   loopId: 0,
   legs: 0
@@ -37,7 +37,6 @@ document.querySelector('#container').onclick = stop;
 let opts = { offset, font, fontSize: 22.55, lineHeightScale: 1.28 };
 let lines = circleLayout(sources[state.destination], radius, opts);
 let spans = spanify(lines);
-
 ramble(spans); // go
 
 /////////////////////////////////////////////////////////
@@ -117,6 +116,14 @@ function replace(e) {
   let { destination, updateDelay } = state;
   let { idx, displaySims, shadowSims } = e.data;
 
+  if (idx === -1) {
+    let cache = e.data.similarCache;
+    console.log('writing preload.js [' + Object.keys(cache).length + ']');
+    let data = `similarCache=${JSON.stringify()};`;
+    download(data, 'preload.js', 'text');
+    return;
+  }
+
   let shadow = destination === 'rural' ? 'urban' : 'rural';
   let displayWord = sources[destination][idx];
   let shadowWord = sources[shadow][idx];
@@ -140,13 +147,13 @@ function replace(e) {
 
     console.log(`${numMods()}) @${idx} `
       + `${destination}: ${displayWord} -> ${displayNext}, ${shadow}: `
-      + `${shadowWord} -> ${shadowNext} [${pos}] ${ms}ms  ${Math.max(1, updateDelay - ms)}`);
+      + `${shadowWord} -> ${shadowNext} [${pos}] ${ms}ms  ${Math.max(1, updateDelay - ms)} `);
   }
   else {
 
     console.warn(`[FAIL] @${idx} `
       + `${displayWord} -> ${displaySims.length}, ${shadowWord} `
-      + `-> ${shadowSims.length} [${pos}] in ${Date.now() - startMs}ms`);
+      + `-> ${shadowSims.length} [${pos}] in ${Date.now() - startMs} ms`);
   }
 
   state.loopId = setTimeout(ramble, delayMs);
@@ -185,8 +192,13 @@ function restore() {
       + `${destination}: ${word} -> ${next} [${pos}]`);
   }
   else {
-    console.warn('[WARN] Invalid-state, numMods:' + numMods(),
-      repIds, repIds.map(i => sources[destination][i]));
+    let id = repIds.find(idx => history[destination][idx].length > 1);
+    let wrd = sources[destination][id];
+    let hst = history[destination][id];
+    console.warn('[WARN] Invalid-state, numMods:'
+      + numMods() + ' idx=' + id + '/' + wrd + ' history=', hst);
+    stop();
+    return
   }
 
   updateState();
@@ -222,6 +234,7 @@ function stop() {
       e.classList.remove('outgoing');
     }), 1000);
   console.log('done');
+  worker.postMessage({ idx: 0, destination: 0 });
 }
 
 /* update stats in debug panel */
@@ -241,7 +254,7 @@ function updateInfo() {
   // Update the #stat panel
   let data = 'Domain: ' + destination;
   data += '&nbsp;' + (updating ? (outgoing ? '⟶' : '⟵') : 'X');
-  data += ` &nbsp;Leg: ${legs + 1}/${maxLegs}&nbsp; Affinity:`;
+  data += ` &nbsp; Leg: ${legs + 1} /${maxLegs}&nbsp; Affinity:`;
   data += ' Rural=' + affinities[0] + ' Urban=' + affinities[1];
   data += ' &nbsp;Strict:'; // and now in strict mode
   data += ' Rural=' + affinities[2] + ' Urban=' + affinities[3];
@@ -280,27 +293,28 @@ function strictReplaceables() {
 }
 
 function spanify(lines) {
-  let wordIdx = 0;
-  let html = lines.reduce((html, l, i) => {
-    let line = '';
-    let ypos = l.bounds[1] - l.bounds[3] / 2;
+  let html, wordIdx = 0;
+  html = htmlSpans || lines.reduce((html, l, i) => {
+    let line = '', ypos = l.bounds[1] - l.bounds[3] / 2;
     if (l.text) {
       let words = RiTa.tokenize(l.text);
       line = words.reduce((line, word, j) => {
         return line +
           `<span id="w${wordIdx++}" class="word">${word}</span>`
           + (j < words.length - 1 && RiTa.isPunct(words[j + 1]) ? '' : ' ');
-
       }, '');
     }
     return html + `<div id="l${i}"class="line" style="top: ${ypos}px;`
       + ` font-size:${l.fontSize}px;">${line}</div>`;
   }, '');
+
   domDisplay.innerHTML = html;
 
   let spans = document.getElementsByClassName("word"); // double-check
   if (spans.length != sources[state.destination].length) throw Error
     ('Invalid spanify: ' + spans.length + '!==' + sources[state.destination].length);
+
+  if (htmlSpans) console.warn(`[WARN] using cached spans [${spans.length}]`);
 
   return spans;
 }

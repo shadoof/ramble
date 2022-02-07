@@ -1,5 +1,6 @@
 
 function circleLayout(words, radius, opts = {}) {
+
   let offset = opts.offset || { x: 0, y: 0 };
   let padding = opts.padding || 0;
   let fontName = opts.font || 'sans-serif';
