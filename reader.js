@@ -1,9 +1,9 @@
 class Reader {
 
-  constructor(element) {
+  constructor(elements) {
     this.index = 0;
     this.reading = false;
-    this.spans = Array.from(element.children);
+    this.spans = Array.from(elements);
     this.numVisibleWords = 13;
     RiTa.SILENCE_LTS = true; // no logging of lts
   }
@@ -14,13 +14,18 @@ class Reader {
     this.step();
   }
 
+  selection() {
+    return this.spans.slice(this.index, this.index + this.numVisibleWords);
+  }
+
   step() {
     if (!this.reading) return;
     let delayTime = this.timeToRead(this.spans[this.index].textContent);
-    this.spans.forEach((ele,i) => {
-      let endIdx = (this.index + this.numVisibleWords) % this.spans.length;
-      let func = (i >= this.index && i < endIdx) ? 'add' : 'remove';
-      ele.classList[func]('visible');
+    this.spans.forEach(e => e.classList.remove('visible'));
+    this.selection().forEach(e => {
+      e.classList.remove('outgoing'); // remove color
+      e.classList.remove('incoming'); // remove color
+      e.classList.add('visible'); // add dark color
     });
     this.index = (this.index + 1) % this.spans.length;
     this.timeoutId = setTimeout(() => this.step(), delayTime);
@@ -29,6 +34,7 @@ class Reader {
   stop() {
     this.reading = false;
     clearTimeout(this.timeoutId);
+    this.spans.forEach(e => e.classList.remove('visible'));
   }
 
   timeToRead(word, basetime = 150) {
