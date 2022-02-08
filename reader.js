@@ -15,7 +15,20 @@ class Reader {
   }
 
   selection() {
-    return this.spans.slice(this.index, this.index + this.numVisibleWords);
+    // line-based highlighter
+    let lastSpan = this.spans[this.index - 1];
+    if (lastSpan !== undefined && lastSpan.nextSibling.nextSibling === null) {
+      return [lastSpan, this.spans[this.index]];
+    }
+    let sl = [], idx = this.index, currSpan;
+    do {
+      currSpan = this.spans[idx--]
+      sl.unshift(currSpan);
+    } while (currSpan !== currSpan.parentElement.firstChild)
+    return sl;
+    // the following would highlight a fixed number of words
+    // with timeToRead delays for the leading word at this.index
+    // return this.spans.slice(this.index - this.numVisibleWords + 1, this.index + 1);
   }
 
   step() {
