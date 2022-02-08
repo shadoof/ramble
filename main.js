@@ -12,7 +12,7 @@ let offset = {
   y: cy = displayBounds.y + displayBounds.height / 2
 }
 let radius = displayBounds.width / 2;
-let displaySims, shadowSims, worker;
+let displaySims, shadowSims, worker, cachedHtml;
 
 const state = {
   destination: 'rural',
@@ -21,7 +21,7 @@ const state = {
   outgoing: true,
   updating: true,
   maxSteps: 50,
-  maxLegs: 10,
+  maxLegs: 20,
   reader: 0,
   loopId: 0,
   legs: 0
@@ -111,16 +111,20 @@ function createProgressBars() {
   return pbars;
 }
 
-function replace(e) {
+function replace(e) { // called by similars.js (worker)
 
   let { destination, updateDelay } = state;
   let { idx, displaySims, shadowSims } = e.data;
 
   if (idx === -1) {
     let cache = e.data.similarCache;
-    console.log('writing preload.js [' + Object.keys(cache).length + ']');
-    let data = `similarCache=${JSON.stringify()};`;
-    download(data, 'preload.js', 'text');
+    let size = Object.keys(cache).length;
+    let data = `let precache=${JSON.stringify(cache,0,2)};`
+    data += `\n\nlet htmlSpans='${cachedHtml}';\n`;
+    if (0) {
+      download(data, `preload-${size}.js`, 'text');
+      console.log(`[INFO] wrote preload-${size}.js`);
+    }
     return;
   }
 
@@ -233,7 +237,7 @@ function stop() {
       e.classList.remove('incoming');
       e.classList.remove('outgoing');
     }), 1000);
-  console.log('done');
+  console.log('[INFO] done');
   worker.postMessage({ idx: 0, destination: 0 });
 }
 
@@ -309,6 +313,7 @@ function spanify(lines) {
   }, '');
 
   domDisplay.innerHTML = html;
+  cachedHtml = html; // tmp
 
   let spans = document.getElementsByClassName("word"); // double-check
   if (spans.length != sources[state.destination].length) throw Error

@@ -56,7 +56,7 @@ function findSimilars(word, pos, sources) {
     next.length >= minWordLength
     && !word.includes(next)
     && !next.includes(word)
-    && !stops.includes(word)
+    && !stops.includes(next)
     && !ignores.includes(next));
 
   if (sims.length > 1) {
