@@ -49,7 +49,7 @@ const initCircularTextDisplay = function(target, lines, opts = {}){
 }
 
 /*
-parameters:targetContainer, number, opts
+parameters:targetArr, opts
     opts.duration: float, in ms
     opts.strokeWidth: float,
     opts.easing: css str
@@ -58,23 +58,20 @@ parameters:targetContainer, number, opts
 
 return: an array of original line widths
 */
-const createProgressBars = function(targetContainer, number, opts = {}){
-    const bars = []
-    for (let i = 0; i <number; i++) {
-        const progressBarPlaceHolder = document.createElement("div");
-        progressBarPlaceHolder.id = "progress" + i;
-        progressBarPlaceHolder.classList.add("progress");
-        targetContainer.append(progressBarPlaceHolder);
-        let thisProgressBar = new ProgressBar.Circle(progressBarPlaceHolder, {
+const createProgressBars = function(targetArr, opts = {}){
+    const col = ['#ddd', "#eee", "#fff", "#ggg"]
+    const bars = [];
+    targetArr.forEach((t,i) => {
+        let thisProgressBar = new ProgressBar.Circle(t, {
             duration: opts.duration || 3000,
-            strokeWidth: opts.strokeWidth || 1.1,
+            strokeWidth: opts.strokeWidth || 1,
             easing: opts.easing || 'easeOut',
             trailColor: opts.trailColor || '#fafafa',
-            color: opts.color || '#ddd'
+            color: opts.color || col[i]
         });
         thisProgressBar.set((i + 1) * .20);
         bars.push(thisProgressBar);
-    }
+    });
     return bars
 }
 
