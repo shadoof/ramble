@@ -15,7 +15,20 @@ class Reader {
   }
 
   selection() {
-    return this.spans.slice(this.index, this.index + this.numVisibleWords);
+    // line-based highlighter
+    let lastSpan = this.spans[this.index - 1];
+    if (lastSpan !== undefined && lastSpan.nextSibling.nextSibling === null) {
+      return [lastSpan, this.spans[this.index]];
+    }
+    let sl = [], idx = this.index, currSpan;
+    do {
+      currSpan = this.spans[idx--]
+      sl.unshift(currSpan);
+    } while (currSpan !== currSpan.parentElement.firstChild)
+    return sl;
+    // the following would highlight a fixed number of words
+    // with timeToRead delays for the leading word at this.index
+    // return this.spans.slice(this.index - this.numVisibleWords + 1, this.index + 1);
   }
 
   step() {
@@ -38,10 +51,11 @@ class Reader {
   }
 
   timeToRead(word, basetime = 150) {
-    // most significant accumulator: these ms per syllable
-    const syltime = basetime / 2;
+    const syltime = basetime / 2; // most significant accumulator: these ms per syllable
+    if (digitsRE.test(word)) return basetime + word.length * syltime; // word is all number
     if (!RiTa.isPunct(word)) {
-      let syls = RiTa.syllables(word); // array of syllables
+      // the following handles 'word's such as "well-illustrated"
+      let syls = RiTa.syllables(word.replaceAll(hyphensRE, " ")).replaceAll(" ", "/");
       let time = basetime + syls.split('/').length * syltime; // syls * basic unit
       time += syls.split(splitRE).length * (syltime / 12); // add 1/12 of a syltime for each phoneme
       time += word.match(punctRE) ? basetime : 0; // add basetime to a punctuated word
@@ -52,4 +66,4 @@ class Reader {
   }
 }
 
-const endsRE = /[.?!]/, punctRE = /[,;:—]/, splitRE = /[\/-]/;
+const endsRE = /[.?!]$/, punctRE = /[,;:—]$/, hyphensRE = /[-–—]/g, splitRE = /[\/-]/, digitsRE = /^\d*[\d+.:,]*\d+$/;
