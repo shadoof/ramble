@@ -25,31 +25,59 @@ const initCircularTextDisplay = function (target, lines, opts = {}) {
         thisLineDiv.classList.add("line");
         const thisFontSize = l.fontSize || fontSize;
         const thisFontFamliy = l.fontFamily || fontFamily;
+        const thisWordSpacing = l.wordSpacing;
         if (thisFontSize) thisLineDiv.style.fontSize = thisFontSize + "px";
         if (thisFontFamliy) thisLineDiv.style.fontFamily = thisFontFamliy;
+        if (thisWordSpacing) thisLineDiv.style.wordSpacing = thisWordSpacing + "px";
         thisLineDiv.style.top = (l.bounds[1] - l.bounds[3] / 2) + "px";
         thisLineDiv.id = "l" + li;
         //---------------------------------
         if (l.text && l.text.length > 0) {
+            const wrapperSpan = document.createElement("span")
             let words = RiTa.tokenize(l.text);
             words.forEach((w, iil) => {
                 if (iil > 0) {
-                    if (!RiTa.isPunct(w)) thisLineDiv.append(" ");
+                    if (!RiTa.isPunct(w)) wrapperSpan.append(" ");
                 }
                 let thisWordSpan = document.createElement("span");
                 thisWordSpan.classList.add("word");
                 thisWordSpan.id = "w" + wi;
                 wi++;
                 thisWordSpan.innerText = w;
-                thisLineDiv.append(thisWordSpan);
+                wrapperSpan.append(thisWordSpan);
             });
+            thisLineDiv.append(wrapperSpan)
         }
         //----------------------------------
         textContainer.append(thisLineDiv);
         ws.push(l.bounds[2]);
     });
     target.append(textContainer);
-    return ws
+    return ws;
+}
+
+/*
+parameter: line, initLineW
+return: none 
+*/
+
+const adjustWordSpace = function(line, initLineW){
+    let step = 0.1;
+    let idx = parseInt((line.id).replace("l",""));
+    let ws = parseFloat((window.getComputedStyle(line).wordSpacing).replace(/px/g,""));
+    let oriW = initLineW[idx];
+    let currentW = line.firstChild.getBoundingClientRect().width;
+    let tries = 0;
+    while (Math.abs(oriW - currentW) > 5 && tries < 999) {
+        if (oriW > currentW){
+            ws += step;
+        } else {
+            ws -= step;
+        }
+        line.style.wordSpacing = ws + "px";
+        currentW = line.firstChild.getBoundingClientRect().width;
+        tries++;
+    }
 }
 
 /*
@@ -59,7 +87,7 @@ parameters:targetArr, opts
     opts.easing: css str
     opts.trailColor: css color
     opts.color: array of css color
-
+   
 return: an array of original line widths
 */
 const createProgressBars = function (targetArr, opts = {}) {
@@ -85,9 +113,7 @@ parameter: words, radius, opts = {}
     opts.font: css str
     opts.fontSize: float, for init guess;
     opts.lineHeightScale: float;
-    opts.lineHeight: float;
-    opts.step: float, adjust step in px;
-    opts.trialLimit: int
+    opts.wordSpacing: float, in px
 return: array of lines
 */
 const dynamicCircleLayout = function (words, radius, opts = {}) {
@@ -95,31 +121,32 @@ const dynamicCircleLayout = function (words, radius, opts = {}) {
     let padding = opts.padding || 0;
     let fontName = opts.font || 'sans-serif';
     let lineHeightScale = opts.lineHeightScale || 1.2;
+    let wordSpacing = opts.wordSpacing || 2;
 
     radius -= padding;
     let fontSize = radius / 4, result;
     do {
         fontSize *= .99;
         result = fitToLineWidths
-            (offset, radius, words, fontSize, fontSize * lineHeightScale, fontName);
+            (offset, radius, words, fontSize, fontSize * lineHeightScale, fontName, wordSpacing);
     }
     while (result.words.length);
 
     console.log('Computed fontSize:', fontSize);
 
-    return result.rects.map((r, i) => ({ fontSize, bounds: r, text: result.text[i] }));
+    return result.rects.map((r, i) => ({ fontSize, wordSpacing, bounds: r, text: result.text[i] }));
 }
 
 /*
 parameter: offset, radius, words, fontSize, lineHeight, fontName
 return: { text, rects, words }
 */
-const fitToLineWidths = function (offset, radius, words, fontSize, lineHeight, fontName = 'sans-serif') {
+const fitToLineWidths = function (offset, radius, words, fontSize, lineHeight, fontName = 'sans-serif', wordSpacing) {
     //console.log('fitToLineWidths', fontSize);
     let tokens = words.slice();
     let text = [], rects = lineWidths(offset, radius, lineHeight);
     rects.forEach(([x, y, w, h], i) => {
-        let data = fitToBox(tokens, w, fontSize, fontName);
+        let data = fitToBox(tokens, w, fontSize, fontName, wordSpacing);
         if (!data) { // fail to fit any words
             text.push('');
             return;
@@ -134,17 +161,17 @@ const fitToLineWidths = function (offset, radius, words, fontSize, lineHeight, f
 parameter: words, width, fontSize, fontName
 return: { words, text }
 */
-const fitToBox = function (words, width, fontSize, fontName = 'sans-serif') {
+const fitToBox = function (words, width, fontSize, fontName = 'sans-serif', wordSpacing) {
     //console.log('fitToBox', words, width, fontSize);
     let i = 1, line = {
         text: words[0],
-        width: measureWidth(words[0], fontSize, fontName)
+        width: measureWidth(words[0], fontSize, fontName, wordSpacing)
     };
     if (line.width > width) return; // can't fit first word
 
     for (let n = words.length; i < n; ++i) {
         let next = ' ' + words[i];
-        let nextWidth = measureWidth(next, fontSize, fontName);
+        let nextWidth = measureWidth(next, fontSize, fontName, wordSpacing);
         if (line.width + nextWidth > width) {
             break; // done
         }
@@ -174,10 +201,11 @@ const caculateNewFontSize = function(triggerByResize, old){
 }
 
 //-----------------------------------helper
-const measureWidth = function(text, fontSizePx = 12, fontName = font) {
+const measureWidth = function(text, fontSizePx = 12, fontName = font, wordSpacing) {
     let context = document.createElement("canvas").getContext("2d");
     context.font = fontSizePx + 'px ' + fontName;
-    return context.measureText(text).width;
+    let spaceCount = (text.split(" ").length - 1);
+    return context.measureText(text).width + spaceCount*wordSpacing;
 }
 
 const chordLength = function (rad, d) {

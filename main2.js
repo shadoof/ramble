@@ -41,7 +41,7 @@ let initLineWidths = initCircularTextDisplay(domDisplay, lines);
 let spans = document.getElementsByClassName("word"); // double-check
   if (spans.length != sources[state.destination].length) throw Error
     ('Invalid spanify: ' + spans.length + '!==' + sources[state.destination].length);
-const progressBars = createProgressBars(document.querySelectorAll(".progress"));
+const progressBars = createProgressBars(document.querySelectorAll(".progress"), { color: ["#ddd", "#ccc", "#bbb", "#aaa"] });
 
 window.onresize = () => {
   let words = unspanify();
@@ -317,5 +317,6 @@ function updateDOM(next, idx) {
   const ele = document.querySelector(`#w${idx}`);
   ele.textContent = next;
   ele.classList.add(state.outgoing ? 'outgoing' : 'incoming');
+  adjustWordSpace(ele.parentElement.parentElement, initLineWidths);
 }
 
