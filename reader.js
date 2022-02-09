@@ -17,7 +17,7 @@ class Reader {
   selection() {
     // line-based highlighter
     let lastSpan = this.spans[this.index - 1];
-    if (lastSpan !== undefined && lastSpan.nextSibling.nextSibling === null) {
+    if (lastSpan !== undefined && (lastSpan.nextSibling === null || lastSpan.nextSibling.nextSibling === null)) {
       return [lastSpan, this.spans[this.index]];
     }
     let sl = [], idx = this.index, currSpan;

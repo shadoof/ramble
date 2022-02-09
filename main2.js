@@ -35,16 +35,32 @@ Object.keys(history).map(k => sources[k].map((w, i) => history[k][i] = [w]));
 document.querySelector('#container').onclick = stop;
 
 // layout lines in circular display
-let opts = { offset, font, fontSize: 14.7, lineHeightScale: 1.28, padding: padding || 5 };
-let lines = circleLayout(sources[state.destination], radius, opts);
+let opts = { offset, font, lineHeightScale: 1.28, padding: padding || 10 };
+let lines = dynamicCircleLayout(sources[state.destination], radius, opts);
 let initLineWidths = initCircularTextDisplay(domDisplay, lines);
 let spans = document.getElementsByClassName("word"); // double-check
   if (spans.length != sources[state.destination].length) throw Error
     ('Invalid spanify: ' + spans.length + '!==' + sources[state.destination].length);
-const progressBarsNo = 4
-const progressBars = createProgressBars(document.querySelectorAll(".progress"), progressBarsNo);
+const progressBars = createProgressBars(document.querySelectorAll(".progress"));
 
-//ramble(spans); // go
+window.onresize = () => {
+  let words = unspanify();
+  displayBounds = domDisplay.getBoundingClientRect();
+  offset = {
+    x: displayBounds.x + displayBounds.width / 2,
+    y: cy = displayBounds.y + displayBounds.height / 2
+  }
+  radius = displayBounds.width / 2;
+  opts = { offset, font, lineHeightScale: 1.28, padding: padding || 10 };
+  lines = dynamicCircleLayout(words, radius, opts);
+  initLineWidths = initCircularTextDisplay(domDisplay, lines);
+  // for (let i = 0; i < lineDivs.length; i++) {
+  //   const ld = lineDivs[i];
+  //   ld.style.fontSize = + "px";
+  // }
+}
+
+ramble(spans); // go
 
 /////////////////////////////////////////////////////////
 
@@ -101,22 +117,6 @@ function updateState() {
   updateInfo();
 }
 
-// function createProgressBars() {
-//   let makeProgressBar = function (ele, opts = {}) {
-//     return new ProgressBar.Circle(ele, {
-//       duration: opts.duration || 3000,
-//       strokeWidth: opts.strokeWidth || 1.1,
-//       easing: opts.easing || 'easeOut',
-//       trailColor: opts.trailColor || '#fafafa',
-//       color: opts.color || '#ddd'
-//     });
-//   }
-//   let numProgressBars = 1; // change to 4;
-//   let pbars = [...Array(numProgressBars).keys()]
-//     .map(i => makeProgressBar('#progress' + i));
-//   pbars.forEach((p, i) => p.set((i + 1) * .20));
-//   return pbars;
-// }
 
 function replace(e) { // called by similars.js (worker)
 
@@ -272,9 +272,9 @@ function updateInfo() {
 
   domStats.innerHTML = data;
 
-//   progressBars.forEach((p, i) =>
-//     p.animate(affinities[i] / 100,
-//       { duration: 3000 }, () => 0/*console.log('done0')*/));
+  progressBars.forEach((p, i) =>
+    p.animate(affinities[i] / 100,
+      { duration: 3000 }, () => 0/*console.log('done0')*/));
 }
 
 function replaceables() { // [] of replaceable indexes
@@ -303,31 +303,6 @@ function strictReplaceables() {
     sources.rural[idx] !== sources.urban[idx]);
 }
 
-// function spanify(lines) {
-//   let wordIdx = 0;
-//   let html = lines.reduce((html, l, i) => {
-//     let line = '';
-//     let ypos = l.bounds[1] - l.bounds[3] / 2;
-//     if (l.text) {
-//       let words = RiTa.tokenize(l.text);
-//       line = words.reduce((line, word, j) => {
-//         return line +
-//           `<span id="w${wordIdx++}" class="word">${word}</span>`
-//           + (j < words.length - 1 && RiTa.isPunct(words[j + 1]) ? '' : ' ');
-
-//       }, '');
-//     }
-//     return html + `<div id="l${i}"class="line" style="top: ${ypos}px;`
-//       + ` font-size:${l.fontSize}px;">${line}</div>`;
-//   }, '');
-//   domDisplay.innerHTML = html;
-
-//   let spans = document.getElementsByClassName("word"); // double-check
-//   if (spans.length != sources[state.destination].length) throw Error
-//     ('Invalid spanify: ' + spans.length + '!==' + sources[state.destination].length);
-
-//   return spans;
-// }
 
 function unspanify() {
   return Array.from(document.getElementsByClassName
