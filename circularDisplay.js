@@ -127,12 +127,13 @@ const dynamicCircleLayout = function (words, radius, opts = {}) {
     let fontName = opts.font || 'sans-serif';
     let lineHeightScale = opts.lineHeightScale || 1.2;
     let wordSpacing = opts.wordSpacing || 2;
-    radius -= padding;
+    let useR = radius -= padding;
+    offset.y -= padding;
     let fontSize = radius / 4, result;
     do {
         fontSize -= 0.1;
         result = fitToLineWidths
-            (offset, radius, words, fontSize, fontSize * lineHeightScale, fontName, wordSpacing);
+            (offset, useR, words, fontSize, fontSize * lineHeightScale, fontName, wordSpacing);
     }
     while (result.words.length);
 
