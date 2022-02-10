@@ -61,14 +61,15 @@ parameter: line, initLineW
 return: none 
 */
 
-const adjustWordSpace = function(line, initLineW){
+const adjustWordSpace = function(line, initLineW, maxMin, padding){
+    if (!maxMin) maxMin = [10, -10]
     let step = 0.1;
     let idx = parseInt((line.id).replace("l",""));
     let ws = parseFloat((window.getComputedStyle(line).wordSpacing).replace(/px/g,""));
-    let oriW = initLineW[idx];
+    let oriW = initLineW[idx] - 2*padding;
     let currentW = line.firstChild.getBoundingClientRect().width;
     let tries = 0;
-    while (Math.abs(oriW - currentW) > 5 && tries < 999) {
+    while (Math.abs(oriW - currentW) > 5 && tries < 200) {
         if (oriW > currentW){
             ws += step;
         } else {
@@ -77,6 +78,10 @@ const adjustWordSpace = function(line, initLineW){
         line.style.wordSpacing = ws + "px";
         currentW = line.firstChild.getBoundingClientRect().width;
         tries++;
+        if (ws >= maxMin[0] || ws <= maxMin[1]) {
+            line.classList.add(ws >= maxMin[0] ? "max-word-spacing" : "min-word-spacing");
+            break;
+        }
     }
 }
 
@@ -122,13 +127,13 @@ const dynamicCircleLayout = function (words, radius, opts = {}) {
     let fontName = opts.font || 'sans-serif';
     let lineHeightScale = opts.lineHeightScale || 1.2;
     let wordSpacing = opts.wordSpacing || 2;
-
-    radius -= padding;
+    let useR = radius -= padding;
+    offset.y -= padding;
     let fontSize = radius / 4, result;
     do {
-        fontSize *= .99;
+        fontSize -= 0.1;
         result = fitToLineWidths
-            (offset, radius, words, fontSize, fontSize * lineHeightScale, fontName, wordSpacing);
+            (offset, useR, words, fontSize, fontSize * lineHeightScale, fontName, wordSpacing);
     }
     while (result.words.length);
 
@@ -187,24 +192,11 @@ const fitToBox = function (words, width, fontSize, fontName = 'sans-serif', word
     };
 }
 
-/*
-parameter: triggerByResize, oriPara
-return: [fontSize, VminInPx]
-*/
-const caculateNewFontSize = function(triggerByResize, old){
-    if(triggerByResize){
-        let oldFontSize = parseFloat(window.getComputedStyle(document.getElementById("l0")).fontSize.replace(/px/g,""));
-        let vmin = oldFontSize/oldvminInPx;
-        let newVminInPx = Math.min(window.innerWidth/100,window.innerHeight/100);
-        return[newVminInPx*vmin, newVminInPx];
-    }
-}
-
 //-----------------------------------helper
 const measureWidth = function(text, fontSizePx = 12, fontName = font, wordSpacing) {
     let context = document.createElement("canvas").getContext("2d");
     context.font = fontSizePx + 'px ' + fontName;
-    let spaceCount = (text.split(" ").length - 1);
+    let spaceCount = text ? (text.split(" ").length - 1) : 0;
     return context.measureText(text).width + spaceCount*wordSpacing;
 }
 
