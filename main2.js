@@ -3,10 +3,11 @@ const strictRepIds = strictReplaceables(repIds);
 const history = { rural: [], urban: [] };
 const domStats = document.querySelector('#stats');
 const domDisplay = document.querySelector('#display');
+const wsMaxMin = [ 10, -10 ];
 
 let font = window.getComputedStyle(domDisplay).fontFamily;
 let padding = window.getComputedStyle(domDisplay).padding;
-padding = parseFloat(padding.replace(/px/g,"")) === NaN || parseFloat(padding.replace(/px/g,"")) === 0 ? undefined : parseFloat(padding.replace(/px/g,""));
+circlePadding = parseFloat(padding.replace(/px/g,"")) === NaN || parseFloat(padding.replace(/px/g,"")) === 0 ? 10 : parseFloat(padding.replace(/px/g,""));
 let displayBounds = domDisplay.getBoundingClientRect();
 let offset = {
   x: displayBounds.x + displayBounds.width / 2,
@@ -35,7 +36,7 @@ Object.keys(history).map(k => sources[k].map((w, i) => history[k][i] = [w]));
 document.querySelector('#container').onclick = stop;
 
 // layout lines in circular display
-let opts = { offset, font, lineHeightScale: 1.28, padding: padding || 10 };
+let opts = { offset, font, lineHeightScale: 1.28, padding: circlePadding };
 let lines = dynamicCircleLayout(sources[state.destination], radius, opts);
 let initLineWidths = initCircularTextDisplay(domDisplay, lines);
 let spans = document.getElementsByClassName("word"); // double-check
@@ -51,13 +52,9 @@ window.onresize = () => {
     y: cy = displayBounds.y + displayBounds.height / 2
   }
   radius = displayBounds.width / 2;
-  opts = { offset, font, lineHeightScale: 1.28, padding: padding || 10 };
+  opts = { offset, font, lineHeightScale: 1.28, padding: circlePadding };
   lines = dynamicCircleLayout(words, radius, opts);
   initLineWidths = initCircularTextDisplay(domDisplay, lines);
-  // for (let i = 0; i < lineDivs.length; i++) {
-  //   const ld = lineDivs[i];
-  //   ld.style.fontSize = + "px";
-  // }
 }
 
 ramble(spans); // go
@@ -317,6 +314,6 @@ function updateDOM(next, idx) {
   const ele = document.querySelector(`#w${idx}`);
   ele.textContent = next;
   ele.classList.add(state.outgoing ? 'outgoing' : 'incoming');
-  adjustWordSpace(ele.parentElement.parentElement, initLineWidths);
+  adjustWordSpace(ele.parentElement.parentElement, initLineWidths, wsMaxMin, circlePadding);
 }
 
