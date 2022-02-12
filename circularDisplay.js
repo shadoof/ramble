@@ -10,10 +10,23 @@ const initCircularTextDisplay = function (target, lines, opts = {}) {
     const fontFamily = opts.fontFamily;
     const dbug = opts.debug;
     //------------------
+    let {minFontSizeExist, ratio} = (() => {
+        let temSpan = document.createElement("span");
+        let fs = lines[0].fontSize || fontSize;
+        temSpan.style.fontSize = fs + "px";
+        target.append(temSpan)
+        let realMinFS = parseFloat(window.getComputedStyle(temSpan).fontSize.replace("px",""));
+        if (realMinFS > fs) {
+            return {minFontSizeExist: true, ratio: fs/realMinFS};
+        } else {
+            return {minFontSizeExist: false, ratio: undefined};
+        }
+    })()
+
+    //------------------
     while(target.firstChild){
         target.removeChild(target.firstChild)
     }
-
     //--------------------- text
     let wi = 0;
     const ws = [];
@@ -33,7 +46,9 @@ const initCircularTextDisplay = function (target, lines, opts = {}) {
         thisLineDiv.id = "l" + li;
         //---------------------------------
         if (l.text && l.text.length > 0) {
-            const wrapperSpan = document.createElement("span")
+            const wrapperSpan = document.createElement("span");
+            wrapperSpan.style.display = "inline-block";
+            wrapperSpan.classList.add("wrapper");
             let words = RiTa.tokenize(l.text);
             words.forEach((w, iil) => {
                 if (iil > 0) {
@@ -53,6 +68,19 @@ const initCircularTextDisplay = function (target, lines, opts = {}) {
         ws.push(l.bounds[2]);
     });
     target.append(textContainer);
+    if (minFontSizeExist && ratio) {
+        let wrappers = document.querySelectorAll(".wrapper");
+        wrappers.forEach(wr => {
+            let wrw = wr.clientWidth;
+            let tarw = target.clientWidth;
+            wr.style.transformOrigin = "center";
+            if (wrw <= tarw){
+                wr.style.transform = "scale(" + ratio + ")";
+            } else {
+                wr.style.transform = "translate(" + (tarw - wrw) / 2 + "px, 0px ) scale(" + ratio + ") ";
+            }
+        });
+    }
     return ws;
 }
 
@@ -81,6 +109,17 @@ const adjustWordSpace = function(line, initLineW, maxMin, padding){
         if (ws >= maxMin[0] || ws <= maxMin[1]) {
             line.classList.add(ws >= maxMin[0] ? "max-word-spacing" : "min-word-spacing");
             break;
+        }
+    }
+    if(line.firstChild.style.transformOrigin && line.firstChild.style.transformOrigin.length > 0){
+        let wrw = line.firstChild.clientWidth;
+        let tarw = line.clientWidth;
+        let oriStr = line.firstChild.style.transform || "";
+        let newStr = oriStr.replace(/^.*(scale\([0-9]+\.[0-9]+\))/, "$1");
+        if (wrw > tarw){
+            line.firstChild.transform = "translate(" + (tarw - wrw) / 2 + "px, 0px ) " + newStr;
+        } else {
+            line.firstChild.transform = newStr;
         }
     }
 }
