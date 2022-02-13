@@ -13,6 +13,7 @@ let offset = {
 }
 let radius = displayBounds.width / 2;
 let displaySims, shadowSims, worker, cachedHtml;
+let logging = true;
 
 const state = {
   destination: 'rural',
@@ -77,7 +78,7 @@ function updateState() {
   if (state.outgoing) {
     if (steps >= maxSteps) {
       if (++state.legs >= maxLegs) return stop();
-      console.log(`Reverse: incoming in `
+      if (logging) console.log(`Reverse: incoming in `
         + `"urban" after leg #${legs + 1}.\n`);
       state.outgoing = false;
       state.destination = 'urban'; // swap dest
@@ -86,7 +87,7 @@ function updateState() {
   else {   // incoming
     if (steps === 0) {
       if (++state.legs >= maxLegs) return stop();
-      console.log(`Reverse: outgoing in `
+      if (logging) console.log(`Reverse: outgoing in `
         + `"urban" after leg #${legs + 1}.\n`);
       state.outgoing = true;
     }
@@ -141,7 +142,7 @@ function replace(e) { // called by similars.js (worker)
     history[destination][idx].push(displayNext);
     updateDOM(displayNext, idx);
 
-    let shadowNext = RiTa.random(shadowSims); // displaySims?
+    let shadowNext = RiTa.random(shadowSims);
     history[shadow][idx].push(shadowNext);
 
     updateState();
@@ -149,9 +150,9 @@ function replace(e) { // called by similars.js (worker)
     let ms = Date.now() - startMs;
     delayMs = Math.max(1, updateDelay - ms);
 
-    console.log(`${numMods()}) @${idx} `
+    if (logging) console.log(`${numMods()}) @${idx} `
       + `${destination}: ${displayWord} -> ${displayNext}, ${shadow}: `
-      + `${shadowWord} -> ${shadowNext} [${pos}] ${ms}ms  ${Math.max(1, updateDelay - ms)} `);
+      + `${shadowWord} -> ${shadowNext} [${pos}] ${ms}ms `);
   }
   else {
 
@@ -192,7 +193,7 @@ function restore() {
     // do replacement
     updateDOM(next, idx);
 
-    console.log(`${numMods()}] @${idx} `
+    if (logging) console.log(`${numMods()}] @${idx} `
       + `${destination}: ${word} -> ${next} [${pos}]`);
   }
   else {

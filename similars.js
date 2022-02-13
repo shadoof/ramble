@@ -43,29 +43,30 @@ function findSimilars(word, pos, sources) {
 
   let sims, limit = -1;
   if (word in similarCache) {
-    sims = similarCache[word]; // cache
+    return similarCache[word]; // from cache
   }
   else {
     let rhymes = RiTa.rhymes(word, { pos, limit });
     let sounds = RiTa.soundsLike(word, { pos, limit });
     let spells = RiTa.spellsLike(word, { pos, limit });
     sims = [...rhymes, ...sounds, ...spells];
-  }
 
-  sims = sims.filter(next =>
-    next.length >= minWordLength
-    && !word.includes(next)
-    && !next.includes(word)
-    && !stops.includes(next)
-    && !ignores.includes(next));
+    sims = sims.filter(sim =>
+      sim.length >= minWordLength
+      && !word.includes(sim)
+      && !sim.includes(word)
+      && !stops.includes(sim)
+      && !ignores.includes(sim));
 
-  if (sims.length > 1) {
-    similarCache[word] = sims; // store in cache
-    return sims;
+    if (sims.length > 1) {
+      console.log('[CACHE] ' + word + '/' + pos + ': ' + sims);
+      similarCache[word] = sims; // to cache
+      return sims;
+    }
   }
 
   console.warn('no similars for: "' + word + '"/' + pos
-    + ((sources.rural.includes(word) || sources.rural.includes(word))
+    + ((sources.rural.includes(word) || sources.urban.includes(word))
       ? ' *** [In Source]' : ''));
 
   return [];
