@@ -30,7 +30,7 @@ const initCircularTextDisplay = function (initR, target, lines, opts = {}) {
         const thisWordSpacing = l.wordSpacing;
         if (thisFontSize) thisLineDiv.style.fontSize = thisFontSize + "px";
         if (thisFontFamliy) thisLineDiv.style.fontFamily = thisFontFamliy;
-        if (thisWordSpacing) thisLineDiv.style.wordSpacing = thisWordSpacing + "px";
+        if (thisWordSpacing) thisLineDiv.style.wordSpacing = thisWordSpacing + "em";
         thisLineDiv.style.top = (l.bounds[1] - l.bounds[3] / 2) + "px";
         thisLineDiv.id = "l" + li;
         //---------------------------------
@@ -65,10 +65,13 @@ parameter: line, initLineW
 return: none 
 */
 const adjustWordSpace = function(line, initLineW, maxMin, padding, scaleRatio){
-    if (!maxMin) maxMin = [10, -10]
-    let step = 0.1;
+    if (!maxMin) maxMin = [-0.1, 1];
+    line.classList.remove("max-word-spacing");
+    line.classList.remove("min-word-spacing");
+    let step = 0.01;
     let idx = parseInt((line.id).replace("l",""));
-    let ws = parseFloat((window.getComputedStyle(line).wordSpacing).replace(/px/g,""));
+    let ws = parseFloat(window.getComputedStyle(line).wordSpacing.replace("px", ""));
+    ws = ws/initFontSize; // px => em
     let oriW = initLineW[idx] - 2*padding;
     let currentW = line.firstChild.getBoundingClientRect().width;
     currentW  = currentW/scaleRatio;
@@ -79,14 +82,18 @@ const adjustWordSpace = function(line, initLineW, maxMin, padding, scaleRatio){
         } else {
             ws -= step;
         }
-        line.style.wordSpacing = ws + "px";
+        line.style.wordSpacing = ws + "em";
         currentW = line.firstChild.getBoundingClientRect().width;
         currentW = currentW/scaleRatio;
         tries++;
-        if (ws >= maxMin[0] || ws <= maxMin[1]) {
-            line.classList.add(ws >= maxMin[0] ? "max-word-spacing" : "min-word-spacing");
-            break;
-        }
+    }
+    if (ws >= maxMin[1]){
+        line.style.wordSpacing = maxMin[1] + "em";
+        line.classList.add("max-word-spacing");
+    }
+    if (ws <= maxMin[0]){
+        line.style.wordSpacing = maxMin[0] + "em";
+        line.classList.add("min-word-spacing");
     }
 }
 
@@ -123,7 +130,7 @@ parameter: words, radius, opts = {}
     opts.font: css str
     opts.fontSize: float, for init guess;
     opts.lineHeightScale: float;
-    opts.wordSpacing: float, in px
+    opts.wordSpacing: float, in em
 return: array of lines
 */
 const dynamicCircleLayout = function (words, radius, opts = {}) {
@@ -131,7 +138,7 @@ const dynamicCircleLayout = function (words, radius, opts = {}) {
     let padding = opts.padding || 0;
     let fontName = opts.font || 'sans-serif';
     let lineHeightScale = opts.lineHeightScale || 1.2;
-    let wordSpacing = opts.wordSpacing || 2;
+    let wordSpacing = opts.wordSpacing || 0.2;
     let fontSize = radius / 4, result;
     do {
         fontSize -= 0.1;
@@ -200,7 +207,7 @@ const measureWidth = function(text, fontSizePx = 12, fontName = font, wordSpacin
     let context = document.createElement("canvas").getContext("2d");
     context.font = fontSizePx + 'px ' + fontName;
     let spaceCount = text ? (text.split(" ").length - 1) : 0;
-    return context.measureText(text).width + spaceCount*wordSpacing;
+    return context.measureText(text).width + spaceCount* (wordSpacing*fontSizePx);
 }
 
 const chordLength = function (rad, d) {
