@@ -3,7 +3,7 @@ const strictRepIds = strictReplaceables(repIds);
 const history = { rural: [], urban: [] };
 const domStats = document.querySelector('#stats');
 const domDisplay = document.querySelector('#display');
-const wsMaxMin = [ 15, -15 ];
+let wsMaxMin = [-0.1, 1]; // in em
 
 let font = window.getComputedStyle(domDisplay).fontFamily;
 let padding = window.getComputedStyle(domDisplay).padding;
@@ -39,6 +39,7 @@ let offset = {
   }
 let opts = { offset, font, lineHeightScale: 1.28, padding: circlePadding };
 let lines = dynamicCircleLayout(sources[state.destination], initR, opts);
+let initFontSize = lines[0].fontSize;
 let initLineWidths = initCircularTextDisplay(initR, domDisplay, lines);
 document.getElementById("text-display").style.transform = "scale(" + radius/initR + ")";
 let spans = document.getElementsByClassName("word"); // double-check
