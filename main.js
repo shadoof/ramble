@@ -3,24 +3,13 @@ const strictRepIds = strictReplaceables(repIds);
 const history = { rural: [], urban: [] };
 const domStats = document.querySelector('#stats');
 const domDisplay = document.querySelector('#display');
-const progressBars = createProgressBars();
-
-let font = window.getComputedStyle(domDisplay).fontFamily;
-let displayBounds = domDisplay.getBoundingClientRect();
-let offset = {
-  x: displayBounds.x + displayBounds.width / 2,
-  y: cy = displayBounds.y + displayBounds.height / 2
-}
-let radius = displayBounds.width / 2;
-let displaySims, shadowSims, worker, cachedHtml;
-let logging = true;
 
 const state = {
   destination: 'rural',
   updateDelay: 500,
-  stepDebug: false,
   outgoing: true,
   updating: true,
+  logging: true,
   maxSteps: 50,
   maxLegs: 20,
   reader: 0,
@@ -28,25 +17,51 @@ const state = {
   legs: 0
 };
 
-////////////////////////////////////////////////////////
+let wordspaceMinMax = [-0.1, 1]; // in em
+let displaySims, shadowSims, worker, cachedHtml;
+let displayBounds = domDisplay.getBoundingClientRect();
+let font = window.getComputedStyle(domDisplay).fontFamily;
+let cpadding = window.getComputedStyle(domDisplay).padding;
+let padfloat = parseFloat(cpadding.replace(/px/g, ""));
+let padding = (!padfloat || padfloat === NaN) ? 30 : padfloat;
+let radius = displayBounds.width / 2;
 
 // setup history and click handler
 Object.keys(history).map(k => sources[k].map((w, i) => history[k][i] = [w]));
 document.querySelector('#container').onclick = stop;
+window.onresize = () => {
+  displayBounds = domDisplay.getBoundingClientRect();
+  radius = displayBounds.width / 2;
+  scaleToFit();
+}
+
+// create progress bars
+let progressBars = setupProgress({ color: ["#ddd", "#ccc", "#bbb", "#aaa"] });
 
 // layout lines in circular display
-let opts = { offset, font, fontSize: 22.55, lineHeightScale: 1.28 };
-let lines = circleLayout(sources[state.destination], radius, opts);
-let spans = spanify(lines);
-ramble(spans); // go
+let initialMetrics = { radius: Math.max(radius, 450) };
+let offset = {
+  x: displayBounds.x + initialMetrics.radius,
+  y: displayBounds.y + initialMetrics.radius
+};
+let opts = { offset, font, lineHeightScale: 1.28, padding: padding };
+let lines = dynamicCircleLayout(sources[state.destination], initialMetrics.radius, opts);
+initialMetrics.lineWidths = layoutCircular(initialMetrics.radius, domDisplay, lines);
+initialMetrics.fontSize = lines[0].fontSize;
+
+scaleToFit();
+ramble(); // go
 
 /////////////////////////////////////////////////////////
 
-function ramble(spans) {
+function ramble() {
 
   let { updating, outgoing, destination } = state;
 
   if (!state.reader) {
+    let spans = document.getElementsByClassName("word"); // double-check
+    if (spans.length != sources[state.destination].length) throw Error
+      ('Invalid spanify: ' + spans.length + '!==' + sources[state.destination].length);
     state.reader = new Reader(spans);
     state.reader.start();
   }
@@ -60,8 +75,7 @@ function ramble(spans) {
       let idx = RiTa.random(repIds.filter(id =>
         !state.reader.selection().includes(sources[destination][id])));
       startMs = Date.now();
-      worker.postMessage({ idx, destination });
-      // worker calls replace() when done
+      worker.postMessage({ idx, destination }); // calls replace() when done
     }
     else {
       restore();
@@ -72,7 +86,7 @@ function ramble(spans) {
 /* logic for steps, legs and domain swapping */
 function updateState() {
 
-  let { maxSteps, legs, maxLegs } = state;
+  let { maxSteps, legs, maxLegs, logging } = state;
 
   let steps = numMods();
   if (state.outgoing) {
@@ -95,32 +109,16 @@ function updateState() {
   updateInfo();
 }
 
-function createProgressBars() {
-  let makeProgressBar = function (ele, opts = {}) {
-    return new ProgressBar.Circle(ele, {
-      duration: opts.duration || 3000,
-      strokeWidth: opts.strokeWidth || 1.1,
-      easing: opts.easing || 'easeOut',
-      trailColor: opts.trailColor || '#fafafa',
-      color: opts.color || '#ddd'
-    });
-  }
-  let numProgressBars = 1; // change to 4;
-  let pbars = [...Array(numProgressBars).keys()]
-    .map(i => makeProgressBar('#progress' + i));
-  pbars.forEach((p, i) => p.set((i + 1) * .20));
-  return pbars;
-}
 
 function replace(e) { // called by similars.js (worker)
 
-  let { destination, updateDelay } = state;
+  let { destination, updateDelay, logging } = state;
   let { idx, displaySims, shadowSims } = e.data;
 
   if (idx === -1) {
     let cache = e.data.similarCache;
     let size = Object.keys(cache).length;
-    let data = `let precache=${JSON.stringify(cache,0,2)};`
+    let data = `let precache=${JSON.stringify(cache, 0, 2)};`
     data += `\n\nlet htmlSpans='${cachedHtml}';\n`;
     if (0) {
       download(data, `preload-${size}.js`, 'text');
@@ -150,9 +148,8 @@ function replace(e) { // called by similars.js (worker)
     let ms = Date.now() - startMs;
     delayMs = Math.max(1, updateDelay - ms);
 
-    if (logging) console.log(`${numMods()}) @${idx} `
-      + `${destination}: ${displayWord} -> ${displayNext}, ${shadow}: `
-      + `${shadowWord} -> ${shadowNext} [${pos}] ${ms}ms `);
+    if (logging) console.log(`${numMods()}) @${idx} ${destination}: ${displayWord} `
+      + ` -> ${displayNext}, ${shadow}: ${shadowWord} -> ${shadowNext} [${pos}] ${ms}ms`);
   }
   else {
 
@@ -167,7 +164,7 @@ function replace(e) { // called by similars.js (worker)
 /* selects an index to restore (from history) in displayed text */
 function restore() {
 
-  let { destination, updateDelay } = state;
+  let { destination, updateDelay, logging } = state;
 
   let displayWords = unspanify();
 
@@ -230,15 +227,16 @@ function numMods() {
 
 /* stop rambler and reader  */
 function stop() {
+  let { reader } = state;
   clearTimeout(state.loopId);
   state.updating = false;
-  state.reader && state.reader.stop();
+  if (reader) reader.stop();
   setTimeout(_ =>
     Array.from(document.querySelectorAll('.word')).forEach(e => {
       e.classList.remove('incoming');
       e.classList.remove('outgoing');
     }), 1000);
-  console.log('[INFO] done');
+  if (state.logging) console.log('[INFO] done');
   worker.postMessage({ idx: 0, destination: 0 });
 }
 
@@ -297,33 +295,6 @@ function strictReplaceables() {
     sources.rural[idx] !== sources.urban[idx]);
 }
 
-function spanify(lines) {
-  let html, wordIdx = 0;
-  html = htmlSpans || lines.reduce((html, l, i) => {
-    let line = '', ypos = l.bounds[1] - l.bounds[3] / 2;
-    if (l.text) {
-      let words = RiTa.tokenize(l.text);
-      line = words.reduce((line, word, j) => {
-        return line +
-          `<span id="w${wordIdx++}" class="word">${word}</span>`
-          + (j < words.length - 1 && RiTa.isPunct(words[j + 1]) ? '' : ' ');
-      }, '');
-    }
-    return html + `<div id="l${i}"class="line" style="top: ${ypos}px;`
-      + ` font-size:${l.fontSize}px;">${line}</div>`;
-  }, '');
-
-  domDisplay.innerHTML = html;
-  cachedHtml = html; // tmp
-
-  let spans = document.getElementsByClassName("word"); // double-check
-  if (spans.length != sources[state.destination].length) throw Error
-    ('Invalid spanify: ' + spans.length + '!==' + sources[state.destination].length);
-
-  if (htmlSpans) console.warn(`[WARN] using cached spans [${spans.length}]`);
-
-  return spans;
-}
 
 function unspanify() {
   return Array.from(document.getElementsByClassName
@@ -335,8 +306,13 @@ function shadowTextName() {
 }
 
 function updateDOM(next, idx) {
-  const ele = document.querySelector(`#w${idx}`);
-  ele.textContent = next;
-  ele.classList.add(state.outgoing ? 'outgoing' : 'incoming');
+  const word = document.querySelector(`#w${idx}`);
+  word.textContent = next;
+  word.classList.add(state.outgoing ? 'outgoing' : 'incoming');
+  adjustWordSpace(word.parentElement.parentElement, initialMetrics, wordspaceMinMax, padding, radius);
 }
 
+function scaleToFit() {
+  document.querySelector('#text-display').style.transform
+    = "scale(" + radius / initialMetrics.radius + ")";
+}
