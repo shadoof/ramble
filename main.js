@@ -17,8 +17,9 @@ const state = {
   legs: 0
 };
 
+let displaySims, shadowSims, worker, cachedHtml, wordSpacing;
+
 let wordspaceMinMax = [-0.1, 1]; // in em
-let displaySims, shadowSims, worker, cachedHtml;
 let displayBounds = domDisplay.getBoundingClientRect();
 let font = window.getComputedStyle(domDisplay).fontFamily;
 let cpadding = window.getComputedStyle(domDisplay).padding;
@@ -136,11 +137,12 @@ function replace(e) { // called by similars.js (worker)
   if (displaySims.length && shadowSims.length) {
 
     // pick a random similar to replace in display text
-    let displayNext = RiTa.random(displaySims);
+    let displayWord = sources[destination][idx];
+    let displayNext = lengthAwareRandom(idx, displayWord, displaySims);
     history[destination][idx].push(displayNext);
     updateDOM(displayNext, idx);
 
-    let shadowNext = RiTa.random(shadowSims);
+    let shadowNext = lengthAwareRandom(idx, shadowWord, shadowSims);
     history[shadow][idx].push(shadowNext);
 
     updateState();
@@ -301,15 +303,26 @@ function unspanify() {
     ("word")).map(e => e.textContent);
 }
 
+function lengthAwareRandom(idx, word, options) {
+
+  // TODO:
+  // let { lineWidth, measuredWidth } = lineMetrics(idx, wordSpacing);
+  // console.log(lineWidth, measuredWidth );// measuredWidth);
+  //stop();
+
+  return RiTa.random(options);
+}
+
 function shadowTextName() {
   return state.destination === 'rural' ? 'urban' : 'rural';
 }
 
 function updateDOM(next, idx) {
   const word = document.querySelector(`#w${idx}`);
+  const line = word.parentElement.parentElement;
   word.textContent = next;
   word.classList.add(state.outgoing ? 'outgoing' : 'incoming');
-  adjustWordSpace(word.parentElement.parentElement, initialMetrics, wordspaceMinMax, padding, radius);
+  wordSpacing = adjustWordSpace(line, initialMetrics, wordspaceMinMax, padding, radius);
 }
 
 function scaleToFit() {

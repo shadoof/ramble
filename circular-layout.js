@@ -41,12 +41,11 @@ const layoutCircular = function (initialRadius, target, lines, opts = {}) {
         if (iil > 0) {
           if (!RiTa.isPunct(w)) wrapperSpan.append(" ");
         }
-        let thisWordSpan = document.createElement("span");
-        thisWordSpan.classList.add("word");
-        thisWordSpan.id = "w" + wi;
-        wi++;
-        thisWordSpan.innerText = w;
-        wrapperSpan.append(thisWordSpan);
+        let wordSpan = document.createElement("span");
+        wordSpan.classList.add("word");
+        wordSpan.id = "w" + wi++;
+        wordSpan.innerText = w;
+        wrapperSpan.append(wordSpan);
       });
       lineDiv.append(wrapperSpan)
     }
@@ -73,7 +72,7 @@ const adjustWordSpace = function (line, initial, maxMin, padding, radius) {
   let origW = initial.lineWidths[idx] - 2 * padding;
   let currentW = line.firstChild.getBoundingClientRect().width / scaleRatio;
 
-  // check for extreme values
+  // try to get within 5 pixels of current width ?
   for (let tries = 0; Math.abs(origW - currentW) > 5 && tries < 200; tries++) {
     if (origW > currentW) {
       ws += step;
@@ -90,10 +89,12 @@ const adjustWordSpace = function (line, initial, maxMin, padding, radius) {
     line.style.wordSpacing = maxMin[1] + "em";
     line.classList.add("max-word-spacing");
   }
-  if (ws <= maxMin[0]) {
+  else if (ws <= maxMin[0]) {
     line.style.wordSpacing = maxMin[0] + "em";
     line.classList.add("min-word-spacing");
   }
+
+  return ws;
 }
 
 /*
@@ -175,7 +176,7 @@ const fitToBox = function (words, width, fontSize, fontName = 'sans-serif', word
   };
 }
 
-const measureWidth = function (text, fontSizePx = 12, fontName = font, wordSpacing) {
+const measureWidth = function (text, fontSizePx = 12, fontName = font, wordSpacing = 1/*?*/) {
   let context = document.createElement("canvas").getContext("2d");
   context.font = fontSizePx + 'px ' + fontName;
   let spaceCount = text ? (text.split(" ").length - 1) : 0;
