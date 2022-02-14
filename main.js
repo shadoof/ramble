@@ -51,6 +51,7 @@ initialMetrics.lineWidths = layoutCircular(initialMetrics.radius, domDisplay, li
 initialMetrics.fontSize = lines[0].fontSize;
 
 scaleToFit();
+if (Math.abs(parseFloat(window.getComputedStyle(document.querySelector("#l1").firstChild).width.replace("px", "")) * (radius/initialMetrics.radius) - measureWidthForLine(lines[1].text, 1)) > 1) throw new Error("invalid measureWidthForLine")
 ramble(); // go
 
 /////////////////////////////////////////////////////////

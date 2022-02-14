@@ -176,12 +176,23 @@ const fitToBox = function (words, width, fontSize, fontName = 'sans-serif', word
   };
 }
 
-const measureWidth = function (text, fontSizePx = 12, fontName = font, wordSpacing = 1/*?*/) {
+const measureWidth = function (text, fontSizePx = 12, fontName = font, wordSpacing = 0/*?*/) {
   let context = document.createElement("canvas").getContext("2d");
   context.font = fontSizePx + 'px ' + fontName;
   let spaceCount = text ? (text.split(" ").length - 1) : 0;
   return context.measureText(text).width + spaceCount * (wordSpacing * fontSizePx);
 }
+
+const measureWidthForLine = function(text, lineIndex){
+  const computedCss = window.getComputedStyle(document.querySelector("#l" + lineIndex));
+  const font = computedCss.font;
+  const wordSpacing = parseFloat(computedCss.wordSpacing.replace("px",""));
+  const scaleRatio = parseFloat(window.getComputedStyle(document.querySelector("#text-display")).transform.replace(/^.*matrix\(([0-9]+\.[0-9]+)\,.*$/,"$1"));
+  let context = document.createElement("canvas").getContext("2d");
+  context.font = font;
+  let spaceCount = text ? (text.split(" ").length - 1) : 0;
+  return (context.measureText(text).width + spaceCount*wordSpacing)*scaleRatio
+};
 
 const chordLength = function (rad, d) {
   return 2 * Math.sqrt(rad * rad - (rad - d) * (rad - d));

@@ -29,7 +29,7 @@ const setupProgress = function (opts = {}) {
   document.querySelectorAll(".progress").forEach((t, i) => {
     let pbar = new ProgressBar.Circle(t, {
       duration: opts.duration || 3000,
-      strokeWidth: opts.strokeWidth || 1,
+      strokeWidth: opts.strokeWidth || (98/(92+2*i)), // keep the absolute width same, see css
       easing: opts.easing || 'easeOut',
       trailColor: opts.trailColor || '#fafafa',
       color: opts.color && opts.color[i] ? opts.color[i] : "#ddd"
