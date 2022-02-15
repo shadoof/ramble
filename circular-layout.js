@@ -176,22 +176,30 @@ const fitToBox = function (words, width, fontSize, fontName = 'sans-serif', word
   };
 }
 
-const measureWidth = function (text, fontSizePx = 12, fontName = font, wordSpacing = 0/*?*/) {
-  let context = document.createElement("canvas").getContext("2d");
-  context.font = fontSizePx + 'px ' + fontName;
+const measureWidth = function (text, fontSizePx = 12, fontName = font, wordSpacing = 0) {
+  canvasCtx = canvasCtx || document.createElement("canvas").getContext("2d");
+  canvasCtx.font = fontSizePx + 'px ' + fontName;
   let spaceCount = text ? (text.split(" ").length - 1) : 0;
-  return context.measureText(text).width + spaceCount * (wordSpacing * fontSizePx);
+  return canvasCtx.measureText(text).width + spaceCount * (wordSpacing * fontSizePx);
 }
 
-const measureWidthForLine = function(text, lineIndex){
-  const computedCss = window.getComputedStyle(document.querySelector("#l" + lineIndex));
-  const font = computedCss.font;
-  const wordSpacing = parseFloat(computedCss.wordSpacing.replace("px",""));
-  const scaleRatio = parseFloat(window.getComputedStyle(document.querySelector("#text-display")).transform.replace(/^.*matrix\(([0-9]+\.[0-9]+)\,.*$/,"$1"));
-  let context = document.createElement("canvas").getContext("2d");
-  context.font = font;
-  let spaceCount = text ? (text.split(" ").length - 1) : 0;
-  return (context.measureText(text).width + spaceCount*wordSpacing)*scaleRatio
+let canvasCtx, lineCtx; // don't recreate canvases 
+const measureWidthForLine = function (text, lineIndex) {
+  const line = document.querySelector("#l" + lineIndex);
+  const lineCss = window.getComputedStyle(line);
+
+  const tdisp = document.querySelector("#text-display");
+  const textCss = window.getComputedStyle(tdisp);
+
+  const wordSpacing = parseFloat(lineCss.wordSpacing.replace("px", ""));
+  const scaleRatio = parseFloat(textCss.transform.replace
+    (/^.*matrix\(([0-9]+\.[0-9]+)\,.*$/, "$1"));  // yuck
+  const spaceCount = text ? (text.split(" ").length - 1) : 0;
+
+  lineCtx = lineCtx || document.createElement("canvas").getContext("2d");
+  lineCtx.font = lineCss.font;
+  const lineWidth = lineCtx.measureText(text).width;
+  return (lineWidth + (spaceCount * wordSpacing)) * scaleRatio;
 };
 
 const chordLength = function (rad, d) {

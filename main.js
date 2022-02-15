@@ -9,7 +9,7 @@ const state = {
   updateDelay: 500,
   outgoing: true,
   updating: true,
-  logging: true,
+  logging: false,
   maxSteps: 50,
   maxLegs: 20,
   reader: 0,
@@ -17,7 +17,7 @@ const state = {
   legs: 0
 };
 
-let displaySims, shadowSims, worker, cachedHtml, wordSpacing;
+let displaySims, shadowSims, worker, cachedHtml, wordSpacing, spans;
 
 let wordspaceMinMax = [-0.1, 1]; // in em
 let displayBounds = domDisplay.getBoundingClientRect();
@@ -26,10 +26,12 @@ let cpadding = window.getComputedStyle(domDisplay).padding;
 let padfloat = parseFloat(cpadding.replace(/px/g, ""));
 let padding = (!padfloat || padfloat === NaN) ? 30 : padfloat;
 let radius = displayBounds.width / 2;
+let highlights = false;
 
-// setup history and click handler
+// setup history and handlers
 Object.keys(history).map(k => sources[k].map((w, i) => history[k][i] = [w]));
-document.querySelector('#container').onclick = stop;
+document.addEventListener('keyup', keyhandler);
+console.log('[INFO] Key cmds -> (l)ogging (h)ighlight (s)tats (e)nd');
 window.onresize = () => {
   displayBounds = domDisplay.getBoundingClientRect();
   radius = displayBounds.width / 2;
@@ -37,7 +39,7 @@ window.onresize = () => {
 }
 
 // create progress bars
-let progressBars = setupProgress({ color: ["#ddd", "#ccc", "#bbb", "#aaa"] });
+let progressBars = setupProgress({ color: ["#aaa", "#bbb", "#ccc", "#ddd"] });
 
 // layout lines in circular display
 let initialMetrics = { radius: Math.max(radius, 450) };
@@ -51,7 +53,6 @@ initialMetrics.lineWidths = layoutCircular(initialMetrics.radius, domDisplay, li
 initialMetrics.fontSize = lines[0].fontSize;
 
 scaleToFit();
-if (Math.abs(parseFloat(window.getComputedStyle(document.querySelector("#l1").firstChild).width.replace("px", "")) * (radius/initialMetrics.radius) - measureWidthForLine(lines[1].text, 1)) > 1) throw new Error("invalid measureWidthForLine")
 ramble(); // go
 
 /////////////////////////////////////////////////////////
@@ -61,9 +62,21 @@ function ramble() {
   let { updating, outgoing, destination } = state;
 
   if (!state.reader) {
-    let spans = document.getElementsByClassName("word"); // double-check
+
+    // double-check the span count
+    spans = document.getElementsByClassName("word"); 
     if (spans.length != sources[state.destination].length) throw Error
       ('Invalid spanify: ' + spans.length + '!==' + sources[state.destination].length);
+
+    // double-check measureWidthForLine
+    let l1 = document.querySelector("#l1");
+    let cWidth = window.getComputedStyle(l1.firstChild).width;
+    let mWidth = measureWidthForLine(lines[1].text, 1);
+    let radScale = radius / initialMetrics.radius;
+    if (Math.abs(parseFloat(cWidth.replace("px", "")) * radScale - mWidth) > 1) {
+      throw new Error("invalid measureWidthForLine");
+    }
+
     state.reader = new Reader(spans);
     state.reader.start();
   }
@@ -235,11 +248,12 @@ function stop() {
   state.updating = false;
   if (reader) reader.stop();
   setTimeout(_ =>
-    Array.from(document.querySelectorAll('.word')).forEach(e => {
+    Array.from(spans).forEach(e => {
       e.classList.remove('incoming');
       e.classList.remove('outgoing');
     }), 1000);
   if (state.logging) console.log('[INFO] done');
+  updateInfo();
   worker.postMessage({ idx: 0, destination: 0 });
 }
 
@@ -268,7 +282,7 @@ function updateInfo() {
   domStats.innerHTML = data;
 
   progressBars.forEach((p, i) =>
-    p.animate(affinities[i] / 100,
+    p.animate((updating ? affinities[i] : 0) / 100,
       { duration: 3000 }, () => 0/*console.log('done0')*/));
 }
 
@@ -318,11 +332,35 @@ function shadowTextName() {
   return state.destination === 'rural' ? 'urban' : 'rural';
 }
 
+function keyhandler(e) {
+  if (e.code === 'KeyI') {
+    let stats = document.querySelector('#stats');
+    let curr = window.getComputedStyle(stats);
+    stats.style.display = curr.display === 'block' ? 'none' : 'block';
+  }
+  else if (e.code === 'KeyL') {
+    state.logging = !state.logging;
+  }
+  else if (e.code === 'KeyH') {
+    highlights = !highlights;
+    if (!highlights) {
+      Array.from(spans).forEach(e => {
+        e.classList.remove('incoming');
+        e.classList.remove('outgoing');
+      });
+    }
+  }
+  else if (e.code === 'KeyE') {
+    stop();
+  }
+  // TODO: step mode
+}
+
 function updateDOM(next, idx) {
   const word = document.querySelector(`#w${idx}`);
   const line = word.parentElement.parentElement;
   word.textContent = next;
-  word.classList.add(state.outgoing ? 'outgoing' : 'incoming');
+  if (highlights) word.classList.add(state.outgoing ? 'outgoing' : 'incoming');
   wordSpacing = adjustWordSpace(line, initialMetrics, wordspaceMinMax, padding, radius);
 }
 
