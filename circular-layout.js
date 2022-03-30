@@ -5,21 +5,20 @@
 
   @return: an array of original line widths
 */
-const layoutCircular = function (initialRadius, target, lines, opts = {}) {
+const layoutCircular = function (target, initialRadius, lines, opts = {}) {
 
+  const dbug = opts.debug;
   const fontSize = opts.fontSize;
   const fontFamily = opts.fontFamily;
-  const dbug = opts.debug;
-
-  //while (target.firstChild) target.removeChild(target.firstChild)
-
-  let wi = 0;
+  
   const ws = [];
   const textContainer = document.createElement("div");
   textContainer.id = "text-display";
   textContainer.style.width = initialRadius * 2 + "px";
   textContainer.style.height = initialRadius * 2 + "px";
   if (dbug) console.log(lines.length);
+
+  let wi = 0;
   lines.forEach((l, li) => {
     let lineDiv = document.createElement("div");
     lineDiv.classList.add("line");
@@ -67,10 +66,10 @@ const adjustWordSpace = function (line, initial, maxMin, padding, radius) {
 
   let wordSpacing = window.getComputedStyle(line).wordSpacing;
   let step = 0.01, scaleRatio = radius / initial.radius;
-  let ws = parseFloat(wordSpacing.replace("px", "")) / initial.fontSize; // px => em
   let idx = parseInt((line.id).slice(1));
   let origW = initial.lineWidths[idx] - 2 * padding;
   let currentW = line.firstChild.getBoundingClientRect().width / scaleRatio;
+  let ws = parseFloat(wordSpacing.replace('px', '')) / initial.fontSize; // px => em
 
   // try to get within 5 pixels of current width ?
   for (let tries = 0; Math.abs(origW - currentW) > 5 && tries < 200; tries++) {
@@ -80,8 +79,7 @@ const adjustWordSpace = function (line, initial, maxMin, padding, radius) {
       ws -= step;
     }
     line.style.wordSpacing = ws + "em";
-    currentW = line.firstChild.getBoundingClientRect().width;
-    currentW = currentW / scaleRatio;
+    currentW = line.firstChild.getBoundingClientRect().width / scaleRatio;
   }
 
   // check for extreme values
@@ -112,7 +110,7 @@ const dynamicCircleLayout = function (words, radius, opts = {}) {
   let padding = opts.padding || 0;
   let fontName = opts.font || 'sans-serif';
   let lineHeightScale = opts.lineHeightScale || 1.2;
-  let wordSpacing = opts.wordSpacing || 0.2;
+  let wordSpacing = opts.wordSpacing || 0.25;
   let fontSize = radius / 4, result;
   do {
     fontSize -= 0.1;
@@ -198,6 +196,7 @@ const measureWidthForLine = function (text, lineIndex) {
 
   lineCtx = lineCtx || document.createElement("canvas").getContext("2d");
   lineCtx.font = lineCss.font;
+  
   const lineWidth = lineCtx.measureText(text).width;
   return (lineWidth + (spaceCount * wordSpacing)) * scaleRatio;
 };

@@ -7,7 +7,7 @@ importScripts('shared.js');
 const lex = RiTa.lexicon();
 
 if (precache) {
-  console.warn('[WARN] using cached similars'
+  console.info('[INFO] Using cached similars'
     + ` [${Object.keys(precache).length}]`);
 }
 

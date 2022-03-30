@@ -1,3 +1,7 @@
+body {
+  background: #fdfdfd;
+}
+
 #center-wrapper {
   width: 100%;
   margin: 0;
@@ -83,7 +87,7 @@
 
 #progress3 {
   z-index: 4;
-  width: calc(calc(min(95vh, 95vw) - 50px)*0.98);
+  width: calc(calc(min(95vh, 95vw) - 50px)*0.978);
   aspect-ratio: 1/1;
   position: absolute;
   top: 50%;
@@ -109,6 +113,22 @@
 
 .word.incoming {
   background-color: #bbf;
+}
+
+.word.outgoing {
+  background-color: #fbb;
+}
+
+.word.incoming {
+  background-color: #bbf;
+}
+
+.max-word-spacing {
+  background-color: #eff;
+}
+
+.min-word-spacing {
+  background-color: #fdd;
 }
 
 #text-display {

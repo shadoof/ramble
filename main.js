@@ -1,12 +1,13 @@
 const repIds = replaceables();
-const strictRepIds = strictReplaceables(repIds);
 const history = { rural: [], urban: [] };
+const strictRepIds = strictReplaceables(repIds);
 const domStats = document.querySelector('#stats');
 const domDisplay = document.querySelector('#display');
 
 const state = {
   destination: 'rural',
   updateDelay: 500,
+  stepMode: false,
   outgoing: true,
   updating: true,
   logging: false,
@@ -19,11 +20,11 @@ const state = {
 
 let displaySims, shadowSims, worker, cachedHtml, wordSpacing, spans;
 
-let wordspaceMinMax = [-0.1, 1]; // in em
+let wordspaceMinMax = [-0.1, .5]; // in em
 let displayBounds = domDisplay.getBoundingClientRect();
 let font = window.getComputedStyle(domDisplay).fontFamily;
 let cpadding = window.getComputedStyle(domDisplay).padding;
-let padfloat = parseFloat(cpadding.replace(/px/g, ""));
+let padfloat = parseFloat(cpadding.replace('px', ''));
 let padding = (!padfloat || padfloat === NaN) ? 30 : padfloat;
 let radius = displayBounds.width / 2;
 let highlights = false;
@@ -31,7 +32,7 @@ let highlights = false;
 // setup history and handlers
 Object.keys(history).map(k => sources[k].map((w, i) => history[k][i] = [w]));
 document.addEventListener('keyup', keyhandler);
-console.log('[INFO] Key cmds -> (l)ogging (h)ighlight (s)tats (e)nd');
+console.log('[INFO] Key cmds -> (l)ogging (h)ighlight (i)nfo (s)tep (e)nd');
 window.onresize = () => {
   displayBounds = domDisplay.getBoundingClientRect();
   radius = displayBounds.width / 2;
@@ -39,7 +40,11 @@ window.onresize = () => {
 }
 
 // create progress bars
-let progressBars = setupProgress({ color: ["#aaa", "#bbb", "#ccc", "#ddd"] });
+let progressBars = setupProgress({
+  color:
+    //["#26495c", "#c4a35a", "#c66b3d", "#e5e5cd"] 
+    ["#d8d8d8", "#dfdfdf", "#eaeaea", "#f6f6f6"]
+});
 
 // layout lines in circular display
 let initialMetrics = { radius: Math.max(radius, 450) };
@@ -49,7 +54,7 @@ let offset = {
 };
 let opts = { offset, font, lineHeightScale: 1.28, padding: padding };
 let lines = dynamicCircleLayout(sources[state.destination], initialMetrics.radius, opts);
-initialMetrics.lineWidths = layoutCircular(initialMetrics.radius, domDisplay, lines);
+initialMetrics.lineWidths = layoutCircular(domDisplay, initialMetrics.radius, lines);
 initialMetrics.fontSize = lines[0].fontSize;
 
 scaleToFit();
@@ -61,34 +66,40 @@ function ramble() {
 
   let { updating, outgoing, destination } = state;
 
-  if (!state.reader) {
+  if (!state.reader) { // first time
 
     // double-check the span count
-    spans = document.getElementsByClassName("word"); 
-    if (spans.length != sources[state.destination].length) throw Error
-      ('Invalid spanify: ' + spans.length + '!==' + sources[state.destination].length);
+    spans = document.getElementsByClassName("word");
+    // if (spans.length != sources[state.destination].length) {
+    //   throw Error('Invalid spanify: ' + spans.length
+    //     + '!==' + sources[state.destination].length);
+    // }
 
     // double-check measureWidthForLine
-    let l1 = document.querySelector("#l1");
-    let cWidth = window.getComputedStyle(l1.firstChild).width;
-    let mWidth = measureWidthForLine(lines[1].text, 1);
-    let radScale = radius / initialMetrics.radius;
-    if (Math.abs(parseFloat(cWidth.replace("px", "")) * radScale - mWidth) > 1) {
-      throw new Error("invalid measureWidthForLine");
-    }
+    // let l1 = document.querySelector("#l1");
+    // let cWidth = window.getComputedStyle(l1.firstChild).width;
+    // let mWidth = measureWidthForLine(lines[1].text, 1);
+    // let radScale = radius / initialMetrics.radius;
+    // if (Math.abs(parseFloat(cWidth.replace("px", "")) * radScale - mWidth) > 1) {
+    //   throw new Error("invalid measureWidthForLine");
+    // }
 
-    state.reader = new Reader(spans);
-    state.reader.start();
+    if (!state.stepMode) {
+      state.reader = new Reader(spans);
+      state.reader.start();
+    }
   }
+
   if (!worker) {
     worker = new Worker("similars.js");
     worker.onmessage = replace;
   }
+
   if (updating) {
     if (outgoing) {
       // tell worker to do similar search
-      let idx = RiTa.random(repIds.filter(id =>
-        !state.reader.selection().includes(sources[destination][id])));
+      let idx = RiTa.random(repIds.filter(id => !state.reader
+        || !state.reader.selection().includes(sources[destination][id])));
       startMs = Date.now();
       worker.postMessage({ idx, destination }); // calls replace() when done
     }
@@ -130,7 +141,7 @@ function replace(e) { // called by similars.js (worker)
   let { destination, updateDelay, logging } = state;
   let { idx, displaySims, shadowSims } = e.data;
 
-  if (idx === -1) {
+  if (idx === -1) { // dev-only
     let cache = e.data.similarCache;
     let size = Object.keys(cache).length;
     let data = `let precache=${JSON.stringify(cache, 0, 2)};`
@@ -174,7 +185,7 @@ function replace(e) { // called by similars.js (worker)
       + `-> ${shadowSims.length} [${pos}] in ${Date.now() - startMs} ms`);
   }
 
-  state.loopId = setTimeout(ramble, delayMs);
+  if (!state.stepMode) state.loopId = setTimeout(ramble, delayMs);
 }
 
 /* selects an index to restore (from history) in displayed text */
@@ -221,7 +232,7 @@ function restore() {
 
   updateState();
 
-  state.loopId = setTimeout(ramble, updateDelay);
+  if (!state.stepMode) state.loopId = setTimeout(ramble, updateDelay);
 }
 
 /* compute the affinity over 2 text arrays for a set of word-ids */
@@ -318,14 +329,36 @@ function unspanify() {
     ("word")).map(e => e.textContent);
 }
 
-function lengthAwareRandom(idx, word, options) {
+function lengthAwareRandom(widx, word, options) {
 
-  // TODO:
-  // let { lineWidth, measuredWidth } = lineMetrics(idx, wordSpacing);
-  // console.log(lineWidth, measuredWidth );// measuredWidth);
-  //stop();
+  let scaleRatio = radius / initialMetrics.radius;
+  const wordEle = document.querySelector(`#w${widx}`);
+  const lineEle = wordEle.parentElement.parentElement;
+  let lineIdx = parseInt((lineEle.id).slice(1));
+  let originalW = initialMetrics.lineWidths[lineIdx] - (2 * padding);
+  let currentW = lineEle.firstChild.getBoundingClientRect().width / scaleRatio;
+  let filter, msg = '', wordW = measureWidthForLine(word, lineIdx); 
+  if (originalW > currentW) {
+    filter = (o) => measureWidthForLine(o, lineIdx) > wordW;
+    msg += 'need longer word';
+  }
+  else {
+    filter = (o, i) => measureWidthForLine(o, lineIdx) < wordW;
+      // console.log('  ', i, `orig: ${word}(${Math.round(wordW)})`
+      //   + ` check: ${o} (${Math.round(ow)})`);
+    msg += 'need shorter word';
+  }
 
-  return RiTa.random(options);
+  let choices = options.filter(filter);
+  if (!choices || !choices.length) {
+    choices = options;
+    msg += ' [random] ';
+  }
+
+  let choice = RiTa.random(choices);
+  //console.log(msg + ', replaced ' + word + `(${Math.round(wordW)})` + ' with '
+    //+ choice + `(${Math.round(measureWidthForLine(choice, lineIdx))})`);
+  return choice;
 }
 
 function shadowTextName() {
@@ -353,7 +386,15 @@ function keyhandler(e) {
   else if (e.code === 'KeyE') {
     stop();
   }
-  // TODO: step mode
+  else if (e.code === 'KeyS') {
+    if (!state.stepMode) {
+      state.stepMode = true;
+      if (state.reader) state.reader.stop();
+    }
+    else {
+      state.loopId = setTimeout(ramble, 1);
+    }
+  }
 }
 
 function updateDOM(next, idx) {
@@ -361,7 +402,8 @@ function updateDOM(next, idx) {
   const line = word.parentElement.parentElement;
   word.textContent = next;
   if (highlights) word.classList.add(state.outgoing ? 'outgoing' : 'incoming');
-  wordSpacing = adjustWordSpace(line, initialMetrics, wordspaceMinMax, padding, radius);
+  wordSpacing = adjustWordSpace(line,
+    initialMetrics, wordspaceMinMax, padding, radius);
 }
 
 function scaleToFit() {

@@ -31,7 +31,7 @@ const setupProgress = function (opts = {}) {
       duration: opts.duration || 3000,
       strokeWidth: opts.strokeWidth || (98/(92+2*i)), // keep the absolute width same, see css
       easing: opts.easing || 'easeOut',
-      trailColor: opts.trailColor || '#fff',
+      trailColor: opts.trailColor || '#fdfdfd',
       color: opts.color && opts.color[i] ? opts.color[i] : "#ddd"
     });
     pbar.set((i + 1) * .20);
