@@ -39,7 +39,7 @@ window.onresize = () => {
 }
 
 // create progress bars
-let progressBars = setupProgress({ color: ["#aaa", "#bbb", "#ccc", "#ddd"] });
+let progressBars = setupProgress({ color: ["rgba(0,0,0,1)","#aaa", "#bbb", "#ccc", "#ddd"] });
 
 // layout lines in circular display
 let initialMetrics = { radius: Math.max(radius, 450) };
@@ -265,10 +265,10 @@ function updateInfo() {
 
   // compare visible text to each source text
   let affinities = [
-    affinity(sources.rural, displayWords, repIds),
-    affinity(sources.urban, displayWords, repIds),
-    affinity(sources.rural, displayWords, strictRepIds),
-    affinity(sources.urban, displayWords, strictRepIds)
+    affinity(sources.rural, displayWords, repIds), // progress bar #1
+    affinity(sources.urban, displayWords, repIds), // progress bar #2
+    affinity(sources.rural, displayWords, strictRepIds), // progress bar #3
+    affinity(sources.urban, displayWords, strictRepIds) // progress bar #4
   ];
 
   // Update the #stat panel
@@ -281,9 +281,12 @@ function updateInfo() {
 
   domStats.innerHTML = data;
 
-  progressBars.forEach((p, i) =>
-    p.animate((updating ? affinities[i] : 0) / 100,
-      { duration: 3000 }, () => 0/*console.log('done0')*/));
+  progressBars.forEach((p, i) =>{
+    if(i > 0){
+      p.animate((updating ? affinities[i - 1] : 0) / 100,
+      { duration: 3000 }, () => 0/*console.log('done0')*/)
+    } 
+  });
 }
 
 function replaceables() { // [] of replaceable indexes

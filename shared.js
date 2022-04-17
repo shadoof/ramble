@@ -29,12 +29,12 @@ const setupProgress = function (opts = {}) {
   document.querySelectorAll(".progress").forEach((t, i) => {
     let pbar = new ProgressBar.Circle(t, {
       duration: opts.duration || 3000,
-      strokeWidth: opts.strokeWidth || (98/(92+2*i)), // keep the absolute width same, see css
+      strokeWidth: opts.strokeWidth || (i > 0 ? (98/(92+2*((i - 1)%2 == 0 ? 2 : 1))) * 2 : 5), // keep the absolute width same, see css
       easing: opts.easing || 'easeOut',
-      trailColor: opts.trailColor || '#fff',
+      trailColor: opts.trailColor || 'rgba(0,0,0,0)',
       color: opts.color && opts.color[i] ? opts.color[i] : "#ddd"
     });
-    pbar.set((i + 1) * .20);
+    pbar.set(i > 0 ? (i) * .20 : 1);
     pbars.push(pbar);
   });
   return pbars;
