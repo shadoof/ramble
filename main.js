@@ -39,7 +39,7 @@ window.onresize = () => {
 }
 
 // create progress bars
-let progressBars = setupProgress({ color: ["#aaa", "#bbb", "#ccc", "#ddd"] });
+let progressBars = setupProgress({ color: ["rgba(0,0,0,1)","#aaa", "#bbb", "#ccc", "#ddd"] });
 
 // layout lines in circular display
 let initialMetrics = { radius: Math.max(radius, 450) };
@@ -281,9 +281,12 @@ function updateInfo() {
 
   domStats.innerHTML = data;
 
-  progressBars.forEach((p, i) =>
-    p.animate((updating ? affinities[i] : 0) / 100,
-      { duration: 3000 }, () => 0/*console.log('done0')*/));
+  progressBars.forEach((p, i) =>{
+    if(i > 0){
+      p.animate((updating ? affinities[i - 1] : 0) / 100,
+      { duration: 3000 }, () => 0/*console.log('done0')*/)
+    } 
+  });
 }
 
 function replaceables() { // [] of replaceable indexes
