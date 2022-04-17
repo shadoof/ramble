@@ -265,10 +265,10 @@ function updateInfo() {
 
   // compare visible text to each source text
   let affinities = [
-    affinity(sources.rural, displayWords, repIds),
-    affinity(sources.urban, displayWords, repIds),
-    affinity(sources.rural, displayWords, strictRepIds),
-    affinity(sources.urban, displayWords, strictRepIds)
+    affinity(sources.rural, displayWords, repIds), // progress bar #1
+    affinity(sources.urban, displayWords, repIds), // progress bar #2
+    affinity(sources.rural, displayWords, strictRepIds), // progress bar #3
+    affinity(sources.urban, displayWords, strictRepIds) // progress bar #4
   ];
 
   // Update the #stat panel
