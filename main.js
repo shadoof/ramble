@@ -41,7 +41,7 @@ window.onresize = () => {
 
 // create progress bars
 let progressBars = setupProgress({
-  color: ["rgba(0,0,0,1)", "#aaa", "#bbb", "#ccc", "#ddd"]
+  color: ["#000", "#ccc", "#ddd", "#aaa", "#bbb"]
 });
 
 // layout lines in circular display
@@ -65,23 +65,7 @@ function ramble() {
   let { updating, outgoing, destination } = state;
 
   if (!state.reader) { // first time
-
-    // double-check the span count
     spans = document.getElementsByClassName("word");
-    // if (spans.length != sources[state.destination].length) {
-    //   throw Error('Invalid spanify: ' + spans.length
-    //     + '!==' + sources[state.destination].length);
-    // }
-
-    // double-check measureWidthForLine
-    // let l1 = document.querySelector("#l1");
-    // let cWidth = window.getComputedStyle(l1.firstChild).width;
-    // let mWidth = measureWidthForLine(lines[1].text, 1);
-    // let radScale = radius / initialMetrics.radius;
-    // if (Math.abs(parseFloat(cWidth.replace("px", "")) * radScale - mWidth) > 1) {
-    //   throw new Error("invalid measureWidthForLine");
-    // }
-
     if (!state.stepMode) {
       state.reader = new Reader(spans);
       state.reader.start();

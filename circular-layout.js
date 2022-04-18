@@ -85,11 +85,11 @@ const adjustWordSpace = function (line, initial, maxMin, padding, radius) {
   // check for extreme values
   if (ws >= maxMin[1]) {
     line.style.wordSpacing = maxMin[1] + "em";
-    line.classList.add("max-word-spacing");
+    //line.classList.add("max-word-spacing"); // debugging only
   }
   else if (ws <= maxMin[0]) {
     line.style.wordSpacing = maxMin[0] + "em";
-    line.classList.add("min-word-spacing");
+    //line.classList.add("min-word-spacing");  // debugging only
   }
 
   return ws;
