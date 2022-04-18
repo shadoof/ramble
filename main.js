@@ -41,9 +41,7 @@ window.onresize = () => {
 
 // create progress bars
 let progressBars = setupProgress({
-  color:
-    //["#26495c", "#c4a35a", "#c66b3d", "#e5e5cd"] 
-    ["#d8d8d8", "#dfdfdf", "#eaeaea", "#f6f6f6"]
+  color: ["rgba(0,0,0,1)", "#aaa", "#bbb", "#ccc", "#ddd"]
 });
 
 // layout lines in circular display
@@ -276,10 +274,10 @@ function updateInfo() {
 
   // compare visible text to each source text
   let affinities = [
-    affinity(sources.rural, displayWords, repIds),
-    affinity(sources.urban, displayWords, repIds),
-    affinity(sources.rural, displayWords, strictRepIds),
-    affinity(sources.urban, displayWords, strictRepIds)
+    affinity(sources.rural, displayWords, repIds), // progress bar #1
+    affinity(sources.urban, displayWords, repIds), // progress bar #2
+    affinity(sources.rural, displayWords, strictRepIds), // progress bar #3
+    affinity(sources.urban, displayWords, strictRepIds) // progress bar #4
   ];
 
   // Update the #stat panel
@@ -292,9 +290,12 @@ function updateInfo() {
 
   domStats.innerHTML = data;
 
-  progressBars.forEach((p, i) =>
-    p.animate((updating ? affinities[i] : 0) / 100,
-      { duration: 3000 }, () => 0/*console.log('done0')*/));
+  progressBars.forEach((p, i) => {
+    if (i > 0) {
+      p.animate((updating ? affinities[i - 1] : 0) / 100,
+        { duration: 3000 }, () => 0/*console.log('done0')*/)
+    }
+  });
 }
 
 function replaceables() { // [] of replaceable indexes
@@ -337,15 +338,15 @@ function lengthAwareRandom(widx, word, options) {
   let lineIdx = parseInt((lineEle.id).slice(1));
   let originalW = initialMetrics.lineWidths[lineIdx] - (2 * padding);
   let currentW = lineEle.firstChild.getBoundingClientRect().width / scaleRatio;
-  let filter, msg = '', wordW = measureWidthForLine(word, lineIdx); 
+  let filter, msg = '', wordW = measureWidthForLine(word, lineIdx);
   if (originalW > currentW) {
     filter = (o) => measureWidthForLine(o, lineIdx) > wordW;
     msg += 'need longer word';
   }
   else {
     filter = (o, i) => measureWidthForLine(o, lineIdx) < wordW;
-      // console.log('  ', i, `orig: ${word}(${Math.round(wordW)})`
-      //   + ` check: ${o} (${Math.round(ow)})`);
+    // console.log('  ', i, `orig: ${word}(${Math.round(wordW)})`
+    //   + ` check: ${o} (${Math.round(ow)})`);
     msg += 'need shorter word';
   }
 
@@ -357,7 +358,7 @@ function lengthAwareRandom(widx, word, options) {
 
   let choice = RiTa.random(choices);
   //console.log(msg + ', replaced ' + word + `(${Math.round(wordW)})` + ' with '
-    //+ choice + `(${Math.round(measureWidthForLine(choice, lineIdx))})`);
+  //+ choice + `(${Math.round(measureWidthForLine(choice, lineIdx))})`);
   return choice;
 }
 

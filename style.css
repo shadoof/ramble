@@ -50,8 +50,8 @@ body {
 }
 
 #progress0 {
-  z-index: 1;
-  width: calc(calc(min(95vh, 95vw) - 50px)*0.92);
+  z-index: 0;
+  width: calc(calc(min(95vh, 95vw) - 50px)*0.943);
   aspect-ratio: 1/1;
   position: absolute;
   top: 50%;
@@ -62,39 +62,39 @@ body {
 }
 
 #progress1 {
+  z-index: 1;
+  width: calc(calc(min(95vh, 95vw) - 50px)*0.92);
+  aspect-ratio: 1/1;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+}
+
+#progress2 {
   z-index: 2;
   width: calc(calc(min(95vh, 95vw) - 50px)*0.94);
   aspect-ratio: 1/1;
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
-  -webkit-transform: translate(-50%, -50%);
-  -moz-transform: translate(-50%, -50%);
-}
-
-#progress2 {
-  z-index: 3;
-  width: calc(calc(min(95vh, 95vw) - 50px)*0.96);
-  aspect-ratio: 1/1;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  -webkit-transform: translate(-50%, -50%);
-  -moz-transform: translate(-50%, -50%);
 }
 
 #progress3 {
-  z-index: 4;
-  width: calc(calc(min(95vh, 95vw) - 50px)*0.978);
+  z-index: 3;
+  width: calc(calc(min(95vh, 95vw) - 50px)*0.92);
   aspect-ratio: 1/1;
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
-  -webkit-transform: translate(-50%, -50%);
-  -moz-transform: translate(-50%, -50%);
+}
+
+#progress4 {
+  z-index: 4;
+  width: calc(calc(min(95vh, 95vw) - 50px)*0.94);
+  aspect-ratio: 1/1;
+  position: absolute;
+  top: 50%;
+  left: 50%;
 }
 
 .word {
@@ -155,6 +155,18 @@ body {
   margin-top: 35px;
   margin-bottom: 5px;
   text-align: center;
+}
+
+.rural {
+  transform: translate(-50%, -50%) scaleX(-1);
+  -webkit-transform: translate(-50%, -50%) scaleX(-1);
+  -moz-transform: translate(-50%, -50%) scaleX(-1);
+}
+
+.urban {
+  transform: translate(-50%, -50%);
+  -webkit-transform: translate(-50%, -50%);
+  -moz-transform: translate(-50%, -50%);
 }
 
 .line {
