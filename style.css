@@ -47,7 +47,7 @@
 
 #progress0 {
   z-index: 0;
-  width: calc(calc(min(95vh, 95vw) - 50px)*0.95);
+  width: calc(calc(min(95vh, 95vw) - 50px)*0.943);
   aspect-ratio: 1/1;
   position: absolute;
   top: 50%;
