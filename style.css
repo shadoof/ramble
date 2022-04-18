@@ -47,7 +47,7 @@
 
 #progress0 {
   z-index: 0;
-  width: calc(calc(min(95vh, 95vw) - 50px)*0.99);
+  width: calc(calc(min(95vh, 95vw) - 50px)*0.943);
   aspect-ratio: 1/1;
   position: absolute;
   top: 50%;
@@ -59,7 +59,7 @@
 
 #progress1 {
   z-index: 1;
-  width: calc(calc(min(95vh, 95vw) - 50px)*0.94);
+  width: calc(calc(min(95vh, 95vw) - 50px)*0.92);
   aspect-ratio: 1/1;
   position: absolute;
   top: 50%;
@@ -68,7 +68,7 @@
 
 #progress2 {
   z-index: 2;
-  width: calc(calc(min(95vh, 95vw) - 50px)*0.98);
+  width: calc(calc(min(95vh, 95vw) - 50px)*0.94);
   aspect-ratio: 1/1;
   position: absolute;
   top: 50%;
@@ -77,7 +77,7 @@
 
 #progress3 {
   z-index: 3;
-  width: calc(calc(min(95vh, 95vw) - 50px)*0.94);
+  width: calc(calc(min(95vh, 95vw) - 50px)*0.92);
   aspect-ratio: 1/1;
   position: absolute;
   top: 50%;
@@ -86,7 +86,7 @@
 
 #progress4 {
   z-index: 4;
-  width: calc(calc(min(95vh, 95vw) - 50px)*0.98);
+  width: calc(calc(min(95vh, 95vw) - 50px)*0.94);
   aspect-ratio: 1/1;
   position: absolute;
   top: 50%;
