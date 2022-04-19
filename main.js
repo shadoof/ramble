@@ -3,6 +3,8 @@ const history = { rural: [], urban: [] };
 const strictRepIds = strictReplaceables(repIds);
 const domStats = document.querySelector('#stats');
 const domDisplay = document.querySelector('#display');
+const progressBarColor = ["#000", "#1E6F34", "#B24444", "#32BB57", "#FF6161"];
+//["#000", "#365474", "#B24444", "#6AA6E6", "#FE6161"]
 
 // length of short and long walks
 const shortWalkLegs = 2, longWalkLegs = 5;
@@ -47,7 +49,7 @@ window.onresize = () => {
 
 // create progress bars
 let progressBars = setupProgress({
-  color: ["#000", "#ccc", "#ddd", "#aaa", "#bbb"]
+  color: progressBarColor
 });
 
 // layout lines in circular display
@@ -62,6 +64,9 @@ let lines = dynamicCircleLayout(
 initialMetrics.lineWidths = layoutCircular(
   domDisplay, initialMetrics.radius, lines);
 initialMetrics.fontSize = lines[0].fontSize;
+
+// legend
+createLegend();
 
 scaleToFit();
 ramble(); // go
@@ -426,4 +431,26 @@ function updateDOM(next, idx) {
 function scaleToFit() {
   document.querySelector('#text-display').style.transform
     = "scale(" + radius / initialMetrics.radius + ")";
+  document.querySelector('#legend').style.transform
+    = "scale(" + radius / initialMetrics.radius + ")";
+}
+
+function createLegend() {
+  let legendDiv = document.createElement("div");
+  legendDiv.id="legend";
+  legendDiv.style.width = "900px"
+  legendDiv.style.height = "900px"
+  let legendContent = document.createElement("div");
+  legendContent.classList.add("legend-content");
+  legendContent.innerHTML = `
+  <p><svg class="rural-legend" style="fill: ${progressBarColor[1]}">
+  <rect id="box" x="0" y="0" width="20" height="20"/>
+  </svg> rural</p>
+  <p><svg class="urban-legend" style="fill: ${progressBarColor[2]}">
+  <rect id="box" x="0" y="0" width="20" height="20"/>
+  </svg> urban</p>
+  `
+  legendDiv.append(legendContent);
+  legendDiv.style.fontSize = (initialMetrics.fontSize) ? initialMetrics.fontSize + "px" : "20.5px"
+  document.querySelector("#display").append(legendDiv)
 }
