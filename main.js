@@ -4,15 +4,21 @@ const strictRepIds = strictReplaceables(repIds);
 const domStats = document.querySelector('#stats');
 const domDisplay = document.querySelector('#display');
 
+// length of short and long walks
+const shortWalkLegs = 2, longWalkLegs = 5;
+
+// time on new text before updates begin
+const preUpdateDelay = 5000;//state.maxSteps * state.updateDelay * 3; 
+
 const state = {
   destination: 'rural',
+  maxLegs: shortWalkLegs,
   updateDelay: 500,
   stepMode: false,
   outgoing: true,
-  updating: true,
+  updating: false,
   logging: false,
-  maxSteps: 50,
-  maxLegs: 20,
+  maxSteps: 10,
   reader: 0,
   loopId: 0,
   legs: 0
@@ -51,8 +57,10 @@ let offset = {
   y: displayBounds.y + initialMetrics.radius
 };
 let opts = { offset, font, lineHeightScale: 1.28, padding: padding };
-let lines = dynamicCircleLayout(sources[state.destination], initialMetrics.radius, opts);
-initialMetrics.lineWidths = layoutCircular(domDisplay, initialMetrics.radius, lines);
+let lines = dynamicCircleLayout(
+  sources[state.destination], initialMetrics.radius, opts);
+initialMetrics.lineWidths = layoutCircular(
+  domDisplay, initialMetrics.radius, lines);
 initialMetrics.fontSize = lines[0].fontSize;
 
 scaleToFit();
@@ -62,12 +70,14 @@ ramble(); // go
 
 function ramble() {
 
-  let { updating, outgoing, destination } = state;
+  let { updating, outgoing, destination, maxSteps, updateDelay } = state;
 
   if (!state.reader) { // first time
     spans = document.getElementsByClassName("word");
     if (!state.stepMode) {
       state.reader = new Reader(spans);
+      state.reader.doAfter(preUpdateDelay, update); // first-time
+      console.log('[INFO] preUpdateDelay: '+preUpdateDelay+' ms');
       state.reader.start();
     }
   }
@@ -91,27 +101,49 @@ function ramble() {
   }
 }
 
+function update(updating = true) {
+  //console.log(`update(${updating})`);
+  state.updating = updating;
+  state.maxLegs = shortWalkLegs;
+  ramble();
+}
+
 /* logic for steps, legs and domain swapping */
 function updateState() {
 
-  let { maxSteps, legs, maxLegs, logging } = state;
+  let { maxSteps, destination, legs, maxLegs, logging } = state;
 
   let steps = numMods();
   if (state.outgoing) {
     if (steps >= maxSteps) {
-      if (++state.legs >= maxLegs) return stop();
+      //if (++state.legs >= maxLegs) return stop();
       if (logging) console.log(`Reverse: incoming in `
-        + `"urban" after leg #${legs + 1}.\n`);
+        + `"${destination}" on leg #${legs + 1}/${maxLegs}\n`);
       state.outgoing = false;
-      state.destination = 'urban'; // swap dest
+      //state.destination = 'urban'; // swap dest
     }
   }
   else {   // incoming
     if (steps === 0) {
-      if (++state.legs >= maxLegs) return stop();
-      if (logging) console.log(`Reverse: outgoing in `
-        + `"urban" after leg #${legs + 1}.\n`);
       state.outgoing = true;
+      if (++state.legs >= maxLegs) {
+        state.legs = 0;
+        state.destination = (state.destination === 'rural') ? 'urban' : 'rural';
+        if (maxLegs === shortWalkLegs) {
+          state.maxLegs = longWalkLegs;
+        }
+        else {
+          state.update = false;
+          state.maxLegs = shortWalkLegs;
+          state.reader.doAfter(preUpdateDelay, update);
+        }
+        if (logging) console.log(`Reverse: outgoing in `
+          + `"${state.destination}" for ${state.maxLegs} legs\n`);
+      }
+      else {
+        if (logging) console.log(`Reverse: outgoing in `
+        + `"${state.destination}" on leg #${legs + 1}/${state.maxLegs}\n`);
+      }
     }
   }
   updateInfo();

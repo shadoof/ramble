@@ -2,6 +2,8 @@ class Reader {
 
   constructor(elements) {
     this.index = 0;
+    this.timeoutId = 0;
+    this.doAfterId = 0;
     this.reading = false;
     this.spans = Array.from(elements);
     this.numVisibleWords = 13;
@@ -14,25 +16,37 @@ class Reader {
     this.step();
   }
 
+  doAfter(ms, func) {
+    clearTimeout(this.doAfterId);
+    this.doAfterId = setTimeout(func, ms);
+  }
+
   selection() {
+
     // line-based highlighter
     let lastSpan = this.spans[this.index - 1];
-    if (lastSpan !== undefined && (lastSpan.nextSibling === null || lastSpan.nextSibling.nextSibling === null)) {
+    if (lastSpan !== undefined && (!lastSpan.nextSibling
+      || !lastSpan.nextSibling.nextSibling)) {
       return [lastSpan, this.spans[this.index]];
     }
+
     let sl = [], idx = this.index, currSpan;
     do {
       currSpan = this.spans[idx--]
       sl.unshift(currSpan);
     } while (currSpan !== currSpan.parentElement.firstChild)
+
     return sl;
+
     // the following would highlight a fixed number of words
     // with timeToRead delays for the leading word at this.index
-    // return this.spans.slice(this.index - this.numVisibleWords + 1, this.index + 1);
+    // return this.spans.slice(
+    //this.index - this.numVisibleWords + 1, this.index + 1);
   }
 
   step() {
     if (!this.reading) return;
+
     let delayTime = this.timeToRead(this.spans[this.index].textContent);
     this.spans.forEach(e => e.classList.remove('visible'));
     this.selection().forEach(e => {
@@ -46,6 +60,7 @@ class Reader {
 
   stop() {
     this.reading = false;
+    clearTimeout(this.doAfterId);
     clearTimeout(this.timeoutId);
     this.spans.forEach(e => e.classList.remove('visible'));
   }
@@ -53,6 +68,7 @@ class Reader {
   timeToRead(word, basetime = 150) {
     const syltime = basetime / 2; // most significant accumulator: these ms per syllable
     if (digitsRE.test(word)) return basetime + word.length * syltime; // word is all number
+
     if (!RiTa.isPunct(word)) {
       // the following handles 'word's such as "well-illustrated"
       let syls = RiTa.syllables(word.replaceAll(hyphensRE, " ")).replaceAll(" ", "/");
@@ -66,4 +82,5 @@ class Reader {
   }
 }
 
-const endsRE = /[.?!]$/, punctRE = /[,;:—]$/, hyphensRE = /[-–—]/g, splitRE = /[\/-]/, digitsRE = /^\d*[\d+.:,]*\d+$/;
+const endsRE = /[.?!]$/, punctRE = /[,;:—]$/, hyphensRE = /[-–—]/g,
+  splitRE = /[\/-]/, digitsRE = /^\d*[\d+.:,]*\d+$/;
