@@ -3,8 +3,9 @@ const history = { rural: [], urban: [] };
 const strictRepIds = strictReplaceables(repIds);
 const domStats = document.querySelector('#stats');
 const domDisplay = document.querySelector('#display');
-const progressBarColor = ["#000", "#1E6F34", "#B24444", "#32BB57", "#FF6161"];
-//["#000", "#365474", "#B24444", "#6AA6E6", "#FE6161"]
+const progressBarColor =  ["#000", "rgba( 255, 97, 97, 0.6)", "rgba(178, 68, 68, 0.8)", "rgba(50, 187, 87, 0.6)", "rgb(30, 111, 52, 0.8)",]; // red-green
+//["#000", "rgba(0, 166, 233, 0.6)", "rgba(82, 158, 191, 0.8)", "rgba(245, 199, 0, 0.6)", "rgba(236, 192, 0, 0.8)",]; // yellow - bule
+//["#000", "rgb(255, 97, 97, 0.6)", "rgba(178, 68, 68, 0.8)", "rgba(106, 166, 230, 0.6)", "rgba(54, 84, 116, 0.8)"]; // red-blue
 
 // length of short and long walks
 const shortWalkLegs = 2, longWalkLegs = 5;
@@ -295,19 +296,19 @@ function updateInfo() {
 
   // compare visible text to each source text
   let affinities = [
-    affinity(sources.rural, displayWords, repIds), // progress bar #1
-    affinity(sources.urban, displayWords, repIds), // progress bar #2
-    affinity(sources.rural, displayWords, strictRepIds), // progress bar #3
-    affinity(sources.urban, displayWords, strictRepIds) // progress bar #4
+    affinity(sources.urban, displayWords, repIds), // progress bar #1
+    affinity(sources.urban, displayWords, strictRepIds), // progress bar #2
+    affinity(sources.rural, displayWords, repIds), // progress bar #3
+    affinity(sources.rural, displayWords, strictRepIds), // progress bar #4
   ];
 
   // Update the #stat panel
   let data = 'Domain: ' + destination;
   data += '&nbsp;' + (updating ? (outgoing ? '⟶' : '⟵') : 'X');
   data += ` &nbsp; Leg: ${legs + 1} /${maxLegs}&nbsp; Affinity:`;
-  data += ' Rural=' + affinities[0] + ' Urban=' + affinities[1];
+  data += ' Rural=' + affinities[2] + ' Urban=' + affinities[0];
   data += ' &nbsp;Strict:'; // and now in strict mode
-  data += ' Rural=' + affinities[2] + ' Urban=' + affinities[3];
+  data += ' Rural=' + affinities[3] + ' Urban=' + affinities[1];
 
   domStats.innerHTML = data;
 
@@ -443,10 +444,10 @@ function createLegend() {
   let legendContent = document.createElement("div");
   legendContent.classList.add("legend-content");
   legendContent.innerHTML = `
-  <p><svg class="rural-legend" style="fill: ${progressBarColor[1]}">
+  <p><svg class="rural-legend" style="fill: ${progressBarColor[3]}">
   <rect id="box" x="0" y="0" width="20" height="20"/>
   </svg> rural</p>
-  <p><svg class="urban-legend" style="fill: ${progressBarColor[2]}">
+  <p><svg class="urban-legend" style="fill: ${progressBarColor[1]}">
   <rect id="box" x="0" y="0" width="20" height="20"/>
   </svg> urban</p>
   `
