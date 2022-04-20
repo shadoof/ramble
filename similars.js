@@ -22,13 +22,13 @@ const similarCache = precache || {
 };
 
 this.onmessage = function (e) {
-  let { idx, destination } = e.data;
-  if (!destination) {
+  let { idx, domain } = e.data;
+  if (!domain) {
     this.postMessage({ idx: -1, displaySims: [], shadowSims: [], similarCache });
     return;
   }
-  let shadow = destination === 'rural' ? 'urban' : 'rural';
-  let displayWord = sources[destination][idx];
+  let shadow = domain === 'rural' ? 'urban' : 'rural';
+  let displayWord = sources[domain][idx];
   let shadowWord = sources[shadow][idx];
   let pos = sources.pos[idx];
   let shadowSims = findSimilars(shadowWord, pos, sources); // ??

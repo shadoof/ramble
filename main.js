@@ -3,9 +3,6 @@ const history = { rural: [], urban: [] };
 const strictRepIds = strictReplaceables(repIds);
 const domStats = document.querySelector('#stats');
 const domDisplay = document.querySelector('#display');
-const progressBarColor =  ["#000", "rgba( 255, 97, 97, 0.6)", "rgba(178, 68, 68, 0.8)", "rgba(50, 187, 87, 0.6)", "rgb(30, 111, 52, 0.8)",]; // red-green
-//["#000", "rgba(0, 166, 233, 0.6)", "rgba(82, 158, 191, 0.8)", "rgba(245, 199, 0, 0.6)", "rgba(236, 192, 0, 0.8)",]; // yellow - blue
-//["#000", "rgb(255, 97, 97, 0.6)", "rgba(178, 68, 68, 0.8)", "rgba(106, 166, 230, 0.6)", "rgba(54, 84, 116, 0.8)"]; // red-blue
 
 // length of short and long walks
 const shortWalkLegs = 4, longWalkLegs = 20;
@@ -17,10 +14,17 @@ const updateDelay = 500;
 const stepsPerLeg = 20;
 
 // time on new text before updates begin
-const preUpdateDelay = stepsPerLeg * updateDelay * 3; 
+const preUpdateDelay = 2000;//stepsPerLeg * updateDelay * 3; 
+
+// min and max CSS word-spacing (em)
+const wordspaceMinMax = [-0.1, .5];
+
+const progressBarColor = ["rgb(0, 0, 0, 0.6)", "rgb(255, 97, 97, 0.6)", "rgba(178, 68, 68, 0.8)", "rgba(106, 166, 230, 0.6)", "rgba(54, 84, 116, 0.8)"]; // red-blue
+// ["rgb(0, 0, 0, 0.6)", "rgba(0, 166, 233, 0.6)", "rgba(82, 158, 191, 0.8)", "rgba(245, 199, 0, 0.6)", "rgba(236, 192, 0, 0.8)"]; // yellow-blue
+// ["rgb(0, 0, 0, 0.6)", "rgba(255, 97, 97, 0.6)", "rgba(178, 68, 68, 0.8)", "rgba(50, 187, 87, 0.6)", "rgb(30, 111, 52, 0.8)"]; // red-green
 
 const state = {
-  destination: 'rural',
+  domain: 'rural',
   maxLegs: shortWalkLegs,
   verbose: false,
   stepMode: false,
@@ -33,7 +37,6 @@ const state = {
 };
 
 let displaySims, shadowSims, worker, cachedHtml, wordSpacing, spans;
-let wordspaceMinMax = [-0.1, .5]; // in em
 let displayBounds = domDisplay.getBoundingClientRect();
 let font = window.getComputedStyle(domDisplay).fontFamily;
 let cpadding = window.getComputedStyle(domDisplay).padding;
@@ -53,9 +56,7 @@ window.onresize = () => {
 }
 
 // create progress bars
-let progressBars = setupProgress({
-  color: progressBarColor
-});
+let progressBars = setupProgress({ color: progressBarColor });
 
 // layout lines in circular display
 let initialMetrics = { radius: Math.max(radius, 450) };
@@ -64,10 +65,10 @@ let offset = {
   y: displayBounds.y + initialMetrics.radius
 };
 let opts = { offset, font, lineHeightScale: 1.28, padding: padding };
-let lines = dynamicCircleLayout(
-  sources[state.destination], initialMetrics.radius, opts);
-initialMetrics.lineWidths = layoutCircular(
-  domDisplay, initialMetrics.radius, lines);
+let lines = dynamicCircleLayout
+  (sources[state.domain], initialMetrics.radius, opts);
+initialMetrics.lineWidths = layoutCircular
+  (domDisplay, initialMetrics.radius, lines);
 initialMetrics.fontSize = lines[0].fontSize;
 
 createLegend();
@@ -78,14 +79,15 @@ ramble(); // go
 
 function ramble() {
 
-  let { updating, outgoing, destination } = state;
+  let { updating, outgoing, domain } = state;
 
   if (!state.reader) { // first time
     spans = document.getElementsByClassName("word");
     if (!state.stepMode) {
       state.reader = new Reader(spans);
       state.reader.doAfter(preUpdateDelay, update); // first-time
-      console.log(`[INFO] Delays: preUpdate=${preUpdateDelay}ms update=${updateDelay}ms`);
+      console.log(`[INFO] Delays: preUpdate=${preUpdateDelay}ms`
+        + ` update=${updateDelay}ms`);
       state.reader.start();
     }
   }
@@ -99,9 +101,9 @@ function ramble() {
     if (outgoing) {
       // tell worker to do similar search
       let idx = RiTa.random(repIds.filter(id => !state.reader
-        || !state.reader.selection().includes(sources[destination][id])));
+        || !state.reader.selection().includes(sources[domain][id])));
       startMs = Date.now();
-      worker.postMessage({ idx, destination }); // calls replace() when done
+      worker.postMessage({ idx, domain }); // calls replace() when done
     }
     else {
       restore();
@@ -119,14 +121,14 @@ function update(updating = true) {
 /* logic for steps, legs and domain swapping */
 function updateState() {
 
-  let { destination, legs, maxLegs, logging } = state;
+  let { domain, legs, maxLegs, logging } = state;
 
   let steps = numMods();
   if (state.outgoing) {
     if (steps >= stepsPerLeg) {
       //if (++state.legs >= maxLegs) return stop();
       if (logging) console.log(`Reverse: incoming in `
-        + `"${destination}" on leg #${legs + 1}/${maxLegs}\n`);
+        + `"${domain}" on leg #${legs + 1}/${maxLegs}\n`);
       state.outgoing = false;
     }
   }
@@ -135,7 +137,7 @@ function updateState() {
       state.outgoing = true;
       if (++state.legs >= maxLegs) {
         state.legs = 0;
-        state.destination = (state.destination === 'rural') ? 'urban' : 'rural';
+        state.domain = (state.domain === 'rural') ? 'urban' : 'rural';
         if (maxLegs === shortWalkLegs) {
           state.maxLegs = longWalkLegs;
         }
@@ -145,11 +147,11 @@ function updateState() {
           state.reader.doAfter(preUpdateDelay, update);
         }
         if (logging) console.log(`Reverse: outgoing in `
-          + `"${state.destination}" for ${state.maxLegs} legs\n`);
+          + `"${state.domain}" for ${state.maxLegs} legs\n`);
       }
       else {
         if (logging) console.log(`Reverse: outgoing in `
-          + `"${state.destination}" on leg #${legs + 1}/${state.maxLegs}\n`);
+          + `"${state.domain}" on leg #${legs + 1}/${state.maxLegs}\n`);
       }
     }
   }
@@ -159,7 +161,7 @@ function updateState() {
 
 function replace(e) { // called by similars.js (worker)
 
-  let { destination, logging, verbose } = state;
+  let { domain, logging, verbose } = state;
   let { idx, displaySims, shadowSims } = e.data;
 
   if (idx === -1) { // dev-only
@@ -174,8 +176,8 @@ function replace(e) { // called by similars.js (worker)
     return;
   }
 
-  let shadow = destination === 'rural' ? 'urban' : 'rural';
-  let displayWord = sources[destination][idx];
+  let shadow = domain === 'rural' ? 'urban' : 'rural';
+  let displayWord = sources[domain][idx];
   let shadowWord = sources[shadow][idx];
   let pos = sources.pos[idx];
   let delayMs = 1;
@@ -183,9 +185,9 @@ function replace(e) { // called by similars.js (worker)
   if (displaySims.length && shadowSims.length) {
 
     // pick a random similar to replace in display text
-    let displayWord = sources[destination][idx];
+    let displayWord = sources[domain][idx];
     let displayNext = lengthAwareRandom(idx, displayWord, displaySims);
-    history[destination][idx].push(displayNext);
+    history[domain][idx].push(displayNext);
     updateDOM(displayNext, idx);
 
     let shadowNext = lengthAwareRandom(idx, shadowWord, shadowSims);
@@ -196,7 +198,7 @@ function replace(e) { // called by similars.js (worker)
     let ms = Date.now() - startMs;
     delayMs = Math.max(1, updateDelay - ms);
 
-    if (logging && verbose) console.log(`${numMods()}) @${idx} ${destination}: ${displayWord} `
+    if (logging && verbose) console.log(`${numMods()}) @${idx} ${domain}: ${displayWord} `
       + ` -> ${displayNext}, ${shadow}: ${shadowWord} -> ${shadowNext} [${pos}] ${ms}ms`);
   }
   else {
@@ -212,14 +214,14 @@ function replace(e) { // called by similars.js (worker)
 /* selects an index to restore (from history) in displayed text */
 function restore() {
 
-  let { destination, logging, verbose } = state;
+  let { domain, logging, verbose } = state;
 
   let displayWords = unspanify();
 
   // get all possible restorations
   let choices = repIds
     .map(idx => ({ idx, word: displayWords[idx] }))
-    .filter(({ word, idx }) => history[destination][idx].length > 1
+    .filter(({ word, idx }) => history[domain][idx].length > 1
       && isReplaceable(word));
 
   if (choices.length) {
@@ -227,7 +229,7 @@ function restore() {
     // pick a changed word to step back
     let { word, idx } = RiTa.random(choices);
     let pos = sources.pos[idx];
-    let hist = history[destination][idx];
+    let hist = history[domain][idx];
 
     // select newest from history
     hist.pop();
@@ -239,12 +241,12 @@ function restore() {
     updateDOM(next, idx);
 
     if (logging && verbose) console.log(`${numMods()}] @${idx} `
-      + `${destination}: ${word} -> ${next} [${pos}]`);
+      + `${domain}: ${word} -> ${next} [${pos}]`);
   }
   else {
-    let id = repIds.find(idx => history[destination][idx].length > 1);
-    let wrd = sources[destination][id];
-    let hst = history[destination][id];
+    let id = repIds.find(idx => history[domain][idx].length > 1);
+    let wrd = sources[domain][id];
+    let hst = history[domain][id];
     console.warn('[WARN] Invalid-state, numMods:'
       + numMods() + ' idx=' + id + '/' + wrd + ' history=', hst);
     stop();
@@ -270,7 +272,7 @@ function affinity(textA, textB, idsToCheck) {
 /* total number of replacements made in display text */
 function numMods() {
   return repIds.reduce((total, idx) =>
-    total + history[state.destination][idx].length - 1, 0);
+    total + history[state.domain][idx].length - 1, 0);
 }
 
 /* stop rambler and reader  */
@@ -286,12 +288,12 @@ function stop() {
     }), 1000);
   if (state.logging) console.log('[INFO] done');
   updateInfo();
-  worker.postMessage({ idx: 0, destination: 0 });
+  worker.postMessage({ idx: 0, domain: 0 });
 }
 
 /* update stats in debug panel */
 function updateInfo() {
-  let { updating, destination, outgoing, legs, maxLegs } = state;
+  let { updating, domain, outgoing, legs, maxLegs } = state;
 
   let displayWords = unspanify(); // get words
 
@@ -304,7 +306,7 @@ function updateInfo() {
   ];
 
   // Update the #stat panel
-  let data = 'Domain: ' + destination;
+  let data = 'Domain: ' + domain;
   data += '&nbsp;' + (updating ? (outgoing ? '⟶' : '⟵') : 'X');
   data += ` &nbsp; Leg: ${legs + 1} /${maxLegs}&nbsp; Affinity:`;
   data += ' Rural=' + affinities[2] + ' Urban=' + affinities[0];
@@ -386,7 +388,7 @@ function lengthAwareRandom(widx, word, options) {
 }
 
 function shadowTextName() {
-  return state.destination === 'rural' ? 'urban' : 'rural';
+  return state.domain === 'rural' ? 'urban' : 'rural';
 }
 
 function keyhandler(e) {
