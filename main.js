@@ -48,7 +48,7 @@ let highlights = false;
 // setup history and handlers
 Object.keys(history).map(k => sources[k].map((w, i) => history[k][i] = [w]));
 document.addEventListener('keyup', keyhandler);
-console.log('[INFO] Key cmds -> (l)ogging (h)ighlight (i)nfo (s)tep (e)nd');
+console.log('[INFO] Key cmds -> (h)ighlight (i)nfo (s)tep (e)nd'); // (l)ogging
 window.onresize = () => {
   displayBounds = domDisplay.getBoundingClientRect();
   radius = displayBounds.width / 2;
