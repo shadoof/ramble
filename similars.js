@@ -3,10 +3,8 @@ importScripts('shared.js');
 
 const lex = RiTa.lexicon();
 
-// if (precache) {
-//   console.info('[INFO] Using cached similars'
+// if (precache) console.info('[INFO] Using cached similars'
 //     + ` [${Object.keys(precache).length}]`);
-// }
 
 const similarCache = precache || {
   avoid: ['elude', 'escape', 'evade'],

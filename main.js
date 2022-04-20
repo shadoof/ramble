@@ -14,7 +14,7 @@ const updateDelay = 500;
 const stepsPerLeg = 20;
 
 // time on new text before updates begin
-const preUpdateDelay = 2000;//stepsPerLeg * updateDelay * 3; 
+const preUpdateDelay = stepsPerLeg * updateDelay * 3; 
 
 // min and max CSS word-spacing (em)
 const wordspaceMinMax = [-0.1, .5];
