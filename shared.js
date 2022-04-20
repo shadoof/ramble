@@ -39,7 +39,7 @@ const setupProgress = function (opts = {}) {
       trailColor: opts.trailColor || 'rgba(0,0,0,0)',
       color: opts.color && opts.color[i] ? opts.color[i] : "#ddd"
     });
-    pbar.set(i > 0 ? (i) * .20 : 1);
+    pbar.set(i > 0 ? 0 : 1);
     pbars.push(pbar);
   });
   return pbars;
