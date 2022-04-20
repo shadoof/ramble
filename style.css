@@ -178,6 +178,7 @@ body {
 .urban-legend {
   width: 20px;
   height: 20px;
+  top: 20px;
   display: inline-block;
 }
 
@@ -200,4 +201,9 @@ body {
   position: fixed;
   bottom: 0;
   right: 0;
+}
+
+.legend-content p {
+  font-family: "helvetica";
+  font-size: 20px;
 }

@@ -3,31 +3,34 @@ const history = { rural: [], urban: [] };
 const strictRepIds = strictReplaceables(repIds);
 const domStats = document.querySelector('#stats');
 const domDisplay = document.querySelector('#display');
-const progressBarColor = ["#000", "#1E6F34", "#B24444", "#32BB57", "#FF6161"];
-//["#000", "#365474", "#B24444", "#6AA6E6", "#FE6161"]
+const progressBarColor = ["#000", "#2C82C6", "#FF6161", "#254B94", "#B24444"];//["#000", "#365474", "#B24444", "#6AA6E6", "#FE6161"], ["#000", "#1E6F34", "#B24444", "#32BB57", "#FF6161"]
 
 // length of short and long walks
-const shortWalkLegs = 2, longWalkLegs = 5;
+const shortWalkLegs = 4, longWalkLegs = 20;
+
+// time between word replacements
+const updateDelay = 500;
+
+// number of steps on incoming/outgoing legs
+const stepsPerLeg = 20;
 
 // time on new text before updates begin
-const preUpdateDelay = 5000;//state.maxSteps * state.updateDelay * 3; 
+const preUpdateDelay = stepsPerLeg * updateDelay * 3; 
 
 const state = {
   destination: 'rural',
   maxLegs: shortWalkLegs,
-  updateDelay: 500,
+  verbose: false,
   stepMode: false,
   outgoing: true,
   updating: false,
-  logging: false,
-  maxSteps: 10,
+  logging: true,
   reader: 0,
   loopId: 0,
   legs: 0
 };
 
 let displaySims, shadowSims, worker, cachedHtml, wordSpacing, spans;
-
 let wordspaceMinMax = [-0.1, .5]; // in em
 let displayBounds = domDisplay.getBoundingClientRect();
 let font = window.getComputedStyle(domDisplay).fontFamily;
@@ -65,9 +68,7 @@ initialMetrics.lineWidths = layoutCircular(
   domDisplay, initialMetrics.radius, lines);
 initialMetrics.fontSize = lines[0].fontSize;
 
-// legend
 createLegend();
-
 scaleToFit();
 ramble(); // go
 
@@ -75,14 +76,14 @@ ramble(); // go
 
 function ramble() {
 
-  let { updating, outgoing, destination, maxSteps, updateDelay } = state;
+  let { updating, outgoing, destination } = state;
 
   if (!state.reader) { // first time
     spans = document.getElementsByClassName("word");
     if (!state.stepMode) {
       state.reader = new Reader(spans);
       state.reader.doAfter(preUpdateDelay, update); // first-time
-      console.log('[INFO] preUpdateDelay: '+preUpdateDelay+' ms');
+      console.log(`[INFO] Delays: preUpdate=${preUpdateDelay}ms update=${updateDelay}ms`);
       state.reader.start();
     }
   }
@@ -116,16 +117,15 @@ function update(updating = true) {
 /* logic for steps, legs and domain swapping */
 function updateState() {
 
-  let { maxSteps, destination, legs, maxLegs, logging } = state;
+  let { destination, legs, maxLegs, logging } = state;
 
   let steps = numMods();
   if (state.outgoing) {
-    if (steps >= maxSteps) {
+    if (steps >= stepsPerLeg) {
       //if (++state.legs >= maxLegs) return stop();
       if (logging) console.log(`Reverse: incoming in `
         + `"${destination}" on leg #${legs + 1}/${maxLegs}\n`);
       state.outgoing = false;
-      //state.destination = 'urban'; // swap dest
     }
   }
   else {   // incoming
@@ -147,7 +147,7 @@ function updateState() {
       }
       else {
         if (logging) console.log(`Reverse: outgoing in `
-        + `"${state.destination}" on leg #${legs + 1}/${state.maxLegs}\n`);
+          + `"${state.destination}" on leg #${legs + 1}/${state.maxLegs}\n`);
       }
     }
   }
@@ -157,7 +157,7 @@ function updateState() {
 
 function replace(e) { // called by similars.js (worker)
 
-  let { destination, updateDelay, logging } = state;
+  let { destination, logging, verbose } = state;
   let { idx, displaySims, shadowSims } = e.data;
 
   if (idx === -1) { // dev-only
@@ -194,7 +194,7 @@ function replace(e) { // called by similars.js (worker)
     let ms = Date.now() - startMs;
     delayMs = Math.max(1, updateDelay - ms);
 
-    if (logging) console.log(`${numMods()}) @${idx} ${destination}: ${displayWord} `
+    if (logging && verbose) console.log(`${numMods()}) @${idx} ${destination}: ${displayWord} `
       + ` -> ${displayNext}, ${shadow}: ${shadowWord} -> ${shadowNext} [${pos}] ${ms}ms`);
   }
   else {
@@ -210,7 +210,7 @@ function replace(e) { // called by similars.js (worker)
 /* selects an index to restore (from history) in displayed text */
 function restore() {
 
-  let { destination, updateDelay, logging } = state;
+  let { destination, logging, verbose } = state;
 
   let displayWords = unspanify();
 
@@ -231,12 +231,12 @@ function restore() {
     hist.pop();
     let next = hist[hist.length - 1];
 
-    history[shadowTextName()][idx].pop(); // stay in sync?
+    history[shadowTextName()][idx].pop(); // stay in sync
 
     // do replacement
     updateDOM(next, idx);
 
-    if (logging) console.log(`${numMods()}] @${idx} `
+    if (logging && verbose) console.log(`${numMods()}] @${idx} `
       + `${destination}: ${word} -> ${next} [${pos}]`);
   }
   else {
@@ -437,16 +437,16 @@ function scaleToFit() {
 
 function createLegend() {
   let legendDiv = document.createElement("div");
-  legendDiv.id="legend";
+  legendDiv.id = "legend";
   legendDiv.style.width = "900px"
   legendDiv.style.height = "900px"
   let legendContent = document.createElement("div");
   legendContent.classList.add("legend-content");
   legendContent.innerHTML = `
-  <p><svg class="rural-legend" style="fill: ${progressBarColor[1]}">
+  <p><svg class="rural-legend" style="fill: ${progressBarColor[3]}">
   <rect id="box" x="0" y="0" width="20" height="20"/>
   </svg> rural</p>
-  <p><svg class="urban-legend" style="fill: ${progressBarColor[2]}">
+  <p><svg class="urban-legend" style="fill: ${progressBarColor[4]}">
   <rect id="box" x="0" y="0" width="20" height="20"/>
   </svg> urban</p>
   `
