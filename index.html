@@ -3,6 +3,12 @@
 
 <head>
     <script src="lib/rita.js"></script>
+    <script>
+        // Load/display the app version number
+        fetch('package.json').then(res => res.json())
+            .then(pkg => console.log('[INFO] v' + pkg.version))
+            .catch(e => console.warn('[WARN] No Version!', e));
+    </script>
     <script src="lib/progressbar.js"></script>
     <link rel="stylesheet" href="style.css">
     <meta charset="utf-8">
@@ -24,12 +30,6 @@
         </div>
         <div id="stats">statistics</div>
     </div>
-    <script> 
-        // Load/display the app version number
-        fetch('package.json').then(res => res.json())
-            .then(pkg => console.log('[INFO] v' + pkg.version))
-            .catch(e => console.warn('[WARN] No Version!', e));
-    </script>
     <script src="circular-layout.js"></script>
     <script src="shared.js"></script>
     <script src="reader.js"></script>

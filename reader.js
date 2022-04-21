@@ -3,7 +3,7 @@ class Reader {
   constructor(elements) {
     this.index = 0;
     this.timeoutId = 0;
-    this.doAfterId = 0;
+    this.pauseForId = 0;
     this.reading = false;
     this.spans = Array.from(elements);
     this.numVisibleWords = 13;
@@ -16,9 +16,9 @@ class Reader {
     this.step();
   }
 
-  doAfter(ms, func) {
-    clearTimeout(this.doAfterId);
-    this.doAfterId = setTimeout(func, ms);
+  pauseForThen(ms, func) {
+    clearTimeout(this.pauseForId);
+    this.pauseForId = setTimeout(func, ms);
   }
 
   selection() {
@@ -60,7 +60,7 @@ class Reader {
 
   stop() {
     this.reading = false;
-    clearTimeout(this.doAfterId);
+    clearTimeout(this.pauseForId);
     clearTimeout(this.timeoutId);
     this.spans.forEach(e => e.classList.remove('visible'));
   }

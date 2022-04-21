@@ -1,55 +1,62 @@
-// NEXT: fix leg-counting, output version #, fix logging cmd, add verbose cmd
+// NEXT: fix leg-counting, fix log cmd, add verbose cmd
 
-// length of short and long walks
-const shortWalkLegs = 4, longWalkLegs = 20;
+// length of short and long walks (legs)
+let walks = { short: 4, long: 20 };
 
 // number of steps in each incoming/outgoing leg
-const stepsPerLeg = 50;
+let stepsPerLeg = 50;
 
 // time between word replacements (ms)
-const updateDelay = 500;
+let updateDelay = 500;
 
 // time on new text before updates begin
-const preUpdateDelay = stepsPerLeg * updateDelay * 3;
+let preUpdateDelay = stepsPerLeg * updateDelay * 3;
 
 // min and max CSS word-spacing (em)
-const wordspaceMinMax = [-0.1, .5];
+let wordspaceMinMax = [-0.1, .5];
+
+// keyboard toggle options
+let logging = false,  verbose = false, highlights = false;
 
 // progress bar color options
-const redblue = ["rgb(0, 0, 0, 0.6)", "rgb(255, 97, 97, 0.6)", "rgba(178, 68, 68, 0.8)", "rgba(106, 166, 230, 0.6)", "rgba(54, 84, 116, 0.8)"];
-const redgreen = ["rgb(0, 0, 0, 0.6)", "rgba(255, 97, 97, 0.6)", "rgba(178, 68, 68, 0.8)", "rgba(50, 187, 87, 0.6)", "rgb(30, 111, 52, 0.8)"];
-const yellowblue = ["rgb(0, 0, 0, 0.6)", "rgba(0, 166, 233, 0.6)", "rgba(82, 158, 191, 0.8)", "rgba(245, 199, 0, 0.6)", "rgba(236, 192, 0, 0.8)"];
-const progressBarColor = redblue;
+let redblue = ["rgb(0, 0, 0, 0.6)", "rgb(255, 97, 97, 0.6)", "rgba(178, 68, 68, 0.8)", "rgba(106, 166, 230, 0.6)", "rgba(54, 84, 116, 0.8)"];
+let redgreen = ["rgb(0, 0, 0, 0.6)", "rgba(255, 97, 97, 0.6)", "rgba(178, 68, 68, 0.8)", "rgba(50, 187, 87, 0.6)", "rgb(30, 111, 52, 0.8)"];
+let yellowblue = ["rgb(0, 0, 0, 0.6)", "rgba(0, 166, 233, 0.6)", "rgba(82, 158, 191, 0.8)", "rgba(245, 199, 0, 0.6)", "rgba(236, 192, 0, 0.8)"];
+let progressBarColor = redblue;
 
-const state = {
+if (1) { // DEBUGGING-ONLY
+  walks.short = 2;
+  walks.long = 20;
+  stepsPerLeg = 10;
+  updateDelay = 500;
+  preUpdateDelay = 2000;
+  logging = true;
+}
+
+let state = {
   domain: 'rural',
-  maxLegs: shortWalkLegs,
-  verbose: false,
-  stepMode: false,
   outgoing: true,
+  maxLegs: walks.short,
+  stepMode: false,
   updating: false,
-  logging: true,
   reader: 0,
   loopId: 0,
   legs: 0,
-  dbug: 1
 };
 
-const repIds = replaceables();
-const history = { rural: [], urban: [] };
-const strictRepIds = strictReplaceables(repIds);
-const domStats = document.querySelector('#stats');
-const domDisplay = document.querySelector('#display');
+let repIds = replaceables();
+let history = { rural: [], urban: [] };
+let strictRepIds = strictReplaceables(repIds);
+let domStats = document.querySelector('#stats');
+let domDisplay = document.querySelector('#display');
 
-let displaySims, shadowSims, worker, cachedHtml, wordSpacing, spans;
-
+let displaySims, shadowSims, worker, cachedHtml, wordSpacing, spans
 let displayBounds = domDisplay.getBoundingClientRect();
 let font = window.getComputedStyle(domDisplay).fontFamily;
 let cpadding = window.getComputedStyle(domDisplay).padding;
 let padfloat = parseFloat(cpadding.replace('px', ''));
 let padding = (!padfloat || padfloat === NaN) ? 30 : padfloat;
 let radius = displayBounds.width / 2;
-let highlights = false;
 
 // setup history and handlers
 Object.keys(history).map(k => sources[k].map((w, i) => history[k][i] = [w]));
@@ -65,12 +72,13 @@ window.onresize = () => {
 let progressBars = setupProgress({ color: progressBarColor });
 
 // layout lines in circular display
+let lineHeightScale = 1.28;
 let initialMetrics = { radius: Math.max(radius, 450) };
 let offset = {
   x: displayBounds.x + initialMetrics.radius,
   y: displayBounds.y + initialMetrics.radius
 };
-let opts = { offset, font, lineHeightScale: 1.28, padding: padding };
+let opts = { offset, font, lineHeightScale, padding };
 let lines = dynamicCircleLayout
   (sources[state.domain], initialMetrics.radius, opts);
 initialMetrics.lineWidths = layoutCircular
@@ -79,7 +87,7 @@ initialMetrics.fontSize = lines[0].fontSize;
 
 createLegend();
 scaleToFit();
-ramble(); // go
+ramble();// go
 
 /////////////////////////////////////////////////////////
 
@@ -91,9 +99,10 @@ function ramble() {
     spans = document.getElementsByClassName("word");
     if (!state.stepMode) {
       state.reader = new Reader(spans);
-      state.reader.doAfter(preUpdateDelay, update); // first-time
-      console.log(`[INFO] Delays: preUpdate=${preUpdateDelay}ms`
-        + ` update=${updateDelay}ms`);
+      log(`Delays: { preUpdate: ${preUpdateDelay / 1000}s,`
+        + ` update: ${updateDelay}ms }`);
+      log(`Pause updates for ${preUpdateDelay / 1000}s {domain: ${domain}}\n`);
+      state.reader.pauseForThen(preUpdateDelay, update); // first-time
       state.reader.start();
     }
   }
@@ -109,7 +118,9 @@ function ramble() {
       let idx = RiTa.random(repIds.filter(id => !state.reader
         || !state.reader.selection().includes(sources[domain][id])));
       startMs = Date.now();
-      worker.postMessage({ idx, domain }); // calls replace() when done
+
+      // calls replace() when done
+      worker.postMessage({ idx, domain });
     }
     else {
       restore();
@@ -117,57 +128,56 @@ function ramble() {
   }
 }
 
-function update(updating = true) {
-  //console.log(`update(${updating})`);
-  state.updating = updating;
-  state.maxLegs = shortWalkLegs;
-  ramble();
-}
-
 /* logic for steps, legs and domain swapping */
 function updateState() {
-
-  let { domain, legs, maxLegs, logging } = state;
 
   let steps = numMods();
   if (state.outgoing) {
     if (steps >= stepsPerLeg) {
       state.legs++;
-      if (logging) console.log(`[INFO] Reverse: incoming in `
-        + `"${domain}" on leg #${legs}/${maxLegs}\n`);
+      log(`Reverse: incoming in '${state.domain}'`
+        + ` on leg #${state.legs+1}/${state.maxLegs}\n`);
       state.outgoing = false;
     }
   }
   else {   // incoming
     if (steps === 0) {
       state.outgoing = true;
-      if (++state.legs >= maxLegs) {
-        state.legs = 0;
-        state.domain = (state.domain === 'rural') ? 'urban' : 'rural';
-        if (maxLegs === shortWalkLegs) {
-          state.maxLegs = longWalkLegs;
+      if (++state.legs >= state.maxLegs) {
+        
+        if (state.maxLegs === walks.short) {
+          // finished a short walk
+          state.maxLegs = walks.long;
+          swapDomain();
         }
         else {
+          // finished a long walk
           state.update = false;
-          state.maxLegs = shortWalkLegs;
-          state.reader.doAfter(preUpdateDelay, update);
+          state.maxLegs = walks.short;
+          log(`Pause updates for ${preUpdateDelay / 1000}s\n`);
+          state.reader.pauseForThen(preUpdateDelay, update);
         }
-        if (logging) console.log(`Reverse: outgoing in `
-          + `"${state.domain}" for ${state.maxLegs} legs\n`);
+        log(`Reverse: outgoing in '${state.domain}'`
+          + ` on leg #${state.legs + 1}/${state.maxLegs}\n`);
       }
       else {
-        if (logging) console.log(`Reverse: outgoing in `
-          + `"${state.domain}" on leg #${legs + 1}/${state.maxLegs}\n`);
+        log(`Reverse: outgoing in '${state.domain}'`
+          + ` on leg #${state.legs + 1}/${state.maxLegs}\n`);
       }
     }
   }
   updateInfo();
 }
 
+function swapDomain() {
+  state.legs = 0;
+  state.domain = (state.domain === 'rural') ? 'urban' : 'rural';
+  log(`Domain switch: new domain = '${state.domain}'\n`);
+}
 
 function replace(e) { // called by similars.js (worker)
 
-  let { domain, logging, verbose } = state;
+  let { domain, verbose } = state;
   let { idx, displaySims, shadowSims } = e.data;
 
   if (idx === -1) { // dev-only
@@ -220,7 +230,7 @@ function replace(e) { // called by similars.js (worker)
 /* selects an index to restore (from history) in displayed text */
 function restore() {
 
-  let { domain, logging, verbose } = state;
+  let { domain, verbose } = state;
 
   let displayWords = unspanify();
 
@@ -251,10 +261,10 @@ function restore() {
   }
   else {
     let id = repIds.find(idx => history[domain][idx].length > 1);
-    let wrd = sources[domain][id];
-    let hst = history[domain][id];
+    let word = sources[domain][id];
+    let hist = history[domain][id];
     console.warn('[WARN] Invalid-state, numMods:'
-      + numMods() + ' idx=' + id + '/' + wrd + ' history=', hst);
+      + numMods() + ' idx=' + id + '/' + word + ' history=', hist);
     stop();
     return
   }
@@ -292,7 +302,7 @@ function stop() {
       e.classList.remove('incoming');
       e.classList.remove('outgoing');
     }), 1000);
-  if (state.logging) console.log('[INFO] done');
+  if (logging) console.log('[INFO] done');
   updateInfo();
   worker.postMessage({ idx: 0, domain: 0 });
 }
@@ -364,8 +374,8 @@ function unspanify() {
 function lengthAwareRandom(widx, word, options) {
 
   let scaleRatio = radius / initialMetrics.radius;
-  const wordEle = document.querySelector(`#w${widx}`);
-  const lineEle = wordEle.parentElement.parentElement;
+  let wordEle = document.querySelector(`#w${widx}`);
+  let lineEle = wordEle.parentElement.parentElement;
   let lineIdx = parseInt((lineEle.id).slice(1));
   let originalW = initialMetrics.lineWidths[lineIdx] - (2 * padding);
   let currentW = lineEle.firstChild.getBoundingClientRect().width / scaleRatio;
@@ -404,7 +414,7 @@ function keyhandler(e) {
     stats.style.display = curr.display === 'block' ? 'none' : 'block';
   }
   else if (e.code === 'KeyL') {
-    state.logging = !state.logging;
+    logging = !logging;
   }
   else if (e.code === 'KeyH') {
     highlights = !highlights;
@@ -430,12 +440,25 @@ function keyhandler(e) {
 }
 
 function updateDOM(next, idx) {
-  const word = document.querySelector(`#w${idx}`);
-  const line = word.parentElement.parentElement;
+  let word = document.querySelector(`#w${idx}`);
+  let line = word.parentElement.parentElement;
   word.textContent = next;
   if (highlights) word.classList.add(state.outgoing ? 'outgoing' : 'incoming');
   wordSpacing = adjustWordSpace(line,
     initialMetrics, wordspaceMinMax, padding, radius);
+}
+
+function update(updating = true) {
+  let { domain, legs, maxLegs } = state;
+  log(`Start: outgoing in '${domain}' #${legs + 1}/${maxLegs}\n`);
+  state.updating = updating;
+  state.maxLegs = walks.short;
+  ramble();
+}
+
+function log(msg) {
+  if (!logging) return;
+  console.log('[INFO] ' + msg);
 }
 
 function scaleToFit() {
