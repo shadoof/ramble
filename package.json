@@ -1,11 +1,8 @@
 {
   "name": "ramble",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "",
-  "main": "rambler.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+  "main": "main.js",
   "keywords": [],
   "author": "",
   "license": "ISC",

@@ -1,22 +1,23 @@
-// NEXT: fix leg-counting, fix log cmd, add verbose cmd
-
-// length of short and long walks (legs)
+// length of short/long walks (legs)
 let walks = { short: 4, long: 20 };
 
-// number of steps in each incoming/outgoing leg
+// steps in each incoming/outgoing leg
 let stepsPerLeg = 50;
 
 // time between word replacements (ms)
 let updateDelay = 500;
 
-// time on new text before updates begin
+// time on new text before updates (ms)
 let preUpdateDelay = stepsPerLeg * updateDelay * 3;
 
-// min and max CSS word-spacing (em)
+// min/max CSS word-spacing (em)
 let wordspaceMinMax = [-0.1, .5];
 
+// leading for text display
+let lineHeightScale = 1.28;
+
 // keyboard toggle options
-let logging = false,  verbose = false, highlights = false;
+let logging = true, verbose = false, highlights = false;
 
 // progress bar color options
 let redblue = ["rgb(0, 0, 0, 0.6)", "rgb(255, 97, 97, 0.6)", "rgba(178, 68, 68, 0.8)", "rgba(106, 166, 230, 0.6)", "rgba(54, 84, 116, 0.8)"];
@@ -24,12 +25,12 @@ let redgreen = ["rgb(0, 0, 0, 0.6)", "rgba(255, 97, 97, 0.6)", "rgba(178, 68, 68
 let yellowblue = ["rgb(0, 0, 0, 0.6)", "rgba(0, 166, 233, 0.6)", "rgba(82, 158, 191, 0.8)", "rgba(245, 199, 0, 0.6)", "rgba(236, 192, 0, 0.8)"];
 let progressBarColor = redblue;
 
-if (1) { // DEBUGGING-ONLY
-  walks.short = 2;
-  walks.long = 20;
-  stepsPerLeg = 10;
-  updateDelay = 500;
-  preUpdateDelay = 2000;
+if (0) { // DEBUG-ONLY
+  walks.short = 4;
+  walks.long = 6;
+  stepsPerLeg = 4;
+  updateDelay = 1000;
+  preUpdateDelay = 5000;
   logging = true;
 }
 
@@ -61,7 +62,7 @@ let radius = displayBounds.width / 2;
 // setup history and handlers
 Object.keys(history).map(k => sources[k].map((w, i) => history[k][i] = [w]));
 document.addEventListener('keyup', keyhandler);
-console.log('[INFO] Key cmds -> (h)ighlight (i)nfo (s)tep (e)nd'); // (l)ogging
+console.log('[INFO] Keys -> (h)ighlight (i)nfo (s)tep (e)nd (l)og (v)erbose');
 window.onresize = () => {
   displayBounds = domDisplay.getBoundingClientRect();
   radius = displayBounds.width / 2;
@@ -72,7 +73,6 @@ window.onresize = () => {
 let progressBars = setupProgress({ color: progressBarColor });
 
 // layout lines in circular display
-let lineHeightScale = 1.28;
 let initialMetrics = { radius: Math.max(radius, 450) };
 let offset = {
   x: displayBounds.x + initialMetrics.radius,
@@ -93,23 +93,31 @@ ramble();// go
 
 function ramble() {
 
-  let { updating, outgoing, domain } = state;
+  let { updating, outgoing, domain, maxLegs } = state;
 
-  if (!state.reader) { // first time
-    spans = document.getElementsByClassName("word");
-    if (!state.stepMode) {
-      state.reader = new Reader(spans);
-      log(`Delays: { preUpdate: ${preUpdateDelay / 1000}s,`
-        + ` update: ${updateDelay}ms }`);
-      log(`Pause updates for ${preUpdateDelay / 1000}s {domain: ${domain}}\n`);
-      state.reader.pauseForThen(preUpdateDelay, update); // first-time
-      state.reader.start();
-    }
+  if (maxLegs / 2 !== Math.floor(maxLegs / 2)) {
+    throw Error('all walks must be even length');
   }
 
   if (!worker) {
     worker = new Worker("similars.js");
     worker.onmessage = replace;
+  }
+
+  if (!state.reader) { // first time
+
+    // load the word spans
+    spans = document.getElementsByClassName("word");
+    if (!state.stepMode) {
+
+      // create/start the reader
+      state.reader = new Reader(spans);
+      log(`Delays: { preUpdate: ${preUpdateDelay / 1000}s,`
+        + ` update: ${updateDelay}ms }`);
+      log(`Pause for ${preUpdateDelay / 1000}s {domain: ${domain}}`);
+      state.reader.pauseForThen(preUpdateDelay, update); // first-time
+      state.reader.start();
+    }
   }
 
   if (updating) {
@@ -136,7 +144,7 @@ function updateState() {
     if (steps >= stepsPerLeg) {
       state.legs++;
       log(`Reverse: incoming in '${state.domain}'`
-        + ` on leg #${state.legs+1}/${state.maxLegs}\n`);
+        + ` on leg ${state.legs + 1}/${state.maxLegs}`);
       state.outgoing = false;
     }
   }
@@ -144,7 +152,7 @@ function updateState() {
     if (steps === 0) {
       state.outgoing = true;
       if (++state.legs >= state.maxLegs) {
-        
+        state.legs = 0;
         if (state.maxLegs === walks.short) {
           // finished a short walk
           state.maxLegs = walks.long;
@@ -152,27 +160,28 @@ function updateState() {
         }
         else {
           // finished a long walk
-          state.update = false;
+          state.updating = false;
           state.maxLegs = walks.short;
-          log(`Pause updates for ${preUpdateDelay / 1000}s\n`);
-          state.reader.pauseForThen(preUpdateDelay, update);
+          log(`Pause for ${preUpdateDelay / 1000}s {domain: ${state.domain}}`);
+          return state.reader.pauseForThen(preUpdateDelay, update);
         }
         log(`Reverse: outgoing in '${state.domain}'`
-          + ` on leg #${state.legs + 1}/${state.maxLegs}\n`);
+          + ` on leg ${state.legs + 1}/${state.maxLegs}`);
       }
       else {
         log(`Reverse: outgoing in '${state.domain}'`
-          + ` on leg #${state.legs + 1}/${state.maxLegs}\n`);
+          + ` on leg ${state.legs + 1}/${state.maxLegs}`);
       }
     }
   }
   updateInfo();
+  return true;
 }
 
 function swapDomain() {
   state.legs = 0;
   state.domain = (state.domain === 'rural') ? 'urban' : 'rural';
-  log(`Domain switch: new domain = '${state.domain}'\n`);
+  log(`Domain switch -> '${state.domain}'`);
 }
 
 function replace(e) { // called by similars.js (worker)
@@ -184,7 +193,7 @@ function replace(e) { // called by similars.js (worker)
     let cache = e.data.similarCache;
     let size = Object.keys(cache).length;
     let data = `let precache=${JSON.stringify(cache, 0, 2)};`
-    data += `\n\nlet htmlSpans='${cachedHtml}';\n`;
+    data += `\nlet htmlSpans='${cachedHtml}';\n`;
     if (0) {
       download(data, `preload-${size}.js`, 'text');
       console.log(`[INFO] wrote preload-${size}.js`);
@@ -218,7 +227,6 @@ function replace(e) { // called by similars.js (worker)
       + ` -> ${displayNext}, ${shadow}: ${shadowWord} -> ${shadowNext} [${pos}] ${ms}ms`);
   }
   else {
-
     console.warn(`[FAIL] @${idx} `
       + `${displayWord} -> ${displaySims.length}, ${shadowWord} `
       + `-> ${shadowSims.length} [${pos}] in ${Date.now() - startMs} ms`);
@@ -269,9 +277,9 @@ function restore() {
     return
   }
 
-  updateState();
-
-  if (!state.stepMode) state.loopId = setTimeout(ramble, updateDelay);
+  if (updateState() && !state.stepMode) {
+    state.loopId = setTimeout(ramble, updateDelay);
+  }
 }
 
 /* compute the affinity over 2 text arrays for a set of word-ids */
@@ -332,10 +340,8 @@ function updateInfo() {
   domStats.innerHTML = data;
 
   progressBars.forEach((p, i) => {
-    if (i > 0) {
-      p.animate((updating ? affinities[i - 1] : 0) / 100,
-        { duration: 3000 }, () => 0/*console.log('done0')*/)
-    }
+    if (i) p.animate((updating ? affinities[i - 1] : 0) / 100,
+      { duration: 3000 }, () => 0/*no-op*/);
   });
 }
 
@@ -415,6 +421,11 @@ function keyhandler(e) {
   }
   else if (e.code === 'KeyL') {
     logging = !logging;
+    console.log('[INFO] logging: '+logging);
+  }
+  else if (e.code === 'KeyV') {
+    verbose = !verbose;
+    console.log('[INFO] verbose: '+verbose);
   }
   else if (e.code === 'KeyH') {
     highlights = !highlights;
@@ -436,21 +447,23 @@ function keyhandler(e) {
     else {
       state.loopId = setTimeout(ramble, 1);
     }
+    console.log('[INFO] stepMode: '+stepMode);
   }
 }
 
 function updateDOM(next, idx) {
+  let { outgoing } = state;
   let word = document.querySelector(`#w${idx}`);
   let line = word.parentElement.parentElement;
   word.textContent = next;
-  if (highlights) word.classList.add(state.outgoing ? 'outgoing' : 'incoming');
+  if (highlights) word.classList.add(outgoing ? 'outgoing' : 'incoming');
   wordSpacing = adjustWordSpace(line,
     initialMetrics, wordspaceMinMax, padding, radius);
 }
 
 function update(updating = true) {
   let { domain, legs, maxLegs } = state;
-  log(`Start: outgoing in '${domain}' #${legs + 1}/${maxLegs}\n`);
+  log(`Start:   outgoing in '${domain}' on leg ${legs + 1}/${maxLegs} ${+new Date()}`);
   state.updating = updating;
   state.maxLegs = walks.short;
   ramble();
@@ -476,10 +489,10 @@ function createLegend() {
   let legendContent = document.createElement("div");
   legendContent.classList.add("legend-content");
   legendContent.innerHTML = `
-  <p><svg class="rural-legend" style="fill: ${progressBarColor[3]}">
+  <p><svg class="rural-legend" style="fill: ${progressBarColor[4]}">
   <rect id="box" x="0" y="0" width="20" height="20"/>
   </svg> rural</p>
-  <p><svg class="urban-legend" style="fill: ${progressBarColor[1]}">
+  <p><svg class="urban-legend" style="fill: ${progressBarColor[2]}">
   <rect id="box" x="0" y="0" width="20" height="20"/>
   </svg> urban</p>
   `;

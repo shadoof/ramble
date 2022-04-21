@@ -19,6 +19,7 @@ class Reader {
   pauseForThen(ms, func) {
     clearTimeout(this.pauseForId);
     this.pauseForId = setTimeout(func, ms);
+    return false;
   }
 
   selection() {
