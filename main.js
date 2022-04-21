@@ -1,27 +1,25 @@
-const repIds = replaceables();
-const history = { rural: [], urban: [] };
-const strictRepIds = strictReplaceables(repIds);
-const domStats = document.querySelector('#stats');
-const domDisplay = document.querySelector('#display');
+// NEXT: fix leg-counting, output version #, fix logging cmd, add verbose cmd
 
 // length of short and long walks
 const shortWalkLegs = 4, longWalkLegs = 20;
 
-// time between word replacements
+// number of steps in each incoming/outgoing leg
+const stepsPerLeg = 50;
+
+// time between word replacements (ms)
 const updateDelay = 500;
 
-// number of steps on incoming/outgoing legs
-const stepsPerLeg = 20;
-
 // time on new text before updates begin
-const preUpdateDelay = stepsPerLeg * updateDelay * 3; 
+const preUpdateDelay = stepsPerLeg * updateDelay * 3;
 
 // min and max CSS word-spacing (em)
 const wordspaceMinMax = [-0.1, .5];
 
-const progressBarColor = ["rgb(0, 0, 0, 0.6)", "rgb(255, 97, 97, 0.6)", "rgba(178, 68, 68, 0.8)", "rgba(106, 166, 230, 0.6)", "rgba(54, 84, 116, 0.8)"]; // red-blue
-// ["rgb(0, 0, 0, 0.6)", "rgba(0, 166, 233, 0.6)", "rgba(82, 158, 191, 0.8)", "rgba(245, 199, 0, 0.6)", "rgba(236, 192, 0, 0.8)"]; // yellow-blue
-// ["rgb(0, 0, 0, 0.6)", "rgba(255, 97, 97, 0.6)", "rgba(178, 68, 68, 0.8)", "rgba(50, 187, 87, 0.6)", "rgb(30, 111, 52, 0.8)"]; // red-green
+// progress bar color options
+const redblue = ["rgb(0, 0, 0, 0.6)", "rgb(255, 97, 97, 0.6)", "rgba(178, 68, 68, 0.8)", "rgba(106, 166, 230, 0.6)", "rgba(54, 84, 116, 0.8)"];
+const redgreen = ["rgb(0, 0, 0, 0.6)", "rgba(255, 97, 97, 0.6)", "rgba(178, 68, 68, 0.8)", "rgba(50, 187, 87, 0.6)", "rgb(30, 111, 52, 0.8)"];
+const yellowblue = ["rgb(0, 0, 0, 0.6)", "rgba(0, 166, 233, 0.6)", "rgba(82, 158, 191, 0.8)", "rgba(245, 199, 0, 0.6)", "rgba(236, 192, 0, 0.8)"];
+const progressBarColor = redblue;
 
 const state = {
   domain: 'rural',
@@ -33,10 +31,18 @@ const state = {
   logging: true,
   reader: 0,
   loopId: 0,
-  legs: 0
+  legs: 0,
+  dbug: 1
 };
 
+const repIds = replaceables();
+const history = { rural: [], urban: [] };
+const strictRepIds = strictReplaceables(repIds);
+const domStats = document.querySelector('#stats');
+const domDisplay = document.querySelector('#display');
+
 let displaySims, shadowSims, worker, cachedHtml, wordSpacing, spans;
+
 let displayBounds = domDisplay.getBoundingClientRect();
 let font = window.getComputedStyle(domDisplay).fontFamily;
 let cpadding = window.getComputedStyle(domDisplay).padding;
@@ -126,9 +132,9 @@ function updateState() {
   let steps = numMods();
   if (state.outgoing) {
     if (steps >= stepsPerLeg) {
-      //if (++state.legs >= maxLegs) return stop();
-      if (logging) console.log(`Reverse: incoming in `
-        + `"${domain}" on leg #${legs + 1}/${maxLegs}\n`);
+      state.legs++;
+      if (logging) console.log(`[INFO] Reverse: incoming in `
+        + `"${domain}" on leg #${legs}/${maxLegs}\n`);
       state.outgoing = false;
     }
   }
@@ -453,8 +459,8 @@ function createLegend() {
   <p><svg class="urban-legend" style="fill: ${progressBarColor[1]}">
   <rect id="box" x="0" y="0" width="20" height="20"/>
   </svg> urban</p>
-  `
+  `;
   legendDiv.append(legendContent);
-  legendDiv.style.fontSize = (initialMetrics.fontSize) ? initialMetrics.fontSize + "px" : "20.5px"
+  legendDiv.style.fontSize = (initialMetrics.fontSize || 20.5) + 'px';
   document.querySelector("#display").append(legendDiv)
 }
