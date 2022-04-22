@@ -99,8 +99,10 @@ body {
 
 .word {
   opacity: .3;
-  transition: opacity .5s ease-in-out;
   transition: background-color .5s linear;
+  transition: opacity .6s ease-in-out;
+  -webkit-transition: opacity .6s ease-in-out;
+  -moz-transition: opacity .6s ease-in-out;
 }
 
 .word.visible {
