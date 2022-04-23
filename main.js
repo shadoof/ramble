@@ -1,5 +1,5 @@
 // length of short/long walks (legs)
-let walks = { short: 4, long: 20 };
+let walks = { short: 2, long: 16 };
 
 // steps in each incoming/outgoing leg
 let stepsPerLeg = 50;
@@ -8,7 +8,7 @@ let stepsPerLeg = 50;
 let updateDelay = 500;
 
 // time on new text before updates (ms)
-let preUpdateDelay = stepsPerLeg * updateDelay * 3;
+let preUpdateDelay = stepsPerLeg * updateDelay * 2;
 
 // min/max CSS word-spacing (em)
 let wordspaceMinMax = [-0.1, .5];
