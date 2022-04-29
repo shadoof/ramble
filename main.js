@@ -22,7 +22,7 @@ let minWordLength = 4;
 // keyboard toggle options
 let logging = true, verbose = false, highlights = false;
 
-// toggle to generate a new cache file
+// set true to generate a new cache file
 let refreshCache = false;
 
 // progress bar color options
@@ -222,9 +222,9 @@ function findSimilars(word, pos) {
       && isReplaceable(word));
 
     if (sims.length > 1) {
+      similarCache[word] = sims; // to cache
       console.log('[CACHE] ' + word + '/' + pos + '('
         + Object.keys(similarCache).length + '): ' + sims);
-      similarCache[word] = sims; // to cache
       return sims;
     }
   }
@@ -363,7 +363,7 @@ function stop() {
       e.classList.remove('outgoing');
     }), 1000);
 
-  if (logging) console.log('[INFO] done');
+  if (logging) console.log('[INFO] Stopped');
 
   updateInfo();
 
