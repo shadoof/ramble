@@ -1,4 +1,4 @@
-let precache={
+let cache = {
   "avoid": [
     "elude",
     "escape",
@@ -27,7 +27,7 @@ let precache={
     "rugged",
     "severe",
     "austere",
-    " inclement",
+    "inclement",
     "intemperate"
   ],
   "sometimes": [
@@ -54,7 +54,7 @@ let precache={
     "unconventional",
     "pioneering",
     "unaccustomed",
-    " unprecedented"
+    "unprecedented"
   ],
   "coiled": [
     "twisted",
@@ -3950,5 +3950,4 @@ let precache={
   ]
 };
 
-let size = Object.keys(precache).length;
-console.log(size);
+if (typeof module !== 'undefined') module.exports = cache;

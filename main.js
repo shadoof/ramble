@@ -1,3 +1,6 @@
+// recursive replace or old-style 
+let recursiveReplace = false;
+
 // length of short/long walks (legs)
 let walks = { short: 2, long: 16 };
 
@@ -36,10 +39,10 @@ let similarOverrides = {
   avoid: ['elude', 'escape', 'evade'],
   neighbors: ['brothers', 'brethren', 'fellows'],
   rending: ['ripping', 'cleaving', 'rupturing', 'splitting', 'severing'],
-  inhuman: ['grievous', 'grim', 'hard', 'heavy', 'onerous', 'oppressive', 'rough', 'rugged', 'severe', 'austere', ' inclement', 'intemperate'],
+  inhuman: ['grievous', 'grim', 'hard', 'heavy', 'onerous', 'oppressive', 'rough', 'rugged', 'severe', 'austere', 'inclement', 'intemperate'],
   sometimes: ['occasionally', 'intermittently', 'periodically', 'recurrently', 'infrequently', 'rarely', 'irregularly', 'sporadically', 'variously'],
   adventure: ['experience', 'exploit', 'occasion', 'ordeal', 'venture', 'expedition', 'mission'],
-  unfamiliar: ['unconventional', 'pioneering', 'unaccustomed', ' unprecedented'],
+  unfamiliar: ['unconventional', 'pioneering', 'unaccustomed', 'unprecedented'],
   coiled: ['twisted', 'twisting', 'curling', 'curving', 'serpentine', 'corkscrewed', 'jagged', 'meandering', 'spiraled'],
   particularly: ['specifically', 'generally', 'aptly'],
   unsettled: ['unresolved', 'uncertain', 'undecided', 'rootless'],
@@ -55,14 +58,14 @@ const sources = {
   pos: ['in', 'dt', 'nn', 'dt', 'jj', 'vbz', 'vbn', ',', 'in', 'dt', 'jj', 'in', 'dt', 'jj', 'jj', 'nn', 'vbz', 'to', 'nn', ',', 'rb', 'rb', 'nns', 'in', 'in', 'dt', 'nn', 'cc', 'nn', 'in', 'dt', 'nns', 'in', 'dt', 'rb', 'vbg', 'nn', 'vbz', ',', 'prp', 'cc', 'prp', 'md', 'vbp', 'vbn', 'in', 'in', 'jj', 'in', 'rb', 'jjr', 'nns', 'in', 'dt', 'nn', 'cc', 'in', 'dt', 'nns', ',', 'in', 'cc', 'in', 'dt', 'cc', 'in', 'nn', ',', 'rb', 'jj', ',', 'nn', 'in', 'rb', 'jj', 'jj', 'nns', ',', 'in', 'in', 'dt', 'nns', 'md', 'vb', 'nns', 'in', 'nn', 'in', 'rb', 'prp$', 'nns', ',', 'vbn', 'in', 'nns', ',', 'vbp', 'rb', 'jjr', 'vb', 'nns', 'in', 'jj', 'rb', 'jj', ':', 'rb', 'in', 'cc', 'in', 'dt', 'nn', ',', 'in', 'dt', 'nn', 'nn', ',', 'in', 'nn', 'in', 'nn', ',', 'wrb', 'dt', 'nns', 'vbp', 'rb', 'vbg', ',', 'in', 'cc', 'wrb', 'dt', 'jj', 'nns', 'vbp', 'vbg', 'prp$', 'nns', 'cc', 'vbz', ',', 'in', 'prp$', 'jj', 'nns', 'in', 'nn', ',', 'in', 'dt', 'nns', 'rb', 'vb', ',', 'in', 'jj', 'nns', 'in', 'nn', ',', 'rbs', 'rb', 'in', 'nn', ',', 'in', 'nn', ',', 'to', 'vb', ',', 'to', 'vb', 'vbg', 'vbd', ',', 'to', 'vb', 'to', 'vb', 'vbd', 'jj', 'rb', 'in', 'dt', 'nn', 'wrb', 'prp', 'cc', 'prp', 'vbp', 'rb', 'vbd', 'to', 'vb', 'cc', 'wrb', 'prp', 'md', 'rb', 'rb', 'cc', 'rb', 'vbp', 'vbn', 'dt', 'jj', 'vbn', 'nn', ',', 'cc', 'cd', 'dt', ',', 'cc', 'vbd', 'cc', 'vbn', 'prp', 'in', 'dt', 'vbg', 'cc', 'vb', 'in', 'jj', 'nns', ',', 'cc', 'vbd', 'in', 'jj', 'nn', ',', 'jj', 'cc', 'jj', ',', 'dt', 'cd', 'vbg', 'cc', 'nn', 'cc', 'vbg', 'in', 'dt', 'nn', 'in', 'prp', 'to', 'vb', ',', 'rb', 'prp', 'vbp', 'dt', 'jj', 'in', 'md', 'vbp', 'vbn', 'dt', 'nn', 'cc', 'nn', 'cc', 'nn', 'cc', 'nn', 'rb', 'in', 'prp', 'cc', 'prp', 'md', 'vb', 'in', 'dt', 'nn', ',', 'dt', 'in', 'cc', 'in', 'vb', ',', 'cc', 'rb', 'jj', ';', 'cc', 'dt', 'jj', ',', 'dt', 'jj', 'nn', 'in', 'dt', 'jj', ',', 'dt', 'nn', ',', 'in', 'prp', 'vbp', 'vbd', 'in', 'vbg', ',', 'prp', 'vbz', 'in', 'prp', 'cc', 'vbz', 'prp', 'in', 'nn', 'in', 'in', 'dt', 'nn', 'prp', 'vbp', 'dt', 'cc', 'rb', 'rb', ',', 'rb', 'rb', 'vbg', 'in', 'cc', 'in', 'cc', 'in', 'dt', 'nn', ',', 'in', 'dt', 'nns', 'in', 'dt', 'nns', ',', 'in', 'dt', 'nn', ',', 'in', 'dt', 'jj', 'in', 'prp$', 'nn', 'vbz', ',', 'vbd', ',', 'vbn', ',', 'rb', 'vbn', ',', 'rb', 'rb', 'vbn', 'cc', ',', 'in', 'vbg', 'cc', 'vbg', 'in', 'dt', 'nns', ',', 'vbg', 'in', 'dt', 'vbg', 'jj', 'in', 'vbd', ',', 'nn', 'vbn', 'nn', 'in', 'prp$', 'nn', ',', 'vbd']
 };
 
-const similarCache = (!refreshCache && typeof precache !== 'undefined') ? precache : {};
-Object.entries(similarOverrides).forEach(([k, v]) => similarCache[k] = v); // override
+const similarCache = (!refreshCache && typeof cache !== 'undefined') ? cache : {};
+Object.entries(similarOverrides).forEach(([k, v]) => similarCache[k] = v);
 
-if (false || refreshCache) { // DBUG
-  walks.short = 2;
-  walks.long = 12;
-  stepsPerLeg = 4;
-  updateDelay = 1;
+if (true || refreshCache) { // DBUG
+  // walks.short = 2;
+  // walks.long = 12;
+  // stepsPerLeg = 4;
+  //updateDelay = 1;
   preUpdateDelay = 1;
   logging = true;
   //verbose = true;
@@ -97,7 +100,8 @@ let radius = displayBounds.width / 2;
 // setup history and handlers
 Object.keys(history).map(k => sources[k].map((w, i) => history[k][i] = [w]));
 document.addEventListener('keyup', keyhandler);
-console.log('[INFO] Keys -> (h)ighlight (i)nfo (s)tep (e)nd (l)og (v)erbose');
+console.log('[INFO] Keys -> (h)ighlight (i)nfo (s)tep (e)nd\n'
+  + ' '.repeat(15) + '(l)og (v)erbose (r)ecursive');
 window.onresize = () => {
   displayBounds = domDisplay.getBoundingClientRect();
   radius = displayBounds.width / 2;
@@ -224,7 +228,7 @@ function findSimilars(word, pos) {
     if (sims.length > 1) {
       similarCache[word] = sims; // to cache
       console.log('[CACHE] ' + word + '/' + pos + '('
-        + Object.keys(similarCache).length + '): ' + sims);
+        + Object.keys(similarCache).length + '): ' + trunc(sims));
       return sims;
     }
   }
@@ -246,12 +250,15 @@ function replace() {
     || !reader.selection().includes(sources[domain][id])));
   //idx = 4;
 
-  let startMs = Date.now();
+  let startMs = Date.now(), delayMs = 1;
   let shadow = domain === 'rural' ? 'urban' : 'rural';
   let displayWord = sources[domain][idx];
   let shadowWord = sources[shadow][idx];
+  if (recursiveReplace) {
+    displayWord = last(history[domain][idx]);
+    shadowWord = last(history[shadow][idx]);
+  }
   let pos = sources.pos[idx];
-  let delayMs = 1;
 
   let shadowSims = findSimilars(shadowWord, pos);
   let displaySims = findSimilars(displayWord, pos);
@@ -363,16 +370,14 @@ function stop() {
       e.classList.remove('outgoing');
     }), 1000);
 
-  if (logging) console.log('[INFO] Stopped');
-
   updateInfo();
 
   if (refreshCache) { //  download cache file on stop()
     let size = Object.keys(similarCache).length;
-    let data = `let precache=${JSON.stringify(similarCache, 0, 2)};`
+    let data = `let cache=${JSON.stringify(similarCache, 0, 2)};`
     // data += `\nlet htmlSpans='${cachedHtml}';\n`;
-    download(data, `preload-${size}.js`, 'text');
-    console.log(`[INFO] wrote preload-${size}.js`);
+    download(data, `cache-${size}.js`, 'text');
+    console.log(`[INFO] wrote cache-${size}.js`);
   }
 }
 
@@ -431,6 +436,16 @@ function isReplaceable(word) {
 function strictReplaceables() {
   return repIds.filter(idx =>
     sources.rural[idx] !== sources.urban[idx]);
+}
+
+
+function trunc(arr, len = 100) {
+  arr = Array.isArray(arr) ? (JSON.stringify(arr)
+    .replace(/[""\[\]]/g, '')
+    .replace(/,/g, ', '))
+    : arr;
+  if (arr.length <= len) return arr;
+  return arr.substring(0, len) + '...';
 }
 
 function unspanify() {
@@ -492,11 +507,11 @@ function keyhandler(e) {
   }
   else if (e.code === 'KeyL') {
     logging = !logging;
-    console.log('[INFO] logging: ' + logging);
+    console.log('[KEY] logging: ' + logging);
   }
   else if (e.code === 'KeyV') {
     verbose = !verbose;
-    console.log('[INFO] verbose: ' + verbose);
+    console.log('[KEY] verbose: ' + verbose);
   }
   else if (e.code === 'KeyH') {
     highlights = !highlights;
@@ -506,9 +521,15 @@ function keyhandler(e) {
         e.classList.remove('outgoing');
       });
     }
+    console.log('[KEY] highlights: ' + highlights);
   }
   else if (e.code === 'KeyE') {
+    if (logging) console.log('[KEY] stop');
     stop();
+  }
+  else if (e.code === 'KeyR') {
+    recursiveReplace = !recursiveReplace;
+    console.log('[KEY] recursiveReplace: ' + recursiveReplace);
   }
   else if (e.code === 'KeyS') {
     if (!state.stepMode) {
@@ -518,7 +539,7 @@ function keyhandler(e) {
     else {
       state.loopId = setTimeout(ramble, 1);
     }
-    console.log('[INFO] stepMode: ' + stepMode);
+    console.log('[KEY] stepMode: ' + stepMode);
   }
 }
 
@@ -586,6 +607,12 @@ function download(data, filename, type = 'json') {
     document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
   }, 0);
+}
+
+function last(arr) {
+  if (arr && arr.length) {
+    return arr[arr.length - 1];
+  }
 }
 
 function setupProgress(opts = {}) {
