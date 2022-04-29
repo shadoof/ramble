@@ -61,7 +61,7 @@ const sources = {
 const similarCache = (!refreshCache && typeof cache !== 'undefined') ? cache : {};
 Object.entries(similarOverrides).forEach(([k, v]) => similarCache[k] = v);
 
-if (true || refreshCache) { // DBUG
+if (false || refreshCache) { // DBUG
   // walks.short = 2;
   // walks.long = 12;
   // stepsPerLeg = 4;
