@@ -1,5 +1,5 @@
 // recursive replace or old-style 
-let recursiveReplace = false;
+let recursiveReplace = true;
 
 // length of short/long walks (legs)
 let walks = { short: 2, long: 16 };
@@ -58,28 +58,33 @@ const sources = {
   pos: ['in', 'dt', 'nn', 'dt', 'jj', 'vbz', 'vbn', ',', 'in', 'dt', 'jj', 'in', 'dt', 'jj', 'jj', 'nn', 'vbz', 'to', 'nn', ',', 'rb', 'rb', 'nns', 'in', 'in', 'dt', 'nn', 'cc', 'nn', 'in', 'dt', 'nns', 'in', 'dt', 'rb', 'vbg', 'nn', 'vbz', ',', 'prp', 'cc', 'prp', 'md', 'vbp', 'vbn', 'in', 'in', 'jj', 'in', 'rb', 'jjr', 'nns', 'in', 'dt', 'nn', 'cc', 'in', 'dt', 'nns', ',', 'in', 'cc', 'in', 'dt', 'cc', 'in', 'nn', ',', 'rb', 'jj', ',', 'nn', 'in', 'rb', 'jj', 'jj', 'nns', ',', 'in', 'in', 'dt', 'nns', 'md', 'vb', 'nns', 'in', 'nn', 'in', 'rb', 'prp$', 'nns', ',', 'vbn', 'in', 'nns', ',', 'vbp', 'rb', 'jjr', 'vb', 'nns', 'in', 'jj', 'rb', 'jj', ':', 'rb', 'in', 'cc', 'in', 'dt', 'nn', ',', 'in', 'dt', 'nn', 'nn', ',', 'in', 'nn', 'in', 'nn', ',', 'wrb', 'dt', 'nns', 'vbp', 'rb', 'vbg', ',', 'in', 'cc', 'wrb', 'dt', 'jj', 'nns', 'vbp', 'vbg', 'prp$', 'nns', 'cc', 'vbz', ',', 'in', 'prp$', 'jj', 'nns', 'in', 'nn', ',', 'in', 'dt', 'nns', 'rb', 'vb', ',', 'in', 'jj', 'nns', 'in', 'nn', ',', 'rbs', 'rb', 'in', 'nn', ',', 'in', 'nn', ',', 'to', 'vb', ',', 'to', 'vb', 'vbg', 'vbd', ',', 'to', 'vb', 'to', 'vb', 'vbd', 'jj', 'rb', 'in', 'dt', 'nn', 'wrb', 'prp', 'cc', 'prp', 'vbp', 'rb', 'vbd', 'to', 'vb', 'cc', 'wrb', 'prp', 'md', 'rb', 'rb', 'cc', 'rb', 'vbp', 'vbn', 'dt', 'jj', 'vbn', 'nn', ',', 'cc', 'cd', 'dt', ',', 'cc', 'vbd', 'cc', 'vbn', 'prp', 'in', 'dt', 'vbg', 'cc', 'vb', 'in', 'jj', 'nns', ',', 'cc', 'vbd', 'in', 'jj', 'nn', ',', 'jj', 'cc', 'jj', ',', 'dt', 'cd', 'vbg', 'cc', 'nn', 'cc', 'vbg', 'in', 'dt', 'nn', 'in', 'prp', 'to', 'vb', ',', 'rb', 'prp', 'vbp', 'dt', 'jj', 'in', 'md', 'vbp', 'vbn', 'dt', 'nn', 'cc', 'nn', 'cc', 'nn', 'cc', 'nn', 'rb', 'in', 'prp', 'cc', 'prp', 'md', 'vb', 'in', 'dt', 'nn', ',', 'dt', 'in', 'cc', 'in', 'vb', ',', 'cc', 'rb', 'jj', ';', 'cc', 'dt', 'jj', ',', 'dt', 'jj', 'nn', 'in', 'dt', 'jj', ',', 'dt', 'nn', ',', 'in', 'prp', 'vbp', 'vbd', 'in', 'vbg', ',', 'prp', 'vbz', 'in', 'prp', 'cc', 'vbz', 'prp', 'in', 'nn', 'in', 'in', 'dt', 'nn', 'prp', 'vbp', 'dt', 'cc', 'rb', 'rb', ',', 'rb', 'rb', 'vbg', 'in', 'cc', 'in', 'cc', 'in', 'dt', 'nn', ',', 'in', 'dt', 'nns', 'in', 'dt', 'nns', ',', 'in', 'dt', 'nn', ',', 'in', 'dt', 'jj', 'in', 'prp$', 'nn', 'vbz', ',', 'vbd', ',', 'vbn', ',', 'rb', 'vbn', ',', 'rb', 'rb', 'vbn', 'cc', ',', 'in', 'vbg', 'cc', 'vbg', 'in', 'dt', 'nns', ',', 'vbg', 'in', 'dt', 'vbg', 'jj', 'in', 'vbd', ',', 'nn', 'vbn', 'nn', 'in', 'prp$', 'nn', ',', 'vbd']
 };
 
-const similarCache = (!refreshCache && typeof cache !== 'undefined') ? cache : {};
-Object.entries(similarOverrides).forEach(([k, v]) => similarCache[k] = v);
+//let similarCache = (!refreshCache && typeof cache !== 'undefined') ? cache : {};
+//Object.entries(similarOverrides).forEach(([k, v]) => similarCache[k] = v);
 
-if (false || refreshCache) { // DBUG
+let dbug = false;
+if (dbug || refreshCache) { // DBUG
   // walks.short = 2;
   // walks.long = 12;
-  // stepsPerLeg = 4;
-  //updateDelay = 1;
+  // verbose = true;
+  //logging = true;
+  updateDelay = 1000;
+  stepsPerLeg = 20;
   preUpdateDelay = 1;
-  logging = true;
-  //verbose = true;
+  keyhandler({ code: 'KeyI' });
 }
 
 let state = {
+  maxLegs: walks.short,
   domain: 'rural',
   outgoing: true,
-  maxLegs: walks.short,
   stepMode: false,
   updating: false,
-  reader: 0,
+  minWordLength,
   loopId: 0,
   legs: 0,
+  ignores,
+  sources,
+  stops,
 };
 
 let lex = RiTa.lexicon();
@@ -89,7 +94,7 @@ let strictRepIds = strictReplaceables(repIds);
 let domStats = document.querySelector('#stats');
 let domDisplay = document.querySelector('#display');
 
-let displaySims, shadowSims, cachedHtml, wordSpacing, spans;
+let reader, worker, wordSpacing, spans;
 let displayBounds = domDisplay.getBoundingClientRect();
 let font = window.getComputedStyle(domDisplay).fontFamily;
 let cpadding = window.getComputedStyle(domDisplay).padding;
@@ -112,17 +117,15 @@ window.onresize = () => {
 let progressBars = setupProgress({ color: progressBarColor });
 
 // layout lines in circular display
-let initialMetrics = { radius: Math.max(radius, 450) };
+let initMetrics = { radius: Math.max(radius, 450) };
 let offset = {
-  x: displayBounds.x + initialMetrics.radius,
-  y: displayBounds.y + initialMetrics.radius
+  x: displayBounds.x + initMetrics.radius,
+  y: displayBounds.y + initMetrics.radius
 };
 let opts = { offset, font, lineHeightScale, padding };
-let lines = dynamicCircleLayout
-  (sources[state.domain], initialMetrics.radius, opts);
-initialMetrics.lineWidths = layoutCircular
-  (domDisplay, initialMetrics.radius, lines);
-initialMetrics.fontSize = lines[0].fontSize;
+let lines = layoutCircular(sources[state.domain], initMetrics.radius, opts);
+initMetrics.lineWidths = lineateCircular(domDisplay, initMetrics.radius, lines);
+initMetrics.fontSize = lines[0].fontSize;
 
 createLegend();
 scaleToFit();
@@ -138,14 +141,12 @@ function ramble() {
     throw Error('all walks must be even length');
   }
 
-  if (!state.reader) { // first time
+  if (!reader) { // first time
 
-    if (similarCache) {
-      console.info('[INFO] Using cached similars'
-        + ` [${Object.keys(similarCache).length}]`);
-    }
-    else {
-      console.info('[INFO] No cache, doing live lookups');
+    if (!worker) {
+      worker = new Worker("similars.js");
+      worker.postMessage({ event: 'init', data: { overrides: similarOverrides } })
+      worker.onmessage = postReplace;
     }
 
     // load the word spans
@@ -153,12 +154,12 @@ function ramble() {
     if (!state.stepMode) {
 
       // create/start the reader
-      state.reader = new Reader(spans);
+      reader = new Reader(spans);
       log(`Delay: { preUpdate: ${preUpdateDelay / 1000}s,`
         + ` update: ${updateDelay}ms }`);
       log(`Pause for ${preUpdateDelay / 1000}s { domain: ${domain} }`);
-      state.reader.pauseForThen(preUpdateDelay, update); // first-time
-      state.reader.start();
+      reader.pauseForThen(preUpdateDelay, update); // first-time
+      reader.start();
     }
   }
 
@@ -192,7 +193,7 @@ function updateState() {
           state.updating = false;
           state.maxLegs = walks.short;
           log(`Pause for ${preUpdateDelay / 1000}s { domain: ${state.domain} }`);
-          return state.reader.pauseForThen(preUpdateDelay, update);
+          return reader.pauseForThen(preUpdateDelay, update);
         }
         log(`Reverse: outgoing in '${state.domain}'`
           + ` on leg ${state.legs + 1}/${state.maxLegs}`);
@@ -207,94 +208,63 @@ function updateState() {
   return true;
 }
 
-function findSimilars(word, pos) {
-
-  let limit = -1;
-  if (word in similarCache) {
-    return similarCache[word]; // from cache
-  }
-  else {
-    let rhymes = RiTa.rhymes(word, { pos, limit });
-    let sounds = RiTa.soundsLike(word, { pos, limit });
-    let spells = RiTa.spellsLike(word, { pos, limit });
-    let sims = new Set([...rhymes, ...sounds, ...spells]);
-
-    sims = [...sims].filter(sim =>
-      !ignores.includes(sim)
-      && !word.includes(sim)
-      && !sim.includes(word)
-      && isReplaceable(word));
-
-    if (sims.length > 1) {
-      similarCache[word] = sims; // to cache
-      console.log('[CACHE] ' + word + '/' + pos + '('
-        + Object.keys(similarCache).length + '): ' + trunc(sims));
-      return sims;
-    }
-  }
-
-  console.warn('no similars for: "' + word + '"/' + pos
-    + ((sources.rural.includes(word) || sources.urban.includes(word))
-      ? ' *** [In Source]' : ''));
-
-  return [];
-}
-
 /* selects an index to replace (from similar lookup) in displayed text */
 function replace() {
-
-  let { domain, reader } = state;
-
-  // do similar search
+  let { domain } = state;
+  let shadow = domain === 'rural' ? 'urban' : 'rural';
   let idx = RiTa.random(repIds.filter(id => !reader
     || !reader.selection().includes(sources[domain][id])));
-  //idx = 4;
+  let dword = recursiveReplace ? last(history[domain][idx]) : sources[domain][idx];
+  let sword = recursiveReplace ? last(history[shadow][idx]) : sources[shadow][idx];
+  let data = { idx, dword, sword, state, timestamp: Date.now() };
+  worker.postMessage({ event: 'lookup', data }); // do similar search
+}
 
-  let startMs = Date.now(), delayMs = 1;
-  let shadow = domain === 'rural' ? 'urban' : 'rural';
-  let displayWord = sources[domain][idx];
-  let shadowWord = sources[shadow][idx];
-  if (recursiveReplace) {
-    displayWord = last(history[domain][idx]);
-    shadowWord = last(history[shadow][idx]);
+function postReplace(e) {
+
+  let { idx, dword, sword, dsims, ssims, timestamp } = e.data;
+  let { domain, stepMode } = state;
+  if (idx < 0) {
+    // TODO: write cache
+    return;
   }
-  let pos = sources.pos[idx];
 
-  let shadowSims = findSimilars(shadowWord, pos);
-  let displaySims = findSimilars(displayWord, pos);
-
-  if (displaySims.length && shadowSims.length) {
+  let shadow = domain === 'rural' ? 'urban' : 'rural';
+  let delayMs, pos = sources.pos[idx];
+  if (dsims.length && ssims.length) {
 
     // pick a random similar to replace in display text
-    let displayWord = sources[domain][idx];
-    let displayNext = lengthAwareRandom(idx, displayWord, displaySims);
-    history[domain][idx].push(displayNext);
-    updateDOM(displayNext, idx);
+    let dnext = lengthAwareRandom(idx, dword, dsims);
+    history[domain][idx].push(dnext);
+    updateDOM(dnext, idx);
 
-    let shadowNext = lengthAwareRandom(idx, shadowWord, shadowSims);
-    history[shadow][idx].push(shadowNext);
+    let snext = lengthAwareRandom(idx, sword, ssims);
+    history[shadow][idx].push(snext);
     updateState();
 
-    let ms = Date.now() - startMs;
+    let ms = Date.now() - timestamp;
     delayMs = Math.max(1, updateDelay - ms);
-
-    if (logging && verbose) console.log(`${numMods()}) @${idx} ${displayWord}`
-      + `->${displayNext}(${domain.substring(0, 1)}), ${shadowWord}->${shadowNext}`
-      + `(${shadow.substring(0, 1)}) [${pos}] ${ms}ms`);
+    if (logging && verbose) console.log(`${numMods()}) @${idx} `
+      + `${dword}->${dnext}(${domain.substring(0, 1)}), `
+      + `${sword}->${snext}(${shadow.substring(0, 1)}) `
+      + `[${pos}] elapsed=${ms} delay=${delayMs}`);
+    //console.log(`${numMods()}) ${Date.now()-ts}ms`);
+    //ts = Date.now(); // timing
   }
   else {
     console.warn(`[FAIL] @${idx} `
-      + `${displayWord}->${displaySims.length}, ${shadowWord}`
-      + `->${shadowSims.length} [${pos}] in ${Date.now() - startMs} ms`);
+      + `${dword}->${dsims.length}, `
+      + `${sword}->${ssims.length} [${pos}]`);
   }
 
-  if (!state.stepMode) state.loopId = setTimeout(ramble, delayMs);
+  if (!stepMode) state.loopId = setTimeout(ramble, delayMs);
 }
+
 
 /* selects an index to restore (from history) in displayed text */
 function restore() {
 
-  let { domain, verbose } = state;
+  let { domain } = state;
 
   let displayWords = unspanify();
 
@@ -322,15 +292,15 @@ function restore() {
 
     if (logging && verbose) console.log(`${numMods()}] @${idx} `
       + `${domain}: ${word} -> ${next} [${pos}]`);
+    //console.log(`${numMods()}] ${Date.now()-ts}ms`);
+    //ts = Date.now(); // timing
   }
   else {
     let id = repIds.find(idx => history[domain][idx].length > 1);
-    let word = sources[domain][id];
-    let hist = history[domain][id];
+    let word = sources[domain][id], hist = history[domain][id];
     console.warn('[WARN] Invalid-state, numMods:'
       + numMods() + ' idx=' + id + '/' + word + ' history=', hist);
-    stop();
-    return
+    return stop();
   }
 
   if (updateState() && !state.stepMode) {
@@ -358,8 +328,6 @@ function numMods() {
 /* stop rambler and reader  */
 function stop() {
 
-  let { reader } = state;
-
   clearTimeout(state.loopId);
   state.updating = false;
   if (reader) reader.stop();
@@ -372,9 +340,14 @@ function stop() {
 
   updateInfo();
 
+  worker.postMessage({ event: 'getcache', data: {} });
+}
+
+function postStop(args) {
+  let { cache } = args;
   if (refreshCache) { //  download cache file on stop()
-    let size = Object.keys(similarCache).length;
-    let data = `let cache=${JSON.stringify(similarCache, 0, 2)};`
+    let size = Object.keys(cache).length;
+    let data = `let cache=${JSON.stringify(cache, 0, 2)};`
     // data += `\nlet htmlSpans='${cachedHtml}';\n`;
     download(data, `cache-${size}.js`, 'text');
     console.log(`[INFO] wrote cache-${size}.js`);
@@ -423,12 +396,11 @@ function replaceables() { // [] of replaceable indexes
     }
   });
   if (repids.length !== count) throw Error('Invalid state[2]');
-
   return repids;
 }
 
 function isReplaceable(word) {
-  return (word.length >= minWordLength || similarCache[word])
+  return (word.length >= minWordLength || similarOverrides[word])
     && !stops.includes(word);
 }
 
@@ -437,7 +409,6 @@ function strictReplaceables() {
   return repIds.filter(idx =>
     sources.rural[idx] !== sources.urban[idx]);
 }
-
 
 function trunc(arr, len = 100) {
   arr = Array.isArray(arr) ? (JSON.stringify(arr)
@@ -455,11 +426,11 @@ function unspanify() {
 
 function lengthAwareRandom(widx, word, options) {
   let { domain } = state;
-  let scaleRatio = radius / initialMetrics.radius;
+  let scaleRatio = radius / initMetrics.radius;
   let wordEle = document.querySelector(`#w${widx}`);
   let lineEle = wordEle.parentElement.parentElement;
   let lineIdx = parseInt((lineEle.id).slice(1));
-  let originalW = initialMetrics.lineWidths[lineIdx] - (2 * padding);
+  let originalW = initMetrics.lineWidths[lineIdx] - (2 * padding);
   let currentW = lineEle.firstChild.getBoundingClientRect().width / scaleRatio;
   let filter, msg = '', wordW = measureWidthForLine(word, lineIdx);
   let hstack = history[domain][widx];
@@ -507,11 +478,11 @@ function keyhandler(e) {
   }
   else if (e.code === 'KeyL') {
     logging = !logging;
-    console.log('[KEY] logging: ' + logging);
+    console.log('[KEYB] logging: ' + logging);
   }
   else if (e.code === 'KeyV') {
     verbose = !verbose;
-    console.log('[KEY] verbose: ' + verbose);
+    console.log('[KEYB] verbose: ' + verbose);
   }
   else if (e.code === 'KeyH') {
     highlights = !highlights;
@@ -521,25 +492,25 @@ function keyhandler(e) {
         e.classList.remove('outgoing');
       });
     }
-    console.log('[KEY] highlights: ' + highlights);
+    console.log('[KEYB] highlights: ' + highlights);
   }
   else if (e.code === 'KeyE') {
-    if (logging) console.log('[KEY] stop');
+    if (logging) console.log('[KEYB] stop');
     stop();
   }
   else if (e.code === 'KeyR') {
     recursiveReplace = !recursiveReplace;
-    console.log('[KEY] recursiveReplace: ' + recursiveReplace);
+    console.log('[KEYB] recursiveReplace: ' + recursiveReplace);
   }
   else if (e.code === 'KeyS') {
     if (!state.stepMode) {
       state.stepMode = true;
-      if (state.reader) state.reader.stop();
+      if (reader) reader.stop();
     }
     else {
       state.loopId = setTimeout(ramble, 1);
     }
-    console.log('[KEY] stepMode: ' + stepMode);
+    console.log('[KEYB] stepMode: ' + stepMode);
   }
 }
 
@@ -550,7 +521,7 @@ function updateDOM(next, idx) {
   word.textContent = next;
   if (highlights) word.classList.add(outgoing ? 'outgoing' : 'incoming');
   wordSpacing = adjustWordSpace(line,
-    initialMetrics, wordspaceMinMax, padding, radius);
+    initMetrics, wordspaceMinMax, padding, radius);
 }
 
 function update(updating = true) {
@@ -568,9 +539,9 @@ function log(msg) {
 
 function scaleToFit() {
   document.querySelector('#text-display').style.transform
-    = "scale(" + radius / initialMetrics.radius + ")";
+    = "scale(" + radius / initMetrics.radius + ")";
   document.querySelector('#legend').style.transform
-    = "scale(" + radius / initialMetrics.radius + ")";
+    = "scale(" + radius / initMetrics.radius + ")";
 }
 
 function createLegend() {
@@ -589,7 +560,7 @@ function createLegend() {
   </svg> urban</p>
   `;
   legendDiv.append(legendContent);
-  legendDiv.style.fontSize = (initialMetrics.fontSize || 20.5) + 'px';
+  legendDiv.style.fontSize = (initMetrics.fontSize || 20.5) + 'px';
   document.querySelector("#display").append(legendDiv)
 }
 
@@ -607,12 +578,6 @@ function download(data, filename, type = 'json') {
     document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
   }, 0);
-}
-
-function last(arr) {
-  if (arr && arr.length) {
-    return arr[arr.length - 1];
-  }
 }
 
 function setupProgress(opts = {}) {
@@ -634,4 +599,8 @@ function setupProgress(opts = {}) {
     pbars.push(pbar);
   });
   return pbars;
+}
+
+function last(arr) {
+  if (arr && arr.length) return arr[arr.length - 1];
 }

@@ -5,7 +5,7 @@
 
   @return: an array of original line widths
 */
-const layoutCircular = function (target, initialRadius, lines, opts = {}) {
+const lineateCircular = function (target, initialRadius, lines, opts = {}) {
 
   const dbug = opts.debug;
   const fontSize = opts.fontSize;
@@ -107,7 +107,7 @@ const adjustWordSpace = function (line, initial, maxMin, padding, radius) {
     opts.wordSpacing: float, in em
   @return: array of lines
 */
-const dynamicCircleLayout = function (words, radius, opts = {}) {
+const layoutCircular = function (words, radius, opts = {}) {
   let offset = opts.offset || { x: 0, y: 0 };
   let padding = opts.padding || 0;
   let fontName = opts.font || 'sans-serif';

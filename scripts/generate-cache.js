@@ -104,7 +104,7 @@ function init() {
   console.log('\n[INFO] Cache: ' + initialSz + '/' + cacheSize() + ' entries');
 
   repIds = replaceables();
-  console.log('[INFO] ' + repIds.length + ' Replaceable words');
+  console.log('[INFO] ' + repIds.length + ' Replaceable words', JSON.stringify(repIds));
 }
 
 function writeMisses(missing, level) {
@@ -222,5 +222,7 @@ function doLevel2() {
 ////////////////////////////////////////////////////////////////////////
 
 init();
-doLevel1();
-doLevel2();
+if (0) {
+  doLevel1();
+  doLevel2();
+}
