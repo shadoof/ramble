@@ -184,6 +184,13 @@ body {
   display: inline-block;
 }
 
+.overlap-legend {
+  width: 20px;
+  height: 20px;
+  top: 20px;
+  display: inline-block;
+}
+
 .line {
   width: 100%;
   position: absolute;

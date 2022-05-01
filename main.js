@@ -540,6 +540,10 @@ function createLegend() {
   <p><svg class="urban-legend" style="fill: ${progressBarColor[progressBarDict.contentIndex.urbanRegular[2]]}">
   <rect id="box" x="0" y="0" width="20" height="20"/>
   </svg> urban</p>
+  <p><svg class="overlap-legend">
+  <rect style="fill: ${progressBarColor[progressBarDict.contentIndex.urbanRegular[2]]}" id="box" x="0" y="0" width="20" height="20"/>
+  <rect style="fill: ${progressBarColor[progressBarDict.contentIndex.ruralRegular[2]]}" id="box" x="0" y="0" width="20" height="20"/>
+  </svg> overlap</p>
   `;
   legendDiv.append(legendContent);
   legendDiv.style.fontSize = (initialMetrics.fontSize || 20.5) + 'px';

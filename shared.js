@@ -45,9 +45,11 @@ const setupProgress = function (opts = {}) {
     pbars.push(pbar);
   });
   if (!opts.displayStrict) {
+    progress[opts.dict.contentIndex.background[3]].classList.add("display-none");
     progress[opts.dict.contentIndex.urbanStrict[3]].classList.add("display-none");
     progress[opts.dict.contentIndex.ruralStrict[3]].classList.add("display-none");
   } else {
+    progress[opts.dict.contentIndex.background[3]].classList.remove("display-none");
     progress[opts.dict.contentIndex.urbanStrict[3]].classList.remove("display-none");
     progress[opts.dict.contentIndex.ruralStrict[3]].classList.remove("display-none");
   }
