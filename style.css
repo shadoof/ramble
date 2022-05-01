@@ -209,3 +209,7 @@ body {
   font-family: "helvetica";
   font-size: 19px;
 }
+
+.display-none {
+  display: none;
+}
