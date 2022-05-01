@@ -35,24 +35,14 @@ const setupProgress = function (opts = {}) {
     let pbar = new ProgressBar.Circle(t, {
       duration: opts.duration || 3000,
        // keep the absolute width same, see css
-       // options for strict bars
-      strokeWidth: opts.strokeWidth || (opts.displayStrict ? (i > 0 ? (98 / (92 + 2 * ((i - 1) % 2 == 0 ? 2 : 1))) : 0.15) : (i > 0 ? (98 / (92 + 2 * ((i - 1) % 2 == 0 ? 2 : 1))) * 2: 0.15) ),
+      strokeWidth: opts.strokeWidth || (i > 0 ? (98 / (92 + 2 * ((i - 1) % 2 == 0 ? 2 : 1))) : 0.15),
       easing: opts.easing || 'easeOut',
       trailColor: opts.trailColor || 'rgba(0,0,0,0)',
-      color: opts.color && opts.color[i] ? opts.color[(opts.dict.divIndex[i][3])] : "#ddd"
+      color: opts.color && opts.color[i] ? opts.color[i] : "#ddd"
     });
     pbar.set(i > 0 ? 0 : 1);
     pbars.push(pbar);
   });
-  if (!opts.displayStrict) {
-    progress[opts.dict.contentIndex.background[3]].classList.add("display-none");
-    progress[opts.dict.contentIndex.urbanStrict[3]].classList.add("display-none");
-    progress[opts.dict.contentIndex.ruralStrict[3]].classList.add("display-none");
-  } else {
-    progress[opts.dict.contentIndex.background[3]].classList.remove("display-none");
-    progress[opts.dict.contentIndex.urbanStrict[3]].classList.remove("display-none");
-    progress[opts.dict.contentIndex.ruralStrict[3]].classList.remove("display-none");
-  }
   return pbars;
 }
 
