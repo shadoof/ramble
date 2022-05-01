@@ -69,7 +69,7 @@ let progressBarDict = displayStrict ?
   }
 };
 
-if (1) { // DEBUG-ONLY
+if (0) { // DEBUG-ONLY
   walks.short = 4;
   walks.long = 6;
   stepsPerLeg = 4;
