@@ -157,6 +157,7 @@ body {
   margin-top: 35px;
   margin-bottom: 5px;
   text-align: center;
+  display: none; /* start hidden */
 }
 
 .rural {

@@ -1,3 +1,6 @@
+// recursive replace or old-style 
+let recursiveReplace = true;
+
 // length of short/long walks (legs)
 let walks = { short: 2, long: 16 };
 
@@ -5,7 +8,7 @@ let walks = { short: 2, long: 16 };
 let stepsPerLeg = 50;
 
 // time between word replacements (ms)
-let updateDelay = 500;
+let updateDelay = 500
 
 // time on new text before updates (ms)
 let preUpdateDelay = stepsPerLeg * updateDelay * 2;
@@ -16,8 +19,14 @@ let wordspaceMinMax = [-0.1, .5];
 // leading for text display
 let lineHeightScale = 1.28;
 
+// min-length unless in similarOverrides
+let minWordLength = 4;
+
 // keyboard toggle options
 let logging = true, verbose = false, highlights = false;
+
+// set true to generate a new cache file
+let refreshCache = false;
 
 // progress bar color options
 let redblue = ["rgb(0, 0, 0, 0.6)", "rgb(255, 97, 97, 0.6)", "rgba(178, 68, 68, 0.8)", "rgba(106, 166, 230, 0.6)", "rgba(54, 84, 116, 0.8)"];
@@ -69,33 +78,66 @@ let progressBarDict = displayStrict ?
   }
 };
 
+// these override lookup values
+let similarOverrides = {
+  avoid: ['elude', 'escape', 'evade'],
+  neighbors: ['brothers', 'brethren', 'fellows'],
+  rending: ['ripping', 'cleaving', 'rupturing', 'splitting', 'severing'],
+  inhuman: ['grievous', 'grim', 'hard', 'heavy', 'onerous', 'oppressive', 'rough', 'rugged', 'severe', 'austere', 'inclement', 'intemperate'],
+  sometimes: ['occasionally', 'intermittently', 'periodically', 'recurrently', 'infrequently', 'rarely', 'irregularly', 'sporadically', 'variously'],
+  adventure: ['experience', 'exploit', 'occasion', 'ordeal', 'venture', 'expedition', 'mission'],
+  unfamiliar: ['unconventional', 'pioneering', 'unaccustomed', 'unprecedented'],
+  coiled: ['twisted', 'twisting', 'curling', 'curving', 'serpentine', 'corkscrewed', 'jagged', 'meandering', 'spiraled'],
+  particularly: ['specifically', 'generally', 'aptly'],
+  unsettled: ['unresolved', 'uncertain', 'undecided', 'rootless'],
+  dip: ['blip', 'chip', 'clip', 'drip', 'grip', 'microchip', 'quip', 'roundtrip', 'ship', 'slip', 'snip', 'strip', 'trip', 'whip'],
+  set: ['caressed', 'digressed', 'forget', 'progressed', 'redressed', 'regressed', 'seat']
+};
+
+const stops = ["also", "over", "have", "this", "that", "just", "then", "under", "some", "their", "when", "these", "within", "after", "with", "there", "where", "while", "from", "whenever", "every", "usually", "other", "whereas"];
+const ignores = ["jerkies", "nary", "outta", "copras", "accomplis", "scad", "silly", "saris", "coca", "durn", "geed", "goted", "denture", "wales", "terry"];
+const sources = {
+  rural: ['by', 'the', 'time', 'the', 'light', 'has', 'faded', ',', 'as', 'the', 'last', 'of', 'the', 'reddish', 'gold', 'illumination', 'comes', 'to', 'rest', ',', 'then', 'imperceptibly', 'spreads', 'out', 'over', 'the', 'moss', 'and', 'floor', 'of', 'the', 'woods', 'on', 'the', 'westerly', 'facing', 'lakeside', 'slopes', ',', 'you', 'or', 'I', 'will', 'have', 'set', 'out', 'on', 'several', 'of', 'yet', 'more', 'circuits', 'at', 'every', 'time', 'and', 'in', 'all', 'directions', ',', 'before', 'or', 'after', 'this', 'or', 'that', 'circadian', ',', 'usually', 'diurnal', ',', 'event', 'on', 'mildly', 'rambling', 'familiar', 'walks', ',', 'as', 'if', 'these', 'exertions', 'might', 'be', 'journeys', 'of', 'adventure', 'whereas', 'always', 'our', 'gestures', ',', 'guided', 'by', 'paths', ',', 'are', 'also', 'more', 'like', 'traces', 'of', 'universal', 'daily', 'ritual', ':', 'just', 'before', 'or', 'with', 'the', 'dawn', ',', 'after', 'a', 'morning', 'dip', ',', 'in', 'anticipation', 'of', 'breakfast', ',', 'whenever', 'the', 'fish', 'are', 'still', 'biting', ',', 'as', 'and', 'when', 'the', 'industrious', 'creatures', 'are', 'building', 'their', 'nests', 'and', 'shelters', ',', 'after', 'our', 'own', 'trials', 'of', 'work', ',', 'while', 'the', 'birds', 'still', 'sing', ',', 'in', 'quiet', 'moments', 'after', 'lunch', ',', 'most', 'particularly', 'after', 'dinner', ',', 'at', 'sunset', ',', 'to', 'escape', ',', 'to', 'avoid', 'being', 'found', ',', 'to', 'seem', 'to', 'be', 'lost', 'right', 'here', 'in', 'this', 'place', 'where', 'you', 'or', 'I', 'have', 'always', 'wanted', 'to', 'be', 'and', 'where', 'we', 'might', 'sometimes', 'now', 'or', 'then', 'have', 'discovered', 'some', 'singular', 'hidden', 'beauty', ',', 'or', 'one', 'another', ',', 'or', 'stumbled', 'and', 'injured', 'ourselves', 'beyond', 'the', 'hearing', 'and', 'call', 'of', 'other', 'voices', ',', 'or', 'met', 'with', 'other', 'danger', ',', 'animal', 'or', 'inhuman', ',', 'the', 'one', 'tearing', 'and', 'rending', 'and', 'opening', 'up', 'the', 'darkness', 'within', 'us', 'to', 'bleed', ',', 'yet', 'we', 'suppress', 'any', 'sound', 'that', 'might', 'have', 'expressed', 'the', 'terror', 'and', 'passion', 'and', 'horror', 'and', 'pain', 'so', 'that', 'I', 'or', 'you', 'may', 'continue', 'on', 'this', 'ramble', ',', 'this', 'before', 'or', 'after', 'walk', ',', 'and', 'still', 'return', ';', 'or', 'the', 'other', ',', 'the', 'quiet', 'evacuation', 'of', 'the', 'light', ',', 'the', 'way', ',', 'as', 'we', 'have', 'kept', 'on', 'walking', ',', 'it', 'falls', 'on', 'us', 'and', 'removes', 'us', 'from', 'existence', 'since', 'in', 'any', 'case', 'we', 'are', 'all', 'but', 'never', 'there', ',', 'always', 'merely', 'passing', 'through', 'and', 'by', 'and', 'over', 'the', 'moss', ',', 'under', 'the', 'limbs', 'of', 'the', 'evergreens', ',', 'beside', 'the', 'lake', ',', 'within', 'the', 'sound', 'of', 'its', 'lapping', 'waves', ',', 'annihilated', ',', 'gone', ',', 'quite', 'gone', ',', 'now', 'simply', 'gone', 'and', ',', 'in', 'being', 'or', 'walking', 'in', 'these', 'ways', ',', 'giving', 'up', 'all', 'living', 'light', 'for', 'settled', ',', 'hearth', 'held', 'fire', 'in', 'its', 'place', ',', 'returned'],
+  urban: ['by', 'the', 'time', 'the', 'light', 'has', 'faded', ',', 'as', 'the', 'last', 'of', 'the', 'reddish', 'gold', 'illumination', 'comes', 'to', 'rest', ',', 'then', 'imperceptibly', 'spreads', 'out', 'over', 'the', 'dust', 'and', 'rubble', 'of', 'the', 'craters', 'on', 'the', 'easterly', 'facing', 'bankside', 'heights', ',', 'you', 'or', 'I', 'will', 'have', 'rushed', 'out', 'on', 'several', 'of', 'yet', 'more', 'circuits', 'at', 'every', 'time', 'and', 'in', 'all', 'directions', ',', 'before', 'or', 'after', 'this', 'or', 'that', 'violent', ',', 'usually', 'nocturnal', ',', 'event', 'on', 'desperately', 'hurried', 'unfamiliar', 'flights', ',', 'as', 'if', 'these', 'panics', 'might', 'be', 'movements', 'of', 'desire', 'whereas', 'always', 'our', 'gestures', ',', 'constrained', 'by', 'obstacles', ',', 'are', 'also', 'more', 'like', 'scars', 'of', 'universal', 'daily', 'terror', ':', 'just', 'before', 'or', 'with', 'the', 'dawn', ',', 'after', 'a', 'morning', 'prayer', ',', 'in', 'anticipation', 'of', 'hunger', ',', 'while', 'the', 'neighbors', 'are', 'still', 'breathing', ',', 'as', 'and', 'when', 'the', 'diligent', 'authorities', 'are', 'marshaling', 'their', 'cronies', 'and', 'thugs', ',', 'after', 'our', 'own', 'trials', 'of', 'loss', ',', 'while', 'the', 'mortars', 'still', 'fall', ',', 'in', 'quiet', 'moments', 'after', 'shock', ',', 'most', 'particularly', 'after', 'curfew', ',', 'at', 'sunset', ',', 'to', 'escape', ',', 'to', 'avoid', 'being', 'found', ',', 'to', 'seem', 'to', 'be', 'lost', 'right', 'here', 'in', 'this', 'place', 'where', 'you', 'or', 'I', 'have', 'always', 'wanted', 'to', 'be', 'and', 'where', 'we', 'might', 'sometimes', 'now', 'or', 'then', 'have', 'discovered', 'some', 'singular', 'hidden', 'beauty', ',', 'or', 'one', 'another', ',', 'or', 'stumbled', 'and', 'injured', 'ourselves', 'beyond', 'the', 'hearing', 'and', 'call', 'of', 'other', 'voices', ',', 'or', 'met', 'with', 'other', 'danger', ',', 'venal', 'or', 'military', ',', 'the', 'one', 'tearing', 'and', 'rending', 'and', 'opening', 'up', 'the', 'darkness', 'within', 'us', 'to', 'bleed', ',', 'yet', 'we', 'suppress', 'any', 'sound', 'that', 'might', 'have', 'expressed', 'the', 'terror', 'and', 'longing', 'and', 'horror', 'and', 'pain', 'so', 'that', 'I', 'or', 'you', 'may', 'continue', 'on', 'this', 'expedition', ',', 'this', 'before', 'or', 'after', 'assault', ',', 'and', 'still', 'return', ';', 'or', 'the', 'other', ',', 'the', 'quiet', 'evacuation', 'of', 'the', 'light', ',', 'the', 'way', ',', 'as', 'we', 'have', 'kept', 'on', 'struggling', ',', 'it', 'falls', 'on', 'us', 'and', 'removes', 'us', 'from', 'existence', 'since', 'in', 'any', 'case', 'we', 'are', 'all', 'but', 'never', 'there', ',', 'always', 'merely', 'passing', 'through', 'and', 'by', 'and', 'over', 'the', 'dust', ',', 'within', 'the', 'shadows', 'of', 'our', 'ruins', ',', 'beneath', 'the', 'wall', ',', 'within', 'the', 'razor', 'of', 'its', 'coiled', 'wire', ',', 'annihilated', ',', 'gone', ',', 'quite', 'gone', ',', 'now', 'simply', 'gone', 'and', ',', 'in', 'being', 'or', 'advancing', 'in', 'these', 'ways', ',', 'giving', 'up', 'all', 'living', 'light', 'for', 'unsettled', ',', 'heart', 'felt', 'fire', 'in', 'our', 'veins', ',', 'exiled'],
+  pos: ['in', 'dt', 'nn', 'dt', 'jj', 'vbz', 'vbn', ',', 'in', 'dt', 'jj', 'in', 'dt', 'jj', 'jj', 'nn', 'vbz', 'to', 'nn', ',', 'rb', 'rb', 'nns', 'in', 'in', 'dt', 'nn', 'cc', 'nn', 'in', 'dt', 'nns', 'in', 'dt', 'rb', 'vbg', 'nn', 'vbz', ',', 'prp', 'cc', 'prp', 'md', 'vbp', 'vbn', 'in', 'in', 'jj', 'in', 'rb', 'jjr', 'nns', 'in', 'dt', 'nn', 'cc', 'in', 'dt', 'nns', ',', 'in', 'cc', 'in', 'dt', 'cc', 'in', 'nn', ',', 'rb', 'jj', ',', 'nn', 'in', 'rb', 'jj', 'jj', 'nns', ',', 'in', 'in', 'dt', 'nns', 'md', 'vb', 'nns', 'in', 'nn', 'in', 'rb', 'prp$', 'nns', ',', 'vbn', 'in', 'nns', ',', 'vbp', 'rb', 'jjr', 'vb', 'nns', 'in', 'jj', 'rb', 'jj', ':', 'rb', 'in', 'cc', 'in', 'dt', 'nn', ',', 'in', 'dt', 'nn', 'nn', ',', 'in', 'nn', 'in', 'nn', ',', 'wrb', 'dt', 'nns', 'vbp', 'rb', 'vbg', ',', 'in', 'cc', 'wrb', 'dt', 'jj', 'nns', 'vbp', 'vbg', 'prp$', 'nns', 'cc', 'vbz', ',', 'in', 'prp$', 'jj', 'nns', 'in', 'nn', ',', 'in', 'dt', 'nns', 'rb', 'vb', ',', 'in', 'jj', 'nns', 'in', 'nn', ',', 'rbs', 'rb', 'in', 'nn', ',', 'in', 'nn', ',', 'to', 'vb', ',', 'to', 'vb', 'vbg', 'vbd', ',', 'to', 'vb', 'to', 'vb', 'vbd', 'jj', 'rb', 'in', 'dt', 'nn', 'wrb', 'prp', 'cc', 'prp', 'vbp', 'rb', 'vbd', 'to', 'vb', 'cc', 'wrb', 'prp', 'md', 'rb', 'rb', 'cc', 'rb', 'vbp', 'vbn', 'dt', 'jj', 'vbn', 'nn', ',', 'cc', 'cd', 'dt', ',', 'cc', 'vbd', 'cc', 'vbn', 'prp', 'in', 'dt', 'vbg', 'cc', 'vb', 'in', 'jj', 'nns', ',', 'cc', 'vbd', 'in', 'jj', 'nn', ',', 'jj', 'cc', 'jj', ',', 'dt', 'cd', 'vbg', 'cc', 'nn', 'cc', 'vbg', 'in', 'dt', 'nn', 'in', 'prp', 'to', 'vb', ',', 'rb', 'prp', 'vbp', 'dt', 'jj', 'in', 'md', 'vbp', 'vbn', 'dt', 'nn', 'cc', 'nn', 'cc', 'nn', 'cc', 'nn', 'rb', 'in', 'prp', 'cc', 'prp', 'md', 'vb', 'in', 'dt', 'nn', ',', 'dt', 'in', 'cc', 'in', 'vb', ',', 'cc', 'rb', 'jj', ';', 'cc', 'dt', 'jj', ',', 'dt', 'jj', 'nn', 'in', 'dt', 'jj', ',', 'dt', 'nn', ',', 'in', 'prp', 'vbp', 'vbd', 'in', 'vbg', ',', 'prp', 'vbz', 'in', 'prp', 'cc', 'vbz', 'prp', 'in', 'nn', 'in', 'in', 'dt', 'nn', 'prp', 'vbp', 'dt', 'cc', 'rb', 'rb', ',', 'rb', 'rb', 'vbg', 'in', 'cc', 'in', 'cc', 'in', 'dt', 'nn', ',', 'in', 'dt', 'nns', 'in', 'dt', 'nns', ',', 'in', 'dt', 'nn', ',', 'in', 'dt', 'jj', 'in', 'prp$', 'nn', 'vbz', ',', 'vbd', ',', 'vbn', ',', 'rb', 'vbn', ',', 'rb', 'rb', 'vbn', 'cc', ',', 'in', 'vbg', 'cc', 'vbg', 'in', 'dt', 'nns', ',', 'vbg', 'in', 'dt', 'vbg', 'jj', 'in', 'vbd', ',', 'nn', 'vbn', 'nn', 'in', 'prp$', 'nn', ',', 'vbd']
+};
+
+//let similarCache = (!refreshCache && typeof cache !== 'undefined') ? cache : {};
+//Object.entries(similarOverrides).forEach(([k, v]) => similarCache[k] = v);
+
+
 if (0) { // DEBUG-ONLY
   walks.short = 4;
   walks.long = 6;
   stepsPerLeg = 4;
   updateDelay = 1000;
-  preUpdateDelay = 5000;
-  logging = true;
+  stepsPerLeg = 20;
+  preUpdateDelay = 1;
+  keyhandler({ code: 'KeyI' });
 }
 
 let state = {
+  maxLegs: walks.short,
   domain: 'rural',
   outgoing: true,
-  maxLegs: walks.short,
   stepMode: false,
   updating: false,
-  reader: 0,
+  minWordLength,
   loopId: 0,
   legs: 0,
+  ignores,
+  sources,
+  stops,
 };
 
+let lex = RiTa.lexicon();
 let repIds = replaceables();
 let history = { rural: [], urban: [] };
 let strictRepIds = strictReplaceables(repIds);
 let domStats = document.querySelector('#stats');
 let domDisplay = document.querySelector('#display');
 
-let displaySims, shadowSims, worker, cachedHtml, wordSpacing, spans
+let reader, worker, wordSpacing, spans;
 let displayBounds = domDisplay.getBoundingClientRect();
 let font = window.getComputedStyle(domDisplay).fontFamily;
 let cpadding = window.getComputedStyle(domDisplay).padding;
@@ -106,7 +148,8 @@ let radius = displayBounds.width / 2;
 // setup history and handlers
 Object.keys(history).map(k => sources[k].map((w, i) => history[k][i] = [w]));
 document.addEventListener('keyup', keyhandler);
-console.log('[INFO] Keys -> (h)ighlight (i)nfo (s)tep (e)nd (l)og (v)erbose');
+console.log('[INFO] Keys -> (h)ighlight (i)nfo (s)tep (e)nd\n'
+  + ' '.repeat(15) + '(l)og (v)erbose (r)ecursive');
 window.onresize = () => {
   displayBounds = domDisplay.getBoundingClientRect();
   radius = displayBounds.width / 2;
@@ -118,17 +161,15 @@ let progressBars = setupProgress({ color: progressBarColor, displayStrict:displa
 console.log('[INFO] Displaying strict progress bars: ' + displayStrict);
 
 // layout lines in circular display
-let initialMetrics = { radius: Math.max(radius, 450) };
+let initMetrics = { radius: Math.max(radius, 450) };
 let offset = {
-  x: displayBounds.x + initialMetrics.radius,
-  y: displayBounds.y + initialMetrics.radius
+  x: displayBounds.x + initMetrics.radius,
+  y: displayBounds.y + initMetrics.radius
 };
 let opts = { offset, font, lineHeightScale, padding };
-let lines = dynamicCircleLayout
-  (sources[state.domain], initialMetrics.radius, opts);
-initialMetrics.lineWidths = layoutCircular
-  (domDisplay, initialMetrics.radius, lines);
-initialMetrics.fontSize = lines[0].fontSize;
+let lines = layoutCircular(sources[state.domain], initMetrics.radius, opts);
+initMetrics.lineWidths = lineateCircular(domDisplay, initMetrics.radius, lines);
+initMetrics.fontSize = lines[0].fontSize;
 
 createLegend();
 scaleToFit();
@@ -144,41 +185,29 @@ function ramble() {
     throw Error('all walks must be even length');
   }
 
-  if (!worker) {
-    worker = new Worker("similars.js");
-    worker.onmessage = replace;
-  }
+  if (!reader) { // first time
 
-  if (!state.reader) { // first time
+    if (!worker) {
+      worker = new Worker("similars.js");
+      worker.postMessage({ event: 'init', data: { overrides: similarOverrides } })
+      worker.onmessage = postReplace;
+    }
 
     // load the word spans
     spans = document.getElementsByClassName("word");
     if (!state.stepMode) {
 
       // create/start the reader
-      state.reader = new Reader(spans);
-      log(`Delays: { preUpdate: ${preUpdateDelay / 1000}s,`
+      reader = new Reader(spans);
+      log(`Delay: { preUpdate: ${preUpdateDelay / 1000}s,`
         + ` update: ${updateDelay}ms }`);
-      log(`Pause for ${preUpdateDelay / 1000}s {domain: ${domain}}`);
-      state.reader.pauseForThen(preUpdateDelay, update); // first-time
-      state.reader.start();
+      log(`Pause for ${preUpdateDelay / 1000}s { domain: ${domain} }`);
+      reader.pauseForThen(preUpdateDelay, update); // first-time
+      reader.start();
     }
   }
 
-  if (updating) {
-    if (outgoing) {
-      // tell worker to do similar search
-      let idx = RiTa.random(repIds.filter(id => !state.reader
-        || !state.reader.selection().includes(sources[domain][id])));
-      startMs = Date.now();
-
-      // calls replace() when done
-      worker.postMessage({ idx, domain });
-    }
-    else {
-      restore();
-    }
-  }
+  if (updating) return outgoing ? replace() : restore();
 }
 
 /* logic for steps, legs and domain swapping */
@@ -207,8 +236,8 @@ function updateState() {
           // finished a long walk
           state.updating = false;
           state.maxLegs = walks.short;
-          log(`Pause for ${preUpdateDelay / 1000}s {domain: ${state.domain}}`);
-          return state.reader.pauseForThen(preUpdateDelay, update);
+          log(`Pause for ${preUpdateDelay / 1000}s { domain: ${state.domain} }`);
+          return reader.pauseForThen(preUpdateDelay, update);
         }
         log(`Reverse: outgoing in '${state.domain}'`
           + ` on leg ${state.legs + 1}/${state.maxLegs}`);
@@ -223,67 +252,63 @@ function updateState() {
   return true;
 }
 
-function swapDomain() {
-  state.legs = 0;
-  state.domain = (state.domain === 'rural') ? 'urban' : 'rural';
-  log(`Domain switch -> '${state.domain}'`);
+/* selects an index to replace (from similar lookup) in displayed text */
+function replace() {
+  let { domain } = state;
+  let shadow = domain === 'rural' ? 'urban' : 'rural';
+  let idx = RiTa.random(repIds.filter(id => !reader
+    || !reader.selection().includes(sources[domain][id])));
+  let dword = recursiveReplace ? last(history[domain][idx]) : sources[domain][idx];
+  let sword = recursiveReplace ? last(history[shadow][idx]) : sources[shadow][idx];
+  let data = { idx, dword, sword, state, timestamp: Date.now() };
+  worker.postMessage({ event: 'lookup', data }); // do similar search
 }
 
-function replace(e) { // called by similars.js (worker)
+function postReplace(e) {
 
-  let { domain, verbose } = state;
-  let { idx, displaySims, shadowSims } = e.data;
-
-  if (idx === -1) { // dev-only
-    let cache = e.data.similarCache;
-    let size = Object.keys(cache).length;
-    let data = `let precache=${JSON.stringify(cache, 0, 2)};`
-    data += `\nlet htmlSpans='${cachedHtml}';\n`;
-    if (0) {
-      download(data, `preload-${size}.js`, 'text');
-      console.log(`[INFO] wrote preload-${size}.js`);
-    }
+  let { idx, dword, sword, dsims, ssims, timestamp } = e.data;
+  let { domain, stepMode } = state;
+  if (idx < 0) {
+    // TODO: write cache
     return;
   }
 
   let shadow = domain === 'rural' ? 'urban' : 'rural';
-  let displayWord = sources[domain][idx];
-  let shadowWord = sources[shadow][idx];
-  let pos = sources.pos[idx];
-  let delayMs = 1;
-
-  if (displaySims.length && shadowSims.length) {
+  let delayMs, pos = sources.pos[idx];
+  if (dsims.length && ssims.length) {
 
     // pick a random similar to replace in display text
-    let displayWord = sources[domain][idx];
-    let displayNext = lengthAwareRandom(idx, displayWord, displaySims);
-    history[domain][idx].push(displayNext);
-    updateDOM(displayNext, idx);
+    let dnext = lengthAwareRandom(idx, dword, dsims);
+    history[domain][idx].push(dnext);
+    updateDOM(dnext, idx);
 
-    let shadowNext = lengthAwareRandom(idx, shadowWord, shadowSims);
-    history[shadow][idx].push(shadowNext);
-
+    let snext = lengthAwareRandom(idx, sword, ssims);
+    history[shadow][idx].push(snext);
     updateState();
 
-    let ms = Date.now() - startMs;
+    let ms = Date.now() - timestamp;
     delayMs = Math.max(1, updateDelay - ms);
-
-    if (logging && verbose) console.log(`${numMods()}) @${idx} ${domain}: ${displayWord} `
-      + ` -> ${displayNext}, ${shadow}: ${shadowWord} -> ${shadowNext} [${pos}] ${ms}ms`);
+    if (logging && verbose) console.log(`${numMods()}) @${idx} `
+      + `${dword}->${dnext}(${domain.substring(0, 1)}), `
+      + `${sword}->${snext}(${shadow.substring(0, 1)}) `
+      + `[${pos}] elapsed=${ms} delay=${delayMs}`);
+    //console.log(`${numMods()}) ${Date.now()-ts}ms`);
+    //ts = Date.now(); // timing
   }
   else {
     console.warn(`[FAIL] @${idx} `
-      + `${displayWord} -> ${displaySims.length}, ${shadowWord} `
-      + `-> ${shadowSims.length} [${pos}] in ${Date.now() - startMs} ms`);
+      + `${dword}->${dsims.length}, `
+      + `${sword}->${ssims.length} [${pos}]`);
   }
 
-  if (!state.stepMode) state.loopId = setTimeout(ramble, delayMs);
+  if (!stepMode) state.loopId = setTimeout(ramble, delayMs);
 }
+
 
 /* selects an index to restore (from history) in displayed text */
 function restore() {
 
-  let { domain, verbose } = state;
+  let { domain } = state;
 
   let displayWords = unspanify();
 
@@ -311,15 +336,15 @@ function restore() {
 
     if (logging && verbose) console.log(`${numMods()}] @${idx} `
       + `${domain}: ${word} -> ${next} [${pos}]`);
+    //console.log(`${numMods()}] ${Date.now()-ts}ms`);
+    //ts = Date.now(); // timing
   }
   else {
     let id = repIds.find(idx => history[domain][idx].length > 1);
-    let word = sources[domain][id];
-    let hist = history[domain][id];
+    let word = sources[domain][id], hist = history[domain][id];
     console.warn('[WARN] Invalid-state, numMods:'
       + numMods() + ' idx=' + id + '/' + word + ' history=', hist);
-    stop();
-    return
+    return stop();
   }
 
   if (updateState() && !state.stepMode) {
@@ -346,18 +371,31 @@ function numMods() {
 
 /* stop rambler and reader  */
 function stop() {
-  let { reader } = state;
+
   clearTimeout(state.loopId);
   state.updating = false;
   if (reader) reader.stop();
+
   setTimeout(_ =>
     Array.from(spans).forEach(e => {
       e.classList.remove('incoming');
       e.classList.remove('outgoing');
     }), 1000);
-  if (logging) console.log('[INFO] done');
+
   updateInfo();
-  worker.postMessage({ idx: 0, domain: 0 });
+
+  worker.postMessage({ event: 'getcache', data: {} });
+}
+
+function postStop(args) {
+  let { cache } = args;
+  if (refreshCache) { //  download cache file on stop()
+    let size = Object.keys(cache).length;
+    let data = `let cache=${JSON.stringify(cache, 0, 2)};`
+    // data += `\nlet htmlSpans='${cachedHtml}';\n`;
+    download(data, `cache-${size}.js`, 'text');
+    console.log(`[INFO] wrote cache-${size}.js`);
+  }
 }
 
 /* update stats in debug panel */
@@ -397,17 +435,17 @@ function replaceables() { // [] of replaceable indexes
   });
   sources.urban.forEach((word, idx) => {
     if (isReplaceable(word)) {
-      if (!repids.includes(idx)) throw Error('Invalid state[1]');
+      if (!repids.includes(idx)) throw Error('Invalid state[1]: ' + idx + '/' + word);
       count++;
     }
   });
   if (repids.length !== count) throw Error('Invalid state[2]');
-
   return repids;
 }
 
 function isReplaceable(word) {
-  return word.length >= minWordLength && !stops.includes(word);
+  return (word.length >= minWordLength || similarOverrides[word])
+    && !stops.includes(word);
 }
 
 /* compute id set for strict replacements */
@@ -416,6 +454,14 @@ function strictReplaceables() {
     sources.rural[idx] !== sources.urban[idx]);
 }
 
+function trunc(arr, len = 100) {
+  arr = Array.isArray(arr) ? (JSON.stringify(arr)
+    .replace(/[""\[\]]/g, '')
+    .replace(/,/g, ', '))
+    : arr;
+  if (arr.length <= len) return arr;
+  return arr.substring(0, len) + '...';
+}
 
 function unspanify() {
   return Array.from(document.getElementsByClassName
@@ -423,35 +469,45 @@ function unspanify() {
 }
 
 function lengthAwareRandom(widx, word, options) {
-
-  let scaleRatio = radius / initialMetrics.radius;
+  let { domain } = state;
+  let scaleRatio = radius / initMetrics.radius;
   let wordEle = document.querySelector(`#w${widx}`);
   let lineEle = wordEle.parentElement.parentElement;
   let lineIdx = parseInt((lineEle.id).slice(1));
-  let originalW = initialMetrics.lineWidths[lineIdx] - (2 * padding);
+  let originalW = initMetrics.lineWidths[lineIdx] - (2 * padding);
   let currentW = lineEle.firstChild.getBoundingClientRect().width / scaleRatio;
   let filter, msg = '', wordW = measureWidthForLine(word, lineIdx);
+  let hstack = history[domain][widx];
+  let last = hstack[hstack.length - 1];
   if (originalW > currentW) {
-    filter = (o) => measureWidthForLine(o, lineIdx) > wordW;
-    msg += 'need longer word';
+    filter = (o) => o !== last && measureWidthForLine(o, lineIdx) > wordW;
+    msg += '   need longer';
   }
   else {
-    filter = (o, i) => measureWidthForLine(o, lineIdx) < wordW;
+    filter = (o, i) => o !== last && measureWidthForLine(o, lineIdx) < wordW;
     // console.log('  ', i, `orig: ${word}(${Math.round(wordW)})`
     //   + ` check: ${o} (${Math.round(ow)})`);
-    msg += 'need shorter word';
+    msg += '    need shorter';
   }
 
   let choices = options.filter(filter);
   if (!choices || !choices.length) {
     choices = options;
-    msg += ' [random] ';
+    msg += ' [random]';
   }
 
   let choice = RiTa.random(choices);
-  //console.log(msg + ', replaced ' + word + `(${Math.round(wordW)})` + ' with '
-  //+ choice + `(${Math.round(measureWidthForLine(choice, lineIdx))})`);
+  //console.log(msg + ', replaced ' + word + `(${Math.round(wordW)})`
+  // + ' with ' + choice + `(${Math.round(measureWidthForLine(choice, lineIdx))})`
+  // + `,\n  h=${history[domain][widx]}, last=${last})`;
+
   return choice;
+}
+
+function swapDomain() {
+  state.legs = 0;
+  state.domain = (state.domain === 'rural') ? 'urban' : 'rural';
+  log(`Domain switch -> '${state.domain}'`);
 }
 
 function shadowTextName() {
@@ -466,11 +522,11 @@ function keyhandler(e) {
   }
   else if (e.code === 'KeyL') {
     logging = !logging;
-    console.log('[INFO] logging: '+logging);
+    console.log('[KEYB] logging: ' + logging);
   }
   else if (e.code === 'KeyV') {
     verbose = !verbose;
-    console.log('[INFO] verbose: '+verbose);
+    console.log('[KEYB] verbose: ' + verbose);
   }
   else if (e.code === 'KeyH') {
     highlights = !highlights;
@@ -480,19 +536,25 @@ function keyhandler(e) {
         e.classList.remove('outgoing');
       });
     }
+    console.log('[KEYB] highlights: ' + highlights);
   }
   else if (e.code === 'KeyE') {
+    if (logging) console.log('[KEYB] stop');
     stop();
+  }
+  else if (e.code === 'KeyR') {
+    recursiveReplace = !recursiveReplace;
+    console.log('[KEYB] recursiveReplace: ' + recursiveReplace);
   }
   else if (e.code === 'KeyS') {
     if (!state.stepMode) {
       state.stepMode = true;
-      if (state.reader) state.reader.stop();
+      if (reader) reader.stop();
     }
     else {
       state.loopId = setTimeout(ramble, 1);
     }
-    console.log('[INFO] stepMode: '+stepMode);
+    console.log('[KEYB] stepMode: ' + stepMode);
   }
 }
 
@@ -503,7 +565,7 @@ function updateDOM(next, idx) {
   word.textContent = next;
   if (highlights) word.classList.add(outgoing ? 'outgoing' : 'incoming');
   wordSpacing = adjustWordSpace(line,
-    initialMetrics, wordspaceMinMax, padding, radius);
+    initMetrics, wordspaceMinMax, padding, radius);
 }
 
 function update(updating = true) {
@@ -521,9 +583,9 @@ function log(msg) {
 
 function scaleToFit() {
   document.querySelector('#text-display').style.transform
-    = "scale(" + radius / initialMetrics.radius + ")";
+    = "scale(" + radius / initMetrics.radius + ")";
   document.querySelector('#legend').style.transform
-    = "scale(" + radius / initialMetrics.radius + ")";
+    = "scale(" + radius / initMetrics.radius + ")";
 }
 
 function createLegend() {
@@ -546,6 +608,47 @@ function createLegend() {
   </svg> overlap</p>
   `;
   legendDiv.append(legendContent);
-  legendDiv.style.fontSize = (initialMetrics.fontSize || 20.5) + 'px';
+  legendDiv.style.fontSize = (initMetrics.fontSize || 20.5) + 'px';
   document.querySelector("#display").append(legendDiv)
+}
+
+// Downloads data to a local file (tmp)
+function download(data, filename, type = 'json') {
+  if (typeof data !== 'string') data = JSON.stringify(data);
+  let file = new Blob([data], { type });
+  let a = document.createElement("a"),
+    url = URL.createObjectURL(file);
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(function () {
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  }, 0);
+}
+
+function setupProgress(opts = {}) {
+  const pbars = [];
+  let progress = document.querySelectorAll(".progress");
+  if (opts.color && opts.color.length !== progress.length) {
+    throw Error('opts.color.length !== ' + progress.length);
+  }
+  progress.forEach((t, i) => {
+    let pbar = new ProgressBar.Circle(t, {
+      duration: opts.duration || 3000,
+      // keep the absolute width same, see css
+      strokeWidth: opts.strokeWidth || (i > 0 ? (98 / (92 + 2 * ((i - 1) % 2 == 0 ? 2 : 1))) : 0.15),
+      easing: opts.easing || 'easeOut',
+      trailColor: opts.trailColor || 'rgba(0,0,0,0)',
+      color: opts.color && opts.color[i] ? opts.color[i] : "#ddd"
+    });
+    pbar.set(i > 0 ? 0 : 1);
+    pbars.push(pbar);
+  });
+  return pbars;
+}
+
+function last(arr) {
+  if (arr && arr.length) return arr[arr.length - 1];
 }
