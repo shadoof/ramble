@@ -34,6 +34,50 @@ let redgreen = ["rgb(0, 0, 0, 0.6)", "rgba(255, 97, 97, 0.6)", "rgba(178, 68, 68
 let yellowblue = ["rgb(0, 0, 0, 0.6)", "rgba(0, 166, 233, 0.6)", "rgba(82, 158, 191, 0.8)", "rgba(245, 199, 0, 0.6)", "rgba(236, 192, 0, 0.8)"];
 let progressBarColor = redblue;
 
+// show and hide the strict (outer) progress bars
+let displayStrict = false;
+
+// progress bars dict
+let progressBarDict = displayStrict ? 
+{
+  divIndex:
+  // [correspondingDivId, correspondingData, correspondingAffinityIndex, correspondingColorIndex]
+  [
+    ["progressbar0","background", -1, 0],
+    ["progressbar1","urbanRegular", 0, 1],
+    ["progressbar2","urbanStrict", 1, 2],
+    ["progressbar3","ruralRegular", 2, 3],
+    ["progressbar4","ruralStrict", 3, 4],
+  ],
+  contentIndex: 
+  //  [correspondingDivId, correspondingAffinityIndex, correspondingColorIndex, correspondingDivIdx]
+  {
+    background: ["progressbar0", -1, 0, 0],
+    urbanRegular: ["progressbar1", 0, 1, 1],
+    urbanStrict: ["progressbar2", 1, 2, 2],
+    ruralRegular: ["progressbar3", 2, 3, 3],
+    ruralStrict: ["progressbar4", 3, 4, 4],
+  }
+} :
+{
+  divIndex:
+  [
+    ["progressbar0","background", -1, 0],
+    ["progressbar1","urbanStrict", 1, 2],
+    ["progressbar2","urbanRegular", 0, 1],
+    ["progressbar3","ruralStrict", 3, 4],
+    ["progressbar4","ruralRegular", 2, 3],
+  ],
+  contentIndex: 
+  {
+    background: ["progressbar0", -1, 0, 0],
+    urbanStrict: ["progressbar1", 0, 2,1 ],
+    urbanRegular: ["progressbar2", 1, 1, 2],
+    ruralStrict: ["progressbar3", 2, 4,3],
+    ruralRegular: ["progressbar4", 3, 3,4],
+  }
+};
+
 // these override lookup values
 let similarOverrides = {
   avoid: ['elude', 'escape', 'evade'],
@@ -61,16 +105,14 @@ const sources = {
 //let similarCache = (!refreshCache && typeof cache !== 'undefined') ? cache : {};
 //Object.entries(similarOverrides).forEach(([k, v]) => similarCache[k] = v);
 
-let dbug = false;
-if (dbug || refreshCache) { // DBUG
-  // walks.short = 2;
-  // walks.long = 12;
-  // verbose = true;
-  //logging = true;
+
+if (0) { // DEBUG-ONLY
+  walks.short = 4;
+  walks.long = 6;
+  stepsPerLeg = 4;
   updateDelay = 1000;
-  stepsPerLeg = 20;
-  preUpdateDelay = 1;
-  keyhandler({ code: 'KeyI' });
+  preUpdateDelay = 5000;
+  logging = true;
 }
 
 let state = {
@@ -114,7 +156,8 @@ window.onresize = () => {
 }
 
 // create progress bars
-let progressBars = setupProgress({ color: progressBarColor });
+let progressBars = setupProgress({ color: progressBarColor, displayStrict:displayStrict, dict:progressBarDict });
+console.log('[INFO] Displaying strict progress bars: ' + displayStrict);
 
 // layout lines in circular display
 let initMetrics = { radius: Math.max(radius, 450) };
@@ -362,10 +405,10 @@ function updateInfo() {
 
   // compare visible text to each source text
   let affinities = [
-    affinity(sources.urban, displayWords, repIds),        // progress bar #1
-    affinity(sources.urban, displayWords, strictRepIds),  // progress bar #2
-    affinity(sources.rural, displayWords, repIds),        // progress bar #3
-    affinity(sources.rural, displayWords, strictRepIds),  // progress bar #4
+    affinity(sources.urban, displayWords, repIds),
+    affinity(sources.urban, displayWords, strictRepIds), 
+    affinity(sources.rural, displayWords, repIds), 
+    affinity(sources.rural, displayWords, strictRepIds), 
   ];
 
   // Update the #stat panel
@@ -379,7 +422,7 @@ function updateInfo() {
   domStats.innerHTML = data;
 
   progressBars.forEach((p, i) => {
-    if (i) p.animate((updating ? affinities[i - 1] : 0) / 100,
+    if (i) p.animate((updating ? affinities[progressBarDict.divIndex[i][2]] : 0) / 100,
       { duration: 3000 }, () => 0/*no-op*/);
   });
 }
@@ -552,12 +595,16 @@ function createLegend() {
   let legendContent = document.createElement("div");
   legendContent.classList.add("legend-content");
   legendContent.innerHTML = `
-  <p><svg class="rural-legend" style="fill: ${progressBarColor[4]}">
+  <p><svg class="rural-legend" style="fill: ${progressBarColor[progressBarDict.contentIndex.ruralRegular[2]]}">
   <rect id="box" x="0" y="0" width="20" height="20"/>
   </svg> rural</p>
-  <p><svg class="urban-legend" style="fill: ${progressBarColor[2]}">
+  <p><svg class="urban-legend" style="fill: ${progressBarColor[progressBarDict.contentIndex.urbanRegular[2]]}">
   <rect id="box" x="0" y="0" width="20" height="20"/>
   </svg> urban</p>
+  <p><svg class="overlap-legend">
+  <rect style="fill: ${progressBarColor[progressBarDict.contentIndex.urbanRegular[2]]}" id="box" x="0" y="0" width="20" height="20"/>
+  <rect style="fill: ${progressBarColor[progressBarDict.contentIndex.ruralRegular[2]]}" id="box" x="0" y="0" width="20" height="20"/>
+  </svg> overlap</p>
   `;
   legendDiv.append(legendContent);
   legendDiv.style.fontSize = (initMetrics.fontSize || 20.5) + 'px';
@@ -578,27 +625,6 @@ function download(data, filename, type = 'json') {
     document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
   }, 0);
-}
-
-function setupProgress(opts = {}) {
-  const pbars = [];
-  let progress = document.querySelectorAll(".progress");
-  if (opts.color && opts.color.length !== progress.length) {
-    throw Error('opts.color.length !== ' + progress.length);
-  }
-  progress.forEach((t, i) => {
-    let pbar = new ProgressBar.Circle(t, {
-      duration: opts.duration || 3000,
-      // keep the absolute width same, see css
-      strokeWidth: opts.strokeWidth || (i > 0 ? (98 / (92 + 2 * ((i - 1) % 2 == 0 ? 2 : 1))) : 0.15),
-      easing: opts.easing || 'easeOut',
-      trailColor: opts.trailColor || 'rgba(0,0,0,0)',
-      color: opts.color && opts.color[i] ? opts.color[i] : "#ddd"
-    });
-    pbar.set(i > 0 ? 0 : 1);
-    pbars.push(pbar);
-  });
-  return pbars;
 }
 
 function last(arr) {
