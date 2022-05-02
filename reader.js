@@ -16,10 +16,15 @@ class Reader {
     this.step();
   }
 
-  pauseForThen(ms, func) {
+  pauseThen(ms, func) {
     clearTimeout(this.pauseForId);
     this.pauseForId = setTimeout(func, ms);
     return false;
+  }
+
+  unpauseThen(func) {
+    clearTimeout(this.pauseForId);
+    this.pauseForId = setTimeout(func, 1);
   }
 
   selection() {

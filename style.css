@@ -200,6 +200,7 @@ body {
 }
 
 #legend {
+  display: none;
   position: absolute;
   transform-origin: top left;
   -webkit-transform-origin: top left;
@@ -209,13 +210,14 @@ body {
 .legend-content {
   color: #B3B3B3;
   position: fixed;
-  bottom: 0;
-  right: 0;
+  bottom:-30px;
+  right: -70px;
 }
 
 .legend-content p {
   font-family: "helvetica";
   font-size: 19px;
+  margin: 20px 0px 0px 0px;
 }
 
 .display-none {
