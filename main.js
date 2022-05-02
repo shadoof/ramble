@@ -111,9 +111,8 @@ if (0) { // DEBUG-ONLY
   walks.long = 6;
   stepsPerLeg = 4;
   updateDelay = 1000;
-  stepsPerLeg = 20;
-  preUpdateDelay = 1;
-  keyhandler({ code: 'KeyI' });
+  preUpdateDelay = 5000;
+  logging = true;
 }
 
 let state = {
@@ -626,27 +625,6 @@ function download(data, filename, type = 'json') {
     document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
   }, 0);
-}
-
-function setupProgress(opts = {}) {
-  const pbars = [];
-  let progress = document.querySelectorAll(".progress");
-  if (opts.color && opts.color.length !== progress.length) {
-    throw Error('opts.color.length !== ' + progress.length);
-  }
-  progress.forEach((t, i) => {
-    let pbar = new ProgressBar.Circle(t, {
-      duration: opts.duration || 3000,
-      // keep the absolute width same, see css
-      strokeWidth: opts.strokeWidth || (i > 0 ? (98 / (92 + 2 * ((i - 1) % 2 == 0 ? 2 : 1))) : 0.15),
-      easing: opts.easing || 'easeOut',
-      trailColor: opts.trailColor || 'rgba(0,0,0,0)',
-      color: opts.color && opts.color[i] ? opts.color[i] : "#ddd"
-    });
-    pbar.set(i > 0 ? 0 : 1);
-    pbars.push(pbar);
-  });
-  return pbars;
 }
 
 function last(arr) {
