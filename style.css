@@ -160,6 +160,24 @@ body {
   display: none; /* start hidden */
 }
 
+.free {
+  transform: translate(-50%, -50%);
+  -webkit-transform: translate(-50%, -50%);
+  -moz-transform: translate(-50%, -50%);
+}
+
+.shared-rural {
+  transform: translate(-50%, -50%);
+  -webkit-transform: translate(-50%, -50%);
+  -moz-transform: translate(-50%, -50%);
+}
+
+.shared-urban {
+  transform: translate(-50%, -50%)  scaleX(-1);
+  -webkit-transform: translate(-50%, -50%)  scaleX(-1);
+  -moz-transform: translate(-50%, -50%)  scaleX(-1);
+}
+ 
 .rural {
   transform: translate(-50%, -50%);
   -webkit-transform: translate(-50%, -50%);

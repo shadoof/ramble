@@ -29,9 +29,6 @@ let bandColors = [ '#9CC0E5', '#F59797', '#E7EBC5', '#C3ACB8', '#F9F9F9' ];
 // let bandColors = [ '#84ACCE', '#D16666', '#D7D9DB', '#B5AEAE', '#F9F9F9' ];
 // let bandColors = [ '#84ACCE', '#D16666', '#D7D9DB', '#FFF185', '#F9F9F9' ];
 
-// show the strict (outer) progress bars
-let displayStrict = false;
-
 // these override lookup values
 let similarOverrides = {
   avoid: ['elude', 'escape', 'evade'],
@@ -106,7 +103,7 @@ window.onresize = () => {
 }
 
 // create progress bars
-let progressBars = createProgressBars({ color: pbcolor, displayStrict });
+let progressBars = createProgressBars({ color: bandColors, trailColor: bandColors[4] });
 
 // layout lines in circular display
 let initMetrics = { radius: Math.max(radius, 450) };
