@@ -1,9 +1,3 @@
-// bandwidth: presentage of the bar div size
-let bandwidth = 2;
-
-// recursive replace or old-style 
-let recursiveReplace = true;
-
 // length of short/long walks (legs)
 let walks = { short: 2, long: 16 };
 
@@ -13,7 +7,7 @@ let stepsPerLeg = 50;
 // time between word replacements (ms)
 let updateDelay = 500
 
-// time on new text before updates (ms)
+// time on new text before updates (ms) 
 let readDelay = stepsPerLeg * updateDelay * 2;
 
 // min/max CSS word-spacing (em)
@@ -25,12 +19,18 @@ let lineHeightScale = 1.28;
 // min-length unless in similarOverrides
 let minWordLength = 4;
 
+// recursive replace or old-style 
+let recursiveReplace = true;
+
+// width of visualization bar (% of div size)
+let visBandWidth = 4;
+
 // visualisation [ rural, urban, shared, free, initial ]
-let bandColors = [ '#9CC0E5', '#F59797', '#E7EBC5', '#C3ACB8', '#F9F9F9' ];
-// let bandColors = [ '#9CC0E5', '#F59797', '#C5C6C7', '#959DAD', '#F9F9F9' ];
-// let bandColors = [ '#9CC0E5', '#F59797', '#EDDEA4', '#526760', '#F9F9F9' ];
-// let bandColors = [ '#84ACCE', '#D16666', '#D7D9DB', '#B5AEAE', '#F9F9F9' ];
-// let bandColors = [ '#84ACCE', '#D16666', '#D7D9DB', '#FFF185', '#F9F9F9' ];
+let visBandColors = [ '#9CC0E5', '#F59797', '#E7EBC5', '#C3ACB8', '#F3F3F3' ];
+// let visBandColors = [ '#9CC0E5', '#F59797', '#C5C6C7', '#959DAD', '#F9F9F9' ];
+// let visBandColors = [ '#9CC0E5', '#F59797', '#EDDEA4', '#526760', '#F9F9F9' ];
+// let visBandColors = [ '#84ACCE', '#D16666', '#D7D9DB', '#B5AEAE', '#F9F9F9' ];
+// let visBandColors = [ '#84ACCE', '#D16666', '#D7D9DB', '#FFF185', '#F9F9F9' ];
 
 // these override lookup values
 let similarOverrides = {
@@ -106,7 +106,7 @@ window.onresize = () => {
 }
 
 // create progress bars
-let progressBars = createProgressBars({ color: bandColors, trailColor: bandColors[4], strokeWidth: bandwidth });
+let progressBars = createProgressBars({ color: visBandColors, trailColor: visBandColors[4], strokeWidth: visBandWidth });
 
 // layout lines in circular display
 let initMetrics = { radius: Math.max(radius, 450) };
@@ -120,11 +120,11 @@ initMetrics.lineWidths = lineateCircular(domDisplay, initMetrics.radius, lines);
 initMetrics.fontSize = lines[0].fontSize;
 
 if (1) { // DEBUG-ONLY
-  // walks.short = 4;
-  // walks.long = 6;
+  // walks.short = 2;
+  // walks.long = 4;
   // stepsPerLeg = 4;
   // updateDelay = 1000;
-  // readDelay = 5000;
+  // readDelay = 3000;
   logging = true;
   keyhandler({ code: 'KeyI' });
   //setTimeout(() => keyhandler({ code: 'KeyD' }, 300));
@@ -135,23 +135,6 @@ scaleToFit();
 ramble();// go
 
 /////////////////////////////////////////////////////////
-
-// affinities for visualization band and stats panel
-function affinities() {
-  let data = { rural: 0, urban: 0, shared: 0, free: 0 };
-  repIds.forEach(idx => {
-    let visible = last(history[state.domain][idx]);
-    let rurMatch = sources.rural[idx] === visible;
-    let urbMatch = sources.urban[idx] === visible;
-    if (!rurMatch && !urbMatch) data.free++;
-    if (rurMatch && !urbMatch) data.rural++;
-    if (!rurMatch && urbMatch) data.urban++;
-    if (rurMatch && urbMatch) data.shared++;
-  });
-  // normalize (4 values should sum to 1)
-  return Object.fromEntries(Object.entries(data).map
-    (([k, v]) => [k, v / repIds.length])); 
-}
 
 function ramble() {
 
@@ -469,6 +452,7 @@ function updateDOM(next, idx) {
 }
 
 function update(updating = true) {
+  console.log('update()');
   let { domain, legs, maxLegs } = state;
   log(`Start: outgoing in '${domain}' on leg ${legs + 1}/${maxLegs}`);
   state.updating = updating;

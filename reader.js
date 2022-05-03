@@ -16,7 +16,7 @@ class Reader {
     this.step();
   }
 
-  pauseThen(ms, func) {
+  pauseThen(func, ms) {
     clearTimeout(this.pauseForId);
     this.pauseForId = setTimeout(func, ms);
     return false;

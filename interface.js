@@ -1,15 +1,21 @@
 const pbID2Color = [4, 3, 2, 1, 0];
-const pbID2Affvals = ['initial','free', 'shared', 'urban', 'rural'];
+const pbID2Affvals = ['initial', 'free', 'shared', 'urban', 'rural'];
 
-/* compute the affinity over 2 text arrays for a set of word-ids */
-function originalAffinity(textA, textB, idsToCheck) {
-
-  let matches = idsToCheck.reduce((total, idx) =>
-    total + (textA[idx] === textB[idx] ? 1 : 0), 0);
-  let raw = matches / idsToCheck.length;
-  let fmt = (raw * 100).toFixed(2);// pad
-  while (fmt.length < 5) fmt = '0' + fmt; 
-  return raw * 100;
+// affinities for visualization band and stats panel
+function affinities() {
+  let data = { rural: 0, urban: 0, shared: 0, free: 0 };
+  repIds.forEach(idx => {
+    let visible = last(history[state.domain][idx]);
+    let rurMatch = sources.rural[idx] === visible;
+    let urbMatch = sources.urban[idx] === visible;
+    if (!rurMatch && !urbMatch) data.free++;
+    if (rurMatch && !urbMatch) data.rural++;
+    if (!rurMatch && urbMatch) data.urban++;
+    if (rurMatch && urbMatch) data.shared++;
+  });
+  // normalize (4 values should sum to 1)
+  return Object.fromEntries(Object.entries(data).map
+    (([k, v]) => [k, v / repIds.length])); 
 }
 
 function keyhandler(e) {
@@ -84,7 +90,7 @@ function updateInfo() {
   progressBars.forEach((p, i) => {
     let num = 0;
     if (updating) {
-      if (pbID2Affvals[i] === 'free'){
+      if (pbID2Affvals[i] === 'free') {
         num = 100;
       } else if (pbID2Affvals[i] === 'shared') {
         num = parseFloat(affvals.shared) + parseFloat(affvals[domain]);
@@ -103,17 +109,17 @@ function createLegend() {
   domLegend.style.height = "900px"
   let legendContent = document.createElement("div");
   legendContent.classList.add("legend-content");
-  legendContent.innerHTML = `<p><svg class="rural-legend" style="fill: ${bandColors[0]}">
+  legendContent.innerHTML = `<p><svg class="rural-legend" style="fill: ${visBandColors[0]}">
   <rect id="box" x="0" y="0" width="20" height="20"/>
   </svg> rural</p>
-  <p><svg class="urban-legend" style="fill: ${bandColors[1]}">
+  <p><svg class="urban-legend" style="fill: ${visBandColors[1]}">
   <rect id="box" x="0" y="0" width="20" height="20"/>
   </svg> urban</p>
   <p><svg class="overlap-legend">
-  <rect style="fill: ${bandColors[2]}" id="box" x="0" y="0" width="20" height="20"/>
+  <rect style="fill: ${visBandColors[2]}" id="box" x="0" y="0" width="20" height="20"/>
   </svg> shared</p>
   <p><svg class="overlap-legend">
-  <rect style="fill: ${bandColors[3]}" id="box" x="0" y="0" width="20" height="20"/>
+  <rect style="fill: ${visBandColors[3]}" id="box" x="0" y="0" width="20" height="20"/>
   </svg> free</p>`;
   domLegend.append(legendContent);
   domLegend.style.fontSize = (initMetrics.fontSize || 20.5) + 'px';
@@ -146,7 +152,7 @@ function createProgressBars(opts = {}) {
       // keep the absolute width same, see css options for strict bars
       strokeWidth: opts.strokeWidth || 4.5,
       easing: opts.easing || 'easeOut',
-      trailColor:opts.trailColor ? (i === 0 ? opts.trailColor : 'rgba(0,0,0,0)') : 'rgba(0,0,0,0)',
+      trailColor: opts.trailColor ? (i === 0 ? opts.trailColor : 'rgba(0,0,0,0)') : 'rgba(0,0,0,0)',
       color: opts.color && opts.color[i]
         ? opts.color[pbID2Color[i]]
         : "#ddd"
@@ -154,4 +160,15 @@ function createProgressBars(opts = {}) {
     pbars.push(pbar);
   });
   return pbars;
+}
+
+// unusued
+function originalAffinity(textA, textB, idsToCheck) {
+
+  let matches = idsToCheck.reduce((total, idx) =>
+    total + (textA[idx] === textB[idx] ? 1 : 0), 0);
+  let raw = matches / idsToCheck.length;
+  let fmt = (raw * 100).toFixed(2);// pad
+  while (fmt.length < 5) fmt = '0' + fmt;
+  return raw * 100;
 }
