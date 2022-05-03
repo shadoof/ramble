@@ -1,18 +1,66 @@
 // progress bar color options
-let redblue = ["rgb(0, 0, 0, 0.1)", "rgb(255, 97, 97, 0.6)", "rgba(178, 68, 68, 0.8)", "rgba(106, 166, 230, 0.6)", "rgba(54, 84, 116, 0.8)"];
+let redblue = ["#E9E9E9", "rgb(255, 97, 97, 0.6)", "rgba(178, 68, 68, 0.8)", "rgba(106, 166, 230, 0.6)", "rgba(54, 84, 116, 0.8)"];
 let redgreen = ["rgb(0, 0, 0, 0.1)", "rgba(255, 97, 97, 0.6)", "rgba(178, 68, 68, 0.8)", "rgba(50, 187, 87, 0.6)", "rgb(30, 111, 52, 0.8)"];
 let yellowblue = ["rgb(0, 0, 0, 0.1)", "rgba(0, 166, 233, 0.6)", "rgba(82, 158, 191, 0.8)", "rgba(245, 199, 0, 0.6)", "rgba(236, 192, 0, 0.8)"];
 let pbdict, pbcolor = redblue;
 
 /* compute the affinity over 2 text arrays for a set of word-ids */
-function affinity(textA, textB, idsToCheck) {
+function originalAffinity(textA, textB, idsToCheck) {
 
   let matches = idsToCheck.reduce((total, idx) =>
     total + (textA[idx] === textB[idx] ? 1 : 0), 0);
   let raw = matches / idsToCheck.length;
-  let fmt = (raw * 100).toFixed(2);
-  while (fmt.length < 5) fmt = '0' + fmt; // pad
-  return fmt;
+  let fmt = (raw * 100).toFixed(2);// pad
+  while (fmt.length < 5) fmt = '0' + fmt; 
+  return raw * 100;
+}
+
+function keyhandler(e) {
+  if (e.code === 'KeyI') {
+    let stats = document.querySelector('#stats');
+    let curr = window.getComputedStyle(stats);
+    stats.style.display = curr.display === 'block' ? 'none' : 'block';
+  }
+  else if (e.code === 'KeyL') {
+    logging = !logging;
+    console.log('[KEYB] logging: ' + logging);
+  }
+  else if (e.code === 'KeyV') {
+    verbose = !verbose;
+    console.log('[KEYB] verbose: ' + verbose);
+  }
+  else if (e.code === 'KeyH') {
+    highlights = !highlights;
+    if (!highlights) {
+      Array.from(spans).forEach(e => {
+        e.classList.remove('incoming');
+        e.classList.remove('outgoing');
+      });
+    }
+    console.log('[KEYB] highlights: ' + highlights);
+  }
+  else if (e.code === 'KeyE') {
+    if (logging) console.log('[KEYB] stop');
+    stop();
+  }
+  else if (e.code === 'KeyR') {
+    recursiveReplace = !recursiveReplace;
+    console.log('[KEYB] recursiveReplace: ' + recursiveReplace);
+  }
+  else if (e.code === 'KeyS') {
+    if (!state.stepMode) {
+      state.stepMode = true;
+      if (reader) reader.stop();
+    }
+    else {
+      state.loopId = setTimeout(ramble, 1);
+    }
+    console.log('[KEYB] stepMode: ' + state.stepMode);
+  }
+  else if (e.code === 'KeyD') {
+    reader.unpauseThen(update);
+    console.log('[KEYB] skip-delay');
+  }
 }
 
 /* update stats in debug panel */
@@ -22,25 +70,32 @@ function updateInfo() {
   let displayWords = unspanify(); // get words
 
   // compare visible text to each source text
-  let affinities = [
-    affinity(sources.urban, displayWords, repIds),
-    affinity(sources.urban, displayWords, strictRepIds),
-    affinity(sources.rural, displayWords, repIds),
-    affinity(sources.rural, displayWords, strictRepIds),
+  let oldAffinities = [
+    originalAffinity(sources.urban, displayWords, repIds),
+    originalAffinity(sources.urban, displayWords, strictRepIds),
+    originalAffinity(sources.rural, displayWords, repIds),
+    originalAffinity(sources.rural, displayWords, strictRepIds),
   ];
 
-  // Update the #stat panel
+  // TODO: (#45) use these affinities for new 4-part progress bar
+  let affvals = Object.fromEntries(Object.entries(affinities())
+    .map(([k, raw]) => {
+      let fmt = (raw * 100).toFixed(2);  // pad
+      while (fmt.length < 5) fmt = '0' + fmt;
+      return [k, fmt];
+    }));
+
+  // Update the #stats panel
   let data = 'Domain: ' + domain;
   data += '&nbsp;' + (updating ? (outgoing ? '⟶' : '⟵') : 'X');
-  data += ` &nbsp; Leg: ${legs + 1} /${maxLegs}&nbsp; Affinity:`;
-  data += ' Rural=' + affinities[2] + ' Urban=' + affinities[0];
-  data += ' &nbsp;Strict:'; // and now in strict mode
-  data += ' Rural=' + affinities[3] + ' Urban=' + affinities[1];
-
+  data += `&nbsp; Leg: ${legs + 1}/${maxLegs}&nbsp; Affinity:`;
+  data += ' Rural=' + affvals.rural + ' Urban=' + affvals.urban;
+  data += ' Shared=' + affvals.shared + ' Free=' + affvals.free;
+  domStats = domStats || document.querySelector('#stats');
   domStats.innerHTML = data;
 
   progressBars.forEach((p, i) => {
-    if (i) p.animate((updating ? affinities[pbdict.divIndex[i][2]] : 0) / 100,
+    if (i) p.animate((updating ? oldAffinities[pbdict.divIndex[i][2]] : 0) / 100,
       { duration: 3000 }, () => 0/*no-op*/);
   });
 }
@@ -113,9 +168,9 @@ function createProgressBars(opts = {}) {
       pbar.set(i ? 0 : 1);
     }
     else { // state with rural-reg only
-//      pbar.set(i!==4 ? 0 : 1);
+      //      pbar.set(i!==4 ? 0 : 1);
       pbar.set(i ? 0 : 1);
-      if (i===0) pbar.set(1);
+      if (i === 0) pbar.set(1);
     }
 
     pbars.push(pbar);
@@ -131,14 +186,7 @@ function createProgressBars(opts = {}) {
   } else {
     strictBars.forEach(b => b.classList.add("display-none"))
   }
-  // let nonstrictBars = [
-  //   progress[cidx.urbanRegular[3]],
-  //   progress[cidx.background[3]],
-  //   progress[cidx.ruralRegular[3]]
-  // ];
-  // nonstrictBars.forEach(b => b.classList.remove("display-none"))
 
-  //progress[cidx.urbanRegular[3]].classList.remove("display-none"); 
   progress[cidx.background[3]].classList.remove("display-none"); // outer-line
   return pbars;
 }
