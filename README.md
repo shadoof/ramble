@@ -25,3 +25,6 @@ This does imply a possible **solution** for the animation problem (except for an
 - the gap (which would be in the position of a third section above) would be equal to: `similars` (light Yellow? or tasteful Orange?)
 
 If we wanted to be *very* cool, we would make it so that the 'gap' which represents `similars` appeared to be on the end of whichever `domain` is current. (The meaning of this would be that similars are being taken from the current `domain`.) This would have the additional benefit of signaling whenever the domain switches !
+
+-----------------
+This makes sense to me, however I'm not sure on the last sentence above. If I'm understanding correctly, we have rural coming from top (CW) and urban from top (CCW) and the gap representing changed words in from neither original text. What does it mean For this gap to be 'at the end' of a segment. As I imagine it, it is at the end of both segments (?)
