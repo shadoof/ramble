@@ -1,8 +1,5 @@
-// progress bar color options
-let redblue = ["#E9E9E9", "rgb(255, 97, 97, 0.6)", "rgba(178, 68, 68, 0.8)", "rgba(106, 166, 230, 0.6)", "rgba(54, 84, 116, 0.8)"];
-let redgreen = ["rgb(0, 0, 0, 0.1)", "rgba(255, 97, 97, 0.6)", "rgba(178, 68, 68, 0.8)", "rgba(50, 187, 87, 0.6)", "rgb(30, 111, 52, 0.8)"];
-let yellowblue = ["rgb(0, 0, 0, 0.1)", "rgba(0, 166, 233, 0.6)", "rgba(82, 158, 191, 0.8)", "rgba(245, 199, 0, 0.6)", "rgba(236, 192, 0, 0.8)"];
-let pbdict, pbcolor = redblue;
+const pbID2Color = [4, 3, 2, 1, 0];
+const pbID2Affvals = ['initial','free', 'shared', 'urban', 'rural'];
 
 /* compute the affinity over 2 text arrays for a set of word-ids */
 function originalAffinity(textA, textB, idsToCheck) {
@@ -67,16 +64,6 @@ function keyhandler(e) {
 function updateInfo() {
   let { updating, domain, outgoing, legs, maxLegs } = state;
 
-  let displayWords = unspanify(); // get words
-
-  // compare visible text to each source text
-  let oldAffinities = [
-    originalAffinity(sources.urban, displayWords, repIds),
-    originalAffinity(sources.urban, displayWords, strictRepIds),
-    originalAffinity(sources.rural, displayWords, repIds),
-    originalAffinity(sources.rural, displayWords, strictRepIds),
-  ];
-
   // TODO: (#45) use these affinities for new 4-part progress bar
   let affvals = Object.fromEntries(Object.entries(affinities())
     .map(([k, raw]) => {
@@ -95,8 +82,17 @@ function updateInfo() {
   domStats.innerHTML = data;
 
   progressBars.forEach((p, i) => {
-    if (i) p.animate((updating ? oldAffinities[pbdict.divIndex[i][2]] : 0) / 100,
-      { duration: 3000 }, () => 0/*no-op*/);
+    let num = 0;
+    if (updating) {
+      if (pbID2Affvals[i] === 'free'){
+        num = 100;
+      } else if (pbID2Affvals[i] === 'shared') {
+        num = parseFloat(affvals.shared) + parseFloat(affvals[domain]);
+      } else {
+        num = affvals[pbID2Affvals[i]];
+      }
+    }
+    p.animate(num / 100, { duration: pbID2Affvals[i] === 'free' ? -100 : 3000 }, () => 0/*no-op*/);
   });
 }
 
@@ -107,8 +103,6 @@ function createLegend() {
   domLegend.style.height = "900px"
   let legendContent = document.createElement("div");
   legendContent.classList.add("legend-content");
-  let rurColReg = pbcolor[pbdict.contentIndex.ruralRegular[2]];
-  let urbColReg = pbcolor[pbdict.contentIndex.urbanRegular[2]];
   legendContent.innerHTML = `<p><svg class="rural-legend" style="fill: ${bandColors[0]}">
   <rect id="box" x="0" y="0" width="20" height="20"/>
   </svg> rural</p>
@@ -143,94 +137,21 @@ function download(data, filename, type = 'json') {
 }
 
 function createProgressBars(opts = {}) {
-
   // progress bars dict
-  pbdict = opts.dict = loadProgress();
-
   const pbars = [];
   let progress = document.querySelectorAll(".progress");
-  if (opts.color && opts.color.length !== progress.length) {
-    throw Error('opts.color.length !== ' + progress.length);
-  }
   progress.forEach((t, i) => {
     let pbar = new ProgressBar.Circle(t, {
-      duration: opts.duration || 3000,
+      duration: opts.duration || (i > 0 ? 3000 : -100),
       // keep the absolute width same, see css options for strict bars
-      strokeWidth: opts.strokeWidth || (opts.displayStrict
-        ? (i > 0 ? (98 / (92 + 2 * ((i - 1) % 2 == 0 ? 2 : 1))) : 0.15)
-        : (i > -1 ? (98 / (92 + 2 * ((i - 1) % 2 == 0 ? 2 : 1))) * 2 : 0.15)),
+      strokeWidth: opts.strokeWidth || 4.5,
       easing: opts.easing || 'easeOut',
-      trailColor: opts.trailColor || 'rgba(0,0,0,0)',
+      trailColor:opts.trailColor ? (i === 0 ? opts.trailColor : 'rgba(0,0,0,0)') : 'rgba(0,0,0,0)',
       color: opts.color && opts.color[i]
-        ? opts.color[(opts.dict.divIndex[i][3])]
+        ? opts.color[pbID2Color[i]]
         : "#ddd"
     });
-
-    if (displayStrict) { // state with outline only
-      pbar.set(i ? 0 : 1);
-    }
-    else { // state with rural-reg only
-      //      pbar.set(i!==4 ? 0 : 1);
-      pbar.set(i ? 0 : 1);
-      if (i === 0) pbar.set(1);
-    }
-
     pbars.push(pbar);
   });
-  let cidx = opts.dict.contentIndex;
-  let strictBars = [
-    progress[cidx.urbanStrict[3]],
-    progress[cidx.background[3]],
-    progress[cidx.ruralStrict[3]]
-  ];
-  if (opts.displayStrict) {
-    strictBars.forEach(b => b.classList.remove("display-none"))
-  } else {
-    strictBars.forEach(b => b.classList.add("display-none"))
-  }
-
-  progress[cidx.background[3]].classList.remove("display-none"); // outer-line
   return pbars;
-}
-
-
-function loadProgress() {
-  let labels = Array(5).map((l, i) => labels[i] = 'progressbar' + i);
-  return displayStrict ? {
-    divIndex:
-      // [correspondingDivId, correspondingData, correspondingAffinityIndex, correspondingColorIndex]
-      [
-        [labels[0], "background", -1, 0],
-        [labels[1], "urbanRegular", 0, 1],
-        [labels[2], "urbanStrict", 1, 2],
-        [labels[3], "ruralRegular", 2, 3],
-        [labels[4], "ruralStrict", 3, 4],
-      ],
-    contentIndex:
-    //  [correspondingDivId, correspondingAffinityIndex, correspondingColorIndex, correspondingDivIdx]
-    {
-      background: [labels[0], -1, 0, 0],
-      urbanRegular: [labels[1], 0, 1, 1],
-      urbanStrict: [labels[2], 1, 2, 2],
-      ruralRegular: [labels[3], 2, 3, 3],
-      ruralStrict: [labels[4], 3, 4, 4],
-    }
-  } : {
-    divIndex:
-      [
-        [labels[0], "background", -1, 0],
-        [labels[1], "urbanStrict", 1, 2],
-        [labels[2], "urbanRegular", 0, 1],
-        [labels[3], "ruralStrict", 3, 4],
-        [labels[4], "ruralRegular", 2, 3],
-      ],
-    contentIndex:
-    {
-      background: [labels[0], -1, 0, 0],
-      urbanStrict: [labels[1], 0, 2, 1],
-      urbanRegular: [labels[2], 1, 1, 2],
-      ruralStrict: [labels[3], 2, 4, 3],
-      ruralRegular: [labels[4], 3, 3, 4],
-    }
-  };
 }
