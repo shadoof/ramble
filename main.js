@@ -282,7 +282,7 @@ function postReplace(e) {
 /* selects an index to restore (from history) in displayed text */
 function restore() {
 
-  let { domain } = state;
+  let { domain, stepMode } = state;
 
   let displayWords = unspanify();
 
@@ -463,7 +463,7 @@ function updateDOM(next, idx) {
 
 function update(updating = true) {
   let { domain, legs, maxLegs } = state;
-  log(`Start:   outgoing in '${domain}' on leg ${legs + 1}/${maxLegs}`);
+  log(`Start: outgoing in '${domain}' on leg ${legs + 1}/${maxLegs}`);
   state.updating = updating;
   state.maxLegs = walks.short;
   domLegend.style.display = 'block';

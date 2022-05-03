@@ -89,8 +89,8 @@ function updateInfo() {
   let data = 'Domain: ' + domain;
   data += '&nbsp;' + (updating ? (outgoing ? '⟶' : '⟵') : 'X');
   data += `&nbsp; Leg: ${legs + 1}/${maxLegs}&nbsp; Affinity:`;
-  data += ' Rural=' + affvals.rural + ' Urban=' + affvals.urban;
-  data += ' Shared=' + affvals.shared + ' Free=' + affvals.free;
+  data += ' rural=' + affvals.rural + ' urban=' + affvals.urban;
+  data += ' shared=' + affvals.shared + ' free=' + affvals.free;
   domStats = domStats || document.querySelector('#stats');
   domStats.innerHTML = data;
 
@@ -109,16 +109,18 @@ function createLegend() {
   legendContent.classList.add("legend-content");
   let rurColReg = pbcolor[pbdict.contentIndex.ruralRegular[2]];
   let urbColReg = pbcolor[pbdict.contentIndex.urbanRegular[2]];
-  legendContent.innerHTML = `<p><svg class="rural-legend" style="fill: ${rurColReg}">
+  legendContent.innerHTML = `<p><svg class="rural-legend" style="fill: ${bandColors[0]}">
   <rect id="box" x="0" y="0" width="20" height="20"/>
   </svg> rural</p>
-  <p><svg class="urban-legend" style="fill: ${urbColReg}">
+  <p><svg class="urban-legend" style="fill: ${bandColors[1]}">
   <rect id="box" x="0" y="0" width="20" height="20"/>
   </svg> urban</p>
   <p><svg class="overlap-legend">
-  <rect style="fill: ${urbColReg}" id="box" x="0" y="0" width="20" height="20"/>
-  <rect style="fill: ${rurColReg}" id="box" x="0" y="0" width="20" height="20"/>
-  </svg> overlap</p>`;
+  <rect style="fill: ${bandColors[2]}" id="box" x="0" y="0" width="20" height="20"/>
+  </svg> shared</p>
+  <p><svg class="overlap-legend">
+  <rect style="fill: ${bandColors[3]}" id="box" x="0" y="0" width="20" height="20"/>
+  </svg> free</p>`;
   domLegend.append(legendContent);
   domLegend.style.fontSize = (initMetrics.fontSize || 20.5) + 'px';
   document.querySelector("#display").append(domLegend)
