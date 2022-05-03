@@ -1,4 +1,3 @@
-const pbID2Color = [4, 3, 2, 1, 0];
 const pbID2Affvals = ['initial', 'free', 'shared', 'urban', 'rural'];
 
 // affinities for visualization band and stats panel
@@ -15,7 +14,7 @@ function affinities() {
   });
   // normalize (4 values should sum to 1)
   return Object.fromEntries(Object.entries(data).map
-    (([k, v]) => [k, v / repIds.length])); 
+    (([k, v]) => [k, v / repIds.length]));
 }
 
 function keyhandler(e) {
@@ -70,7 +69,6 @@ function keyhandler(e) {
 function updateInfo() {
   let { updating, domain, outgoing, legs, maxLegs } = state;
 
-  // TODO: (#45) use these affinities for new 4-part progress bar
   let affvals = Object.fromEntries(Object.entries(affinities())
     .map(([k, raw]) => {
       let fmt = (raw * 100).toFixed(2);  // pad
@@ -89,16 +87,19 @@ function updateInfo() {
 
   progressBars.forEach((p, i) => {
     let num = 0;
+    let barname = pbID2Affvals[i];
     if (updating) {
-      if (pbID2Affvals[i] === 'free') {
+      if (barname === 'free') {
         num = 100;
-      } else if (pbID2Affvals[i] === 'shared') {
+      } else if (barname === 'shared') {
         num = parseFloat(affvals.shared) + parseFloat(affvals[domain]);
       } else {
-        num = affvals[pbID2Affvals[i]];
+        num = affvals[barname];
       }
     }
-    p.animate(num / 100, { duration: pbID2Affvals[i] === 'free' ? -100 : 3000 }, () => 0/*no-op*/);
+    p.animate(num / 100, {
+      duration: barname === 'free' ? -100 : 3000
+    }, () => 0/*no-op*/);
   });
 }
 
@@ -152,9 +153,10 @@ function createProgressBars(opts = {}) {
       // keep the absolute width same, see css options for strict bars
       strokeWidth: opts.strokeWidth || 4.5,
       easing: opts.easing || 'easeOut',
-      trailColor: opts.trailColor ? (i === 0 ? opts.trailColor : 'rgba(0,0,0,0)') : 'rgba(0,0,0,0)',
+      trailColor: opts.trailColor ? (i === 0
+        ? opts.trailColor : 'rgba(0,0,0,0)') : 'rgba(0,0,0,0)',
       color: opts.color && opts.color[i]
-        ? opts.color[pbID2Color[i]]
+        ? opts.color[pbID2Affvals.length - 1 - i]
         : "#ddd"
     });
     pbars.push(pbar);

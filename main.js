@@ -122,9 +122,9 @@ initMetrics.fontSize = lines[0].fontSize;
 if (1) { // DEBUG-ONLY
   // walks.short = 2;
   // walks.long = 4;
-  // stepsPerLeg = 4;
-  // updateDelay = 1000;
-  // readDelay = 3000;
+  // updateDelay = 500;
+  stepsPerLeg = 4;
+  readDelay = 500;
   logging = true;
   keyhandler({ code: 'KeyI' });
   //setTimeout(() => keyhandler({ code: 'KeyD' }, 300));
