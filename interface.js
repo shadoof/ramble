@@ -3,8 +3,9 @@ const pbID2Affvals = ['initial', 'free', 'shared', 'urban', 'rural'];
 // affinities for visualization band and stats panel
 function affinities() {
   let data = { rural: 0, urban: 0, shared: 0, free: 0 };
+  let current = unspanify();
   repIds.forEach(idx => {
-    let visible = last(history[state.domain][idx]);
+    let visible = current[idx];
     let rurMatch = sources.rural[idx] === visible;
     let urbMatch = sources.urban[idx] === visible;
     if (!rurMatch && !urbMatch) data.free++;
@@ -121,7 +122,7 @@ function createLegend() {
   </svg> shared</p>
   <p><svg class="overlap-legend">
   <rect style="fill: ${visBandColors[3]}" id="box" x="0" y="0" width="20" height="20"/>
-  </svg> free</p>`;
+  </svg> found</p>`;
   domLegend.append(legendContent);
   domLegend.style.fontSize = (initMetrics.fontSize || 20.5) + 'px';
   document.querySelector("#display").append(domLegend)

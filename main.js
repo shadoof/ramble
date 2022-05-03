@@ -23,7 +23,7 @@ let minWordLength = 4;
 let recursiveReplace = true;
 
 // width of visualization bar (% of div size)
-let visBandWidth = 4;
+let visBandWidth = 3;
 
 // visualisation [ rural, urban, shared, free, initial ]
 let visBandColors = [ '#9CC0E5', '#F59797', '#E7EBC5', '#C3ACB8', '#F3F3F3' ];
@@ -52,7 +52,7 @@ let similarOverrides = {
 let stops = ["also", "over", "have", "this", "that", "just", "then", "under", "some", "their", "when", "these", "within", "after", "with", "there", "where", "while", "from", "whenever", "every", "usually", "other", "whereas"];
 
 // ignored when found as a similar
-let ignores = ["jerkies", "nary", "outta", "copras", "accomplis", "scad", "silly", "saris", "coca", "durn", "geed", "goted", "denture", "wales", "terry"];
+let ignores = ["jerkies", "trite", "nary", "outta", "copras", "accomplis", "scad", "silly", "saris", "coca", "durn", "geed", "goted", "denture", "wales", "terry"];
 
 // set true to generate a new cache file
 let refreshCache = false;
@@ -123,10 +123,10 @@ if (1) { // DEBUG-ONLY
   // walks.short = 2;
   // walks.long = 4;
   // updateDelay = 500;
-  stepsPerLeg = 4;
-  readDelay = 500;
+  // stepsPerLeg = 4;
+  // readDelay = 500;
   logging = true;
-  keyhandler({ code: 'KeyI' });
+  //keyhandler({ code: 'KeyI' });
   //setTimeout(() => keyhandler({ code: 'KeyD' }, 300));
 }
 
@@ -452,7 +452,6 @@ function updateDOM(next, idx) {
 }
 
 function update(updating = true) {
-  console.log('update()');
   let { domain, legs, maxLegs } = state;
   log(`Start: outgoing in '${domain}' on leg ${legs + 1}/${maxLegs}`);
   state.updating = updating;

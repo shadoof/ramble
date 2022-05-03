@@ -667,7 +667,6 @@ let cache = {
     "polite",
     "right",
     "tight",
-    "trite",
     "upright",
     "uptight",
     "white"
