@@ -441,6 +441,13 @@ function swapDomain() {
   state.legs = 0;
   state.domain = shadowTextName();
   log(`Domain switch -> '${state.domain}'`);
+  if (state.domain === 'rural') {
+    document.getElementById("progress2").classList.add('shared-rural');
+    document.getElementById("progress2").classList.remove('shared-urban');
+  } else {
+    document.getElementById("progress2").classList.remove('shared-rural');
+    document.getElementById("progress2").classList.add('shared-urban');
+  }
 }
 
 function shadowTextName(domain) {
