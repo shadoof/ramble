@@ -1,3 +1,6 @@
+// bandwidth: presentage of the bar div size
+let bandwidth = 2;
+
 // recursive replace or old-style 
 let recursiveReplace = true;
 
@@ -103,7 +106,7 @@ window.onresize = () => {
 }
 
 // create progress bars
-let progressBars = createProgressBars({ color: bandColors, trailColor: bandColors[4] });
+let progressBars = createProgressBars({ color: bandColors, trailColor: bandColors[4], strokeWidth: bandwidth });
 
 // layout lines in circular display
 let initMetrics = { radius: Math.max(radius, 450) };
