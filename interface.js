@@ -93,7 +93,7 @@ function updateInfo() {
       if (barname === 'free') {
         num = 100;
       } else if (barname === 'shared') {
-        num = parseFloat(affvals.shared) + parseFloat(affvals[domain]);
+        num = parseFloat(affvals.shared) + parseFloat(affvals[domain === "rural" ? "urban" : "rural"]);
       } else {
         num = affvals[barname];
       }

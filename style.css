@@ -166,13 +166,13 @@ body {
   -moz-transform: translate(-50%, -50%);
 }
 
-.shared-rural {
+.shared-urban {
   transform: translate(-50%, -50%);
   -webkit-transform: translate(-50%, -50%);
   -moz-transform: translate(-50%, -50%);
 }
 
-.shared-urban {
+.shared-rural {
   transform: translate(-50%, -50%)  scaleX(-1);
   -webkit-transform: translate(-50%, -50%)  scaleX(-1);
   -moz-transform: translate(-50%, -50%)  scaleX(-1);
