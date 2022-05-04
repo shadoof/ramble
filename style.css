@@ -225,6 +225,18 @@ body {
   -moz-transform-origin: top left;
 }
 
+#legend-container {
+  aspect-ratio: 1;
+  min-width: 0;
+  z-index: 5;
+  height: 95%;
+  margin-left: auto;
+  margin-right: auto;
+  position: absolute;
+  font-family: "Source Serif Pro", "Iowan Old Style", "Apple Garamond", "Palatino Linotype", "Times New Roman", "Droid Serif", Times, serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  vertical-align: middle;
+}
+
 .legend-content {
   color: #B3B3B3;
   position: fixed;
@@ -232,10 +244,35 @@ body {
   right: -70px;
 }
 
-.legend-content p {
+.legend-content div {
   font-family: "helvetica";
   font-size: 19px;
   margin: 10px 0px 0px 0px;
+}
+
+.hidden-legend {
+  width: 100%;
+  height: 5.5%;
+  display: flex;
+  justify-content: space-evenly;
+  bottom: 98.5%;
+  right: 0;
+  background-color: rgba(255,255,255,0.8);
+  opacity: 0;
+  -webkit-transition: opacity 0.3s ease-in-out;
+  -moz-transition: opacity 0.3s ease-in-out;
+  -o-transition: opacity 0.3s ease-in-out;
+  -ms-transition: opacity 0.3s ease-in-out;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.hidden-legend:hover {
+  -webkit-transition: opacity 0.3s ease-in-out;
+  -moz-transition: opacity 0.3s ease-in-out;
+  -o-transition: opacity 0.3s ease-in-out;
+  -ms-transition: opacity 0.3s ease-in-out;
+  transition: opacity 0.3s ease-in-out;
+  opacity: 100;
 }
 
 .display-none {

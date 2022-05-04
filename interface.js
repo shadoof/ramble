@@ -64,6 +64,10 @@ function keyhandler(e) {
     reader.unpauseThen(update);
     console.log('[KEYB] skip-delay');
   }
+  else if (e.code === 'KeyT') {
+    toggleLegend();
+    console.log('[KEYB] toggleLegend')
+  }
 }
 
 /* update stats in debug panel */
@@ -111,21 +115,26 @@ function createLegend() {
   domLegend.style.height = "900px"
   let legendContent = document.createElement("div");
   legendContent.classList.add("legend-content");
-  legendContent.innerHTML = `<p><svg class="rural-legend" style="fill: ${visBandColors[0]}">
+  legendContent.innerHTML = `<div><svg class="rural-legend" style="fill: ${visBandColors[0]}">
   <rect id="box" x="0" y="0" width="20" height="20"/>
-  </svg> rural</p>
-  <p><svg class="urban-legend" style="fill: ${visBandColors[1]}">
+  </svg> rural</div>
+  <div><svg class="urban-legend" style="fill: ${visBandColors[1]}">
   <rect id="box" x="0" y="0" width="20" height="20"/>
-  </svg> urban</p>
-  <p><svg class="overlap-legend">
+  </svg> urban</div>
+  <div><svg class="overlap-legend">
   <rect style="fill: ${visBandColors[2]}" id="box" x="0" y="0" width="20" height="20"/>
-  </svg> shared</p>
-  <p><svg class="overlap-legend">
+  </svg> shared</div>
+  <div><svg class="overlap-legend">
   <rect style="fill: ${visBandColors[3]}" id="box" x="0" y="0" width="20" height="20"/>
-  </svg> found</p>`;
+  </svg> found</div>`;
+  if (hidingLegends) {
+    legendContent.classList.add('hidden-legend')
+  } else {
+    legendContent.classList.remove('hidden-legend')
+  }
   domLegend.append(legendContent);
   domLegend.style.fontSize = (initMetrics.fontSize || 20.5) + 'px';
-  document.querySelector("#display").append(domLegend)
+  document.querySelector("#legend-container").append(domLegend)
 }
 
 // Downloads data to a local file (tmp)
@@ -174,4 +183,23 @@ function originalAffinity(textA, textB, idsToCheck) {
   let fmt = (raw * 100).toFixed(2);// pad
   while (fmt.length < 5) fmt = '0' + fmt;
   return raw * 100;
+}
+
+// toggle legends
+function toggleLegend(target) {
+  if (typeof target ==='boolean') {
+    if (target) {
+      document.querySelector('.legend-content').classList.add('hidden-legend')
+    } else {
+      document.querySelector('.legend-content').classList.remove('hidden-legend')
+    }
+    hidingLegends = target;
+  } else {
+    hidingLegends = !hidingLegends;
+    if (hidingLegends) {
+      document.querySelector('.legend-content').classList.add('hidden-legend')
+    } else {
+      document.querySelector('.legend-content').classList.remove('hidden-legend')
+    }
+  }
 }
