@@ -32,6 +32,9 @@ let visBandColors = [ '#9CC0E5', '#F59797', '#E7EBC5', '#C3ACB8', '#F3F3F3' ];
 // let visBandColors = [ '#84ACCE', '#D16666', '#D7D9DB', '#B5AEAE', '#F9F9F9' ];
 // let visBandColors = [ '#84ACCE', '#D16666', '#D7D9DB', '#FFF185', '#F9F9F9' ];
 
+// hide legends toggle 
+let hidingLegends = true;
+
 // these override lookup values
 let similarOverrides = {
   avoid: ['elude', 'escape', 'evade'],
