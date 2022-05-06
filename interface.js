@@ -111,22 +111,22 @@ function updateInfo() {
 function createLegend() {
   domLegend = document.createElement("div");
   domLegend.id = "legend";
-  domLegend.style.width = "900px"
-  domLegend.style.height = "900px"
+  domLegend.style.width = initMetrics.radius * 2 + "px"
+  domLegend.style.height = initMetrics.radius * 2 + "px"
   let legendContent = document.createElement("div");
   legendContent.classList.add("legend-content");
   legendContent.innerHTML = `<div><svg class="rural-legend" style="fill: ${visBandColors[0]}">
   <rect id="box" x="0" y="0" width="20" height="20"/>
-  </svg> rural</div>
+  </svg> <span> rural</span></div>
   <div><svg class="urban-legend" style="fill: ${visBandColors[1]}">
   <rect id="box" x="0" y="0" width="20" height="20"/>
-  </svg> urban</div>
+  </svg> <span> urban</span></div>
   <div><svg class="overlap-legend">
   <rect style="fill: ${visBandColors[2]}" id="box" x="0" y="0" width="20" height="20"/>
-  </svg> shared</div>
+  </svg> <span> shared</span></div>
   <div><svg class="overlap-legend">
   <rect style="fill: ${visBandColors[3]}" id="box" x="0" y="0" width="20" height="20"/>
-  </svg> found</div>`;
+  </svg> <span> found<span></div>`;
   if (hidingLegends) {
     legendContent.classList.add('hidden-legend')
   } else {
