@@ -1,5 +1,7 @@
 body {
   background: #fdfdfd;
+  padding: 0;
+  margin: 0;
 }
 
 #center-wrapper {
@@ -11,7 +13,9 @@ body {
 #centered-container {
   width: min(95vw, 95vh);
   height: calc(min(95vw, 95vh) - 50px);
-  margin: auto;
+  margin-left: auto;
+  margin-right: auto;
+  /* margin-top: 5%; */
 }
 
 #container {
@@ -248,14 +252,21 @@ body {
   font-family: "helvetica";
   font-size: 19px;
   margin: 10px 0px 0px 0px;
+  display: flex;
+  align-items: center;
+}
+
+.legend-content div span {
+  vertical-align: middle;
+  margin-left: 10px;
 }
 
 .hidden-legend {
   width: 100%;
-  height: 5.5%;
+  height: 5%;
   display: flex;
-  justify-content: space-evenly;
-  bottom: 98.5%;
+  justify-content: center;
+  bottom: 102.6%;
   right: 0;
   background-color: rgba(255,255,255,0.8);
   opacity: 0;
@@ -264,6 +275,10 @@ body {
   -o-transition: opacity 0.3s ease-in-out;
   -ms-transition: opacity 0.3s ease-in-out;
   transition: opacity 0.3s ease-in-out;
+  padding-left: 500%;
+  padding-right: 500%;
+  margin-left: -500%;
+  margin-right: -500%;
 }
 
 .hidden-legend:hover {
@@ -273,6 +288,11 @@ body {
   -ms-transition: opacity 0.3s ease-in-out;
   transition: opacity 0.3s ease-in-out;
   opacity: 100;
+}
+
+.hidden-legend div {
+  margin-left: 10px;
+  margin-right: 10px;
 }
 
 .display-none {

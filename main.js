@@ -132,7 +132,6 @@ if (1) { // DEBUG-ONLY
   //keyhandler({ code: 'KeyI' });
   //setTimeout(() => keyhandler({ code: 'KeyD' }, 300));
 }
-
 createLegend();
 scaleToFit();
 ramble();// go
@@ -473,6 +472,8 @@ function scaleToFit() {
     = "scale(" + radius / initMetrics.radius + ")";
   document.querySelector('#legend').style.transform
     = "scale(" + radius / initMetrics.radius + ")";
+  document.querySelector("#display-container").style.marginTop
+    = 0.1 * radius + "px";
 }
 
 function last(arr) {
