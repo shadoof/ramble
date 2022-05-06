@@ -203,3 +203,14 @@ function toggleLegend(target) {
     }
   }
 }
+
+function hideCursor(e){
+  let mouse = {x:e.pageX, y:e.pageY}; //clientXY?
+  let r = progressBounds.width/2;
+  let center = {x: progressBounds.x + window.scrollX + r, y:progressBounds.y + window.scrollY + r};
+  if ((mouse.x - center.x) * (mouse.x - center.x) + (mouse.y - center.y) * (mouse.y - center.y) <= r * r) {
+    document.querySelector("#display-container").classList.add("hide-cursor");
+  } else {
+    document.querySelector("#display-container").classList.remove("hide-cursor");
+  }
+}
