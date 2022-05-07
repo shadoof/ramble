@@ -120,7 +120,7 @@ let offset = {
 };
 let opts = { offset, font, lineHeightScale, padding };
 let lines = layoutCircular(sources[state.domain], initMetrics.radius, opts);
-initMetrics.lineWidths = lineateCircular(domDisplay, initMetrics.radius, lines);
+initMetrics.lineWidths = lineateCircular(domDisplay, initMetrics.radius, lines); // this is not the width of the text, but the width of the bounding box
 initMetrics.fontSize = lines[0].fontSize;
 if (1) { // DEBUG-ONLY
   // walks.short = 2;
@@ -134,7 +134,8 @@ if (1) { // DEBUG-ONLY
 }
 createLegend();
 scaleToFit();
-let progressBounds = document.getElementById("progress4").getBoundingClientRect();
+initMetrics.contentWidths = getAllLineWidths(); // this contains the widths of the text for each line
+let progressBounds= document.getElementById("progress4").getBoundingClientRect();
 document.querySelector("#display-container").addEventListener("mousemove", hideCursor);
 ramble();// go
 
@@ -393,22 +394,24 @@ function unspanify() {
 
 function lengthAwareRandom(widx, word, options) {
   let { domain } = state;
-  let scaleRatio = radius / initMetrics.radius;
+  let scaleRatio = getScaleRatio();
   let wordEle = document.querySelector(`#w${widx}`);
   let lineEle = wordEle.parentElement.parentElement;
   let lineIdx = parseInt((lineEle.id).slice(1));
   let originalW = initMetrics.lineWidths[lineIdx] - (2 * padding);
   let currentW = lineEle.firstChild.getBoundingClientRect().width / scaleRatio;
-  let filter, msg = '', wordW = measureWidthForLine(word, lineIdx);
+  let filter, msg = '', wordW = getLineWidthAfterSub_old(word, lineIdx);
   let hstack = history[domain][widx];
   let last = hstack[hstack.length - 1];
   if (originalW > currentW) {
-    filter = (o) => o !== last && measureWidthForLine(o, lineIdx) > wordW;
-    msg += '  need longer';
+    filter = (o) => o !== last && getLineWidthAfterSub_old(o, lineIdx) > wordW;
+    msg += '   need longer';
   }
   else {
-    filter = (o) => o !== last && measureWidthForLine(o, lineIdx) < wordW;
-    msg += '  need shorter';
+    filter = (o, i) => o !== last && getLineWidthAfterSub_old(o, lineIdx) < wordW;
+    // console.log('  ', i, `orig: ${word}(${Math.round(wordW)})`
+    //   + ` check: ${o} (${Math.round(ow)})`);
+    msg += '    need shorter';
   }
 
   let choices = options.filter(filter);
@@ -418,9 +421,9 @@ function lengthAwareRandom(widx, word, options) {
   }
 
   let choice = RiTa.random(choices);
-  // console.log(msg + ', replaced ' + word + `(${Math.round(wordW)})`
-  //   + ' with ' + choice + `(${Math.round(measureWidthForLine(choice, lineIdx))})`
-  //   + `,\n  h=${history[domain][widx]}, last=${last}`);
+  //console.log(msg + ', replaced ' + word + `(${Math.round(wordW)})`
+  // + ' with ' + choice + `(${Math.round(getLineWidthAfterSub_old(choice, lineIdx))})`
+  // + `,\n  h=${history[domain][widx]}, last=${last})`;
 
   return choice;
 }
@@ -478,5 +481,9 @@ function scaleToFit() {
 
 function last(arr) {
   if (arr && arr.length) return arr[arr.length - 1];
+}
+
+function getScaleRatio(){
+  return radius/initMetrics.radius;
 }
 
