@@ -58,7 +58,7 @@ const lineateCircular = function (target, initialRadius, lines, opts = {}) {
 }
 
 const adjustWordSpace = function (lineEle, initialMetrics, maxMin, padding, radius) {
-  
+  // caculation in scale=1, not current scale
   if (!Array.isArray(maxMin)) throw Error('[maxMin] required');
 
   lineEle.classList.remove("max-word-spacing");
@@ -125,6 +125,7 @@ const layoutCircular = function (words, radius, opts = {}) {
   @return: { text, rects, words }
 */
 const fitToLineWidths = function (offset, radius, words, fontSize, lineHeight, wordSpacing, fontName) {
+  // caculation in scale=1, not current scale
   //console.log('fitToLineWidths', fontSize);
   fontName = fontName || 'sans-serif';
   let tokens = words.slice();
@@ -146,6 +147,7 @@ const fitToLineWidths = function (offset, radius, words, fontSize, lineHeight, w
   @return: { words, text }
 */
 const fitToBox = function (words, width, fontSize, fontName = 'sans-serif', wordSpacing) {
+  // caculation in scale=1, not current scale
   //console.log('fitToBox', words, width, fontSize);
   let i = 1, line = {
     text: words[0],
@@ -173,6 +175,7 @@ const fitToBox = function (words, width, fontSize, fontName = 'sans-serif', word
 
 let canvasCtx; // don't recreate canvas
 const measureWidth = function (text, fontSizePx = 12, fontName = font, wordSpacing = 0) {
+  // caculation in scale=1, not current scale
   canvasCtx = canvasCtx || document.createElement("canvas").getContext("2d");
   canvasCtx.font = fontSizePx + 'px ' + fontName;
   let spaceCount = text ? (text.split(" ").length - 1) : 0;
