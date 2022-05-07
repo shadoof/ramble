@@ -193,14 +193,18 @@ const measureWidthForLine = function (text, lineIndex) {
 
   const wordSpacing = parseFloat(lineCss.wordSpacing.replace("px", ""));
   const scaleRatio = parseFloat(textCss.transform.replace
-    (/^.*matrix\(([0-9]+\.[0-9]+)\,.*$/, "$1"));  // yuck
-  const spaceCount = text ? (text.split(" ").length - 1) : 0;
+    (/^.*matrix\(([0-9]+(?:\.[0-9]+)?)\,.*$/, "$1"));  // yuck
+  const numSpaces = text ? (text.split(" ").length - 1) : 0;
+
+  if (Number.isNaN(scaleRatio)) {
+    throw Error('scaleRatio is NaN: '+textCss.transform);
+  }
 
   lineCtx = lineCtx || document.createElement("canvas").getContext("2d");
   lineCtx.font = lineCss.font;
 
   const lineWidth = lineCtx.measureText(text).width;
-  return (lineWidth + (spaceCount * wordSpacing)) * scaleRatio;
+  return (lineWidth + (numSpaces * wordSpacing)) * scaleRatio;
 };
 
 const chordLength = function (rad, d) {
