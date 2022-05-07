@@ -7,90 +7,84 @@
 */
 const lineateCircular = function (target, initialRadius, lines, opts = {}) {
 
-  const dbug = opts.debug;
-  const fontSize = opts.fontSize;
-  const fontFamily = opts.fontFamily;
-
-  const ws = [];
-  const textContainer = document.createElement("div");
+  let lineWidths = [];
+  let fontSize = opts.fontSize;
+  let textContainer = document.createElement("div");
   textContainer.id = "text-display";
   textContainer.style.width = initialRadius * 2 + "px";
   textContainer.style.height = initialRadius * 2 + "px";
-  if (dbug) console.log(lines.length);
 
-  let wi = 0;
+  let wordIdx = 0;
   lines.forEach((l, li) => {
     let lineDiv = document.createElement("div");
     lineDiv.classList.add("line");
-    const thisFontSize = l.fontSize || fontSize;
-    const thisFontFamliy = l.fontFamily || fontFamily;
-    const thisWordSpacing = l.wordSpacing;
+    let thisFontSize = l.fontSize || fontSize;
+    let thisFontFamily = l.fontFamily || opts.fontFamily;
     if (thisFontSize) lineDiv.style.fontSize = thisFontSize + "px";
-    if (thisFontFamliy) lineDiv.style.fontFamily = thisFontFamliy;
-    if (thisWordSpacing) lineDiv.style.wordSpacing = thisWordSpacing + "em";
+    if (thisFontFamily) lineDiv.style.fontFamily = thisFontFamily;
+    if (l.wordSpacing) lineDiv.style.wordSpacing = l.wordSpacing + "em";
     lineDiv.style.top = (l.bounds[1] - l.bounds[3] / 2) + "px";
     lineDiv.id = "l" + li;
 
     if (l.text && l.text.length > 0) {
-      const wrapperSpan = document.createElement("span");
+      let wrapperSpan = document.createElement("span");
       wrapperSpan.style.display = "inline-block";
+      //if (li === 0) wrapperSpan.style.outline = '1px solid red';
+
       wrapperSpan.classList.add("wrapper");
       let words = RiTa.tokenize(l.text);
       words.forEach((w, iil) => {
-        if (iil > 0) {
-          if (!RiTa.isPunct(w)) wrapperSpan.append(" ");
-        }
+        if (iil > 0 && !RiTa.isPunct(w)) wrapperSpan.append(" ");
         let wordSpan = document.createElement("span");
         wordSpan.classList.add("word");
-        wordSpan.id = "w" + wi++;
+        wordSpan.id = "w" + wordIdx++;
         wordSpan.innerText = w;
         wrapperSpan.append(wordSpan);
       });
-      lineDiv.append(wrapperSpan)
+      lineDiv.append(wrapperSpan);
     }
 
     textContainer.append(lineDiv);
-    ws.push(l.bounds[2]);
+    lineWidths.push(l.bounds[2]);
   });
 
   target.append(textContainer);
 
-  return ws;
+  return { // main::initMetrics
+    fontSize,
+    lineWidths,
+    radius: initialRadius,
+  };
 }
 
-const adjustWordSpace = function (line, initial, maxMin, padding, radius) {
+const adjustWordSpace = function (lineEle, initialMetrics, maxMin, padding, radius) {
   
   if (!Array.isArray(maxMin)) throw Error('[maxMin] required');
 
-  line.classList.remove("max-word-spacing");
-  line.classList.remove("min-word-spacing");
+  lineEle.classList.remove("max-word-spacing");
+  lineEle.classList.remove("min-word-spacing");
 
-  let wordSpacing = window.getComputedStyle(line).wordSpacing;
-  let step = 0.01, scaleRatio = radius / initial.radius;
-  let idx = parseInt((line.id).slice(1));
-  let origW = initial.lineWidths[idx] - 2 * padding;
-  let currentW = line.firstChild.getBoundingClientRect().width / scaleRatio;
-  let ws = parseFloat(wordSpacing.replace('px', '')) / initial.fontSize; // px => em
+  let wordSpacing = window.getComputedStyle(lineEle).wordSpacing;
+  let step = 0.01, scaleRatio = radius / initialMetrics.radius;
+  let idx = parseInt((lineEle.id).slice(1));
+  let origW = initialMetrics.lineWidths[idx] - 2 * padding;
+  let currentW = lineEle.firstChild.getBoundingClientRect().width / scaleRatio;
+  let ws = parseFloat(wordSpacing.replace('px', '')) / initialMetrics.fontSize; // px => em
 
   // try to get within 5 pixels of current width ?
   for (let tries = 0; Math.abs(origW - currentW) > 5 && tries < 200; tries++) {
-    // if (origW > currentW) {
-    //   ws += step;
-    // } else {
-    //   ws -= step;
-    // }
     ws += (origW > currentW) ? step : -step;
-    line.style.wordSpacing = ws + "em";
-    currentW = line.firstChild.getBoundingClientRect().width / scaleRatio;
+    lineEle.style.wordSpacing = ws + "em";
+    currentW = lineEle.firstChild.getBoundingClientRect().width / scaleRatio;
   }
 
   // check for extreme values
   if (ws >= maxMin[1]) {
-    line.style.wordSpacing = maxMin[1] + "em";
+    lineEle.style.wordSpacing = maxMin[1] + "em";
     //line.classList.add("max-word-spacing"); // debugging only
   }
   else if (ws <= maxMin[0]) {
-    line.style.wordSpacing = maxMin[0] + "em";
+    lineEle.style.wordSpacing = maxMin[0] + "em";
     //line.classList.add("min-word-spacing");  // debugging only
   }
 
@@ -177,6 +171,7 @@ const fitToBox = function (words, width, fontSize, fontName = 'sans-serif', word
   };
 }
 
+let canvasCtx; // don't recreate canvas
 const measureWidth = function (text, fontSizePx = 12, fontName = font, wordSpacing = 0) {
   canvasCtx = canvasCtx || document.createElement("canvas").getContext("2d");
   canvasCtx.font = fontSizePx + 'px ' + fontName;
@@ -184,7 +179,7 @@ const measureWidth = function (text, fontSizePx = 12, fontName = font, wordSpaci
   return canvasCtx.measureText(text).width + spaceCount * (wordSpacing * fontSizePx);
 }
 
-let canvasCtx, lineCtx; // don't recreate canvases 
+let lineCtx; // don't recreate canvas
 const measureWidthForLine = function (text, lineIndex) {
   const line = document.querySelector("#l" + lineIndex);
   const lineCss = window.getComputedStyle(line);
