@@ -26,7 +26,7 @@ let recursiveReplace = true;
 let visBandWidth = 3;
 
 // visualisation [ rural, urban, shared, free, initial ]
-let visBandColors = [ '#9CC0E5', '#F59797', '#E7EBC5', '#C3ACB8', '#F3F3F3' ];
+let visBandColors = ['#9CC0E5', '#F59797', '#E7EBC5', '#C3ACB8', '#F3F3F3'];
 // let visBandColors = [ '#9CC0E5', '#F59797', '#C5C6C7', '#959DAD', '#F9F9F9' ];
 // let visBandColors = [ '#9CC0E5', '#F59797', '#EDDEA4', '#526760', '#F9F9F9' ];
 // let visBandColors = [ '#84ACCE', '#D16666', '#D7D9DB', '#B5AEAE', '#F9F9F9' ];
@@ -105,7 +105,7 @@ console.log('[INFO] Keys -> (h)ighlight (i)nfo (s)tep (e)nd\n'
 window.onresize = () => {
   displayBounds = domDisplay.getBoundingClientRect();
   radius = displayBounds.width / 2;
-  progressBounds= document.getElementById("progress4").getBoundingClientRect();
+  progressBounds = document.getElementById("progress4").getBoundingClientRect();
   scaleToFit();
 }
 
