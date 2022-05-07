@@ -59,21 +59,21 @@ const lineateCircular = function (target, initialRadius, lines, opts = {}) {
 }
 
 const adjustWordSpace = function (line, initial, maxMin, padding, radius) {
-  
+  // hardcoded value in scaleRatio = 1 (initial state), not current scale (length in browser window)
   if (!Array.isArray(maxMin)) throw Error('[maxMin] required');
 
   line.classList.remove("max-word-spacing");
   line.classList.remove("min-word-spacing");
 
   let wordSpacing = window.getComputedStyle(line).wordSpacing;
-  let step = 0.01, scaleRatio = radius / initial.radius;
+  let step = 0.01, scaleRatio = getScaleRatio();
   let idx = parseInt((line.id).slice(1));
   let origW = initial.lineWidths[idx] - 2 * padding;
   let currentW = line.firstChild.getBoundingClientRect().width / scaleRatio;
   let ws = parseFloat(wordSpacing.replace('px', '')) / initial.fontSize; // px => em
 
-  // try to get within 5 pixels of current width ?
-  for (let tries = 0; Math.abs(origW - currentW) > 5 && tries < 200; tries++) {
+  // try to get within 5 pixels wider or narrower
+  for (let tries = 0; Math.abs(origW - currentW) > 0.0055555 * initMetrics.radius && tries < 200; tries++) {
     // if (origW > currentW) {
     //   ws += step;
     // } else {
@@ -185,28 +185,6 @@ const measureWidth = function (text, fontSizePx = 12, fontName = font, wordSpaci
 }
 
 let canvasCtx, lineCtx; // don't recreate canvases 
-const measureWidthForLine = function (text, lineIndex) {
-  const line = document.querySelector("#l" + lineIndex);
-  const lineCss = window.getComputedStyle(line);
-
-  const tdisp = document.querySelector("#text-display");
-  const textCss = window.getComputedStyle(tdisp);
-
-  const wordSpacing = parseFloat(lineCss.wordSpacing.replace("px", ""));
-  const scaleRatio = parseFloat(textCss.transform.replace
-    (/^.*matrix\(([0-9]+(?:\.[0-9]+)?)\,.*$/, "$1"));  // yuck
-  const numSpaces = text ? (text.split(" ").length - 1) : 0;
-
-  if (Number.isNaN(scaleRatio)) {
-    throw Error('scaleRatio is NaN: '+textCss.transform);
-  }
-
-  lineCtx = lineCtx || document.createElement("canvas").getContext("2d");
-  lineCtx.font = lineCss.font;
-
-  const lineWidth = lineCtx.measureText(text).width;
-  return (lineWidth + (numSpaces * wordSpacing)) * scaleRatio;
-};
 
 const chordLength = function (rad, d) {
   return 2 * Math.sqrt(rad * rad - (rad - d) * (rad - d));
@@ -227,4 +205,50 @@ const lineWidths = function (center, rad, lh) {
     }
   }
   return result;
+}
+
+const getLineWidth = function(lineIdx) {
+  //return value in scaleRatio = 1 (inital state), not current scale (width on brower window)
+  let lineDiv = document.getElementById("l" + lineIdx);
+  let contentSpan = lineDiv.firstChild;
+
+  return contentSpan.getBoundingClientRect().width / getScaleRatio();
+}
+
+const getLineWidthAfterSub = function(newWord, wordIdx, lineIdx){
+  //return value in scaleRatio = 1 (inital state), not current scale (width on brower window)
+  let targetSpan = document.getElementById("w" + wordIdx);
+  let oriWord = targetSpan.textContent;
+  targetSpan.textContent = newWord;
+  let targetLine = lineIdx ? document.getElementById("l" + lineIdx).firstChild : targetSpan.parentElement;
+  let w = targetLine.getBoundingClientRect().width / getScaleRatio();
+  targetSpan.textContent = oriWord;
+  return w;
+}
+
+const getLineWidthAfterSub_old = function (text, lineIndex) {
+  //return value in scaleRatio = 1 (inital state), not current scale (width on brower window)
+  const line = document.querySelector("#l" + lineIndex);
+  const lineCss = window.getComputedStyle(line);
+
+  const tdisp = document.querySelector("#text-display");
+  const textCss = window.getComputedStyle(tdisp);
+
+  const wordSpacing = parseFloat(lineCss.wordSpacing.replace("px", ""));
+  const scaleRatio = getScaleRatio();
+  const numSpaces = text ? (text.split(" ").length - 1) : 0;
+
+  lineCtx = lineCtx || document.createElement("canvas").getContext("2d");
+  lineCtx.font = lineCss.font;
+
+  const lineWidth = lineCtx.measureText(text).width;
+  return (lineWidth + (numSpaces * wordSpacing)) * scaleRatio;
+};
+
+const getAllLineWidths = function() {
+  let r = [];
+  for (let index = 0; index < lines.length; index++) {
+    r.push(getLineWidth(index));
+  }
+  return r;
 }
