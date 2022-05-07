@@ -105,6 +105,7 @@ console.log('[INFO] Keys -> (h)ighlight (i)nfo (s)tep (e)nd\n'
 window.onresize = () => {
   displayBounds = domDisplay.getBoundingClientRect();
   radius = displayBounds.width / 2;
+  progressBounds= document.getElementById("progress4").getBoundingClientRect();
   scaleToFit();
 }
 
@@ -121,7 +122,6 @@ let opts = { offset, font, lineHeightScale, padding };
 let lines = layoutCircular(sources[state.domain], initMetrics.radius, opts);
 initMetrics.lineWidths = lineateCircular(domDisplay, initMetrics.radius, lines);
 initMetrics.fontSize = lines[0].fontSize;
-
 if (1) { // DEBUG-ONLY
   // walks.short = 2;
   // walks.long = 4;
@@ -134,6 +134,8 @@ if (1) { // DEBUG-ONLY
 }
 createLegend();
 scaleToFit();
+let progressBounds= document.getElementById("progress4").getBoundingClientRect();
+document.querySelector("#display-container").addEventListener("mousemove", hideCursor);
 ramble();// go
 
 /////////////////////////////////////////////////////////
