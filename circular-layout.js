@@ -117,7 +117,7 @@ const layoutCircular = function (words, radius, opts = {}) {
   do {
     fontSize -= 0.1;
     result = fitToLineWidths
-      (offset, radius - padding, words, fontSize, fontSize * lineHeightScale, fontName, wordSpacing);
+      (offset, radius - padding, words, fontSize, fontSize * lineHeightScale, wordSpacing, fontName);
   }
   while (result.words.length);
 
@@ -127,11 +127,12 @@ const layoutCircular = function (words, radius, opts = {}) {
 }
 
 /*
-  parameter: offset, radius, words, fontSize, lineHeight, fontName
+  parameter: offset, radius, words, fontSize, lineHeight, wordSpacing, fontName
   @return: { text, rects, words }
 */
-const fitToLineWidths = function (offset, radius, words, fontSize, lineHeight, fontName = 'sans-serif', wordSpacing) {
+const fitToLineWidths = function (offset, radius, words, fontSize, lineHeight, wordSpacing, fontName) {
   //console.log('fitToLineWidths', fontSize);
+  fontName = fontName || 'sans-serif';
   let tokens = words.slice();
   let text = [], rects = lineWidths(offset, radius, lineHeight);
   rects.forEach(([x, y, w, h], i) => {
