@@ -11,7 +11,7 @@ let updateDelay = 500
 let readDelay = stepsPerLeg * updateDelay * 2;
 
 // min/max CSS word-spacing (em)
-let wordspaceMinMax = [-0.1, .5];
+let wordspaceMinMaxDefault = [-0.1, .5, .25];
 
 // leading for text display
 let lineHeightScale = 1.28;
@@ -136,16 +136,22 @@ function doLayout() {
   let initRadius = Math.max(radius, 450);
   let offset = { x: displayBounds.x + initRadius, y: displayBounds.y + initRadius };
   let opts = { offset, font, lineHeightScale, padding };
-  let lines = layoutCircular(sources[state.domain], initRadius, opts);
-  //console.log(lines.map(l => l.bounds[2]));
-  initialMetrics = lineateCircular(domDisplay, initRadius, lines);
+  let lines = layoutCircularLines(sources[state.domain], initRadius, opts);
+  //let initialMetrics = { fontSize: 0, lineWidths: 0, textDisplay: 0, initialRadius: 0 }
+  initialMetrics = createCircularDOM(domDisplay, initRadius, lines);
   textDisplay = initialMetrics.textDisplay;
   domLegend = createLegend();
 
   scaleToFit(); // size to window 
 
   // screen widths of the text for each line
-  initialMetrics.contentWidths = lines.map((l, i) => getLineWidth(i));
+  initialMetrics.minWidths = lines.map((l, i) => getLineWidth(i, wordspaceMinMaxDefault[0]));
+  initialMetrics.maxWidths = lines.map((l, i) => getLineWidth(i, wordspaceMinMaxDefault[1]));
+  initialMetrics.contentWidths = lines.map((l, i) => getLineWidth(i, wordspaceMinMaxDefault[2]));
+  initialMetrics.contentWidths.forEach((w, i) => console.log(i, 'content-width', w,
+    'line-width', initialMetrics.lineWidths[i],
+    'with-min-wordspace', initialMetrics.minWidths[i],
+    'with-max-wordspace', initialMetrics.maxWidths[i]));
 }
 
 function ramble() {
@@ -401,17 +407,32 @@ function unspanify() {
     ("word")).map(e => e.textContent);
 }
 
+
+/*  lengthAwareRandom(current):  WORKING HERE ****
+    -- get replacement options
+    -- make random replacement (default, strictly shorter, or strictly longer than current)
+    -- calculate new width
+    -- if width is longer than ideal, we shrink the word-space until it is near ideal
+    -- if width is shorter than ideal, we grow the word-space until it is near ideal
+    -- if wordSpace is near min, we store the fact that we need a shorter word next time
+    -- if wordSpace is near max, we store the fact that we need a longer word next time
+      -- data-structure? array of needs ['shorter','longer','default'] 
+
+    lengthAwareRandom(shadow):
+*/
 function lengthAwareRandom(wordIdx, word, similars, opts) {
   let isShadow = opts && opts.isShadow;
   let wordEle = document.querySelector(`#w${wordIdx}`);
   let lineEle = wordEle.parentElement.parentElement;
   let lineIdx = parseInt((lineEle.id).slice(1));
   let originalW = initialMetrics.contentWidths[lineIdx];//lineWidths[lineIdx] - (2 * padding);
+  let originalW2 = initialMetrics.lineWidths[lineIdx];
   let currentW = getLineWidth(lineIdx);//lineEle.firstChild.getBoundingClientRect().width /  getScaleRatio();
   let diff = currentW - originalW, msg = lineIdx + '/' + wordIdx + ') \'' + lineEle.innerText + '\' ';
   if (!isShadow) {
-    console.log('-'.repeat(70) + '\nwidths: ' + originalW, currentW, 'diff=' + diff);
+    console.log('-'.repeat(70) + '\nwidths: ' + originalW, currentW, originalW2, 'diff=' + diff);
     console.log(msg);
+    updateDelay = 300000;
   }
   if (diff > 0) {
     if (!isShadow) {
@@ -478,8 +499,7 @@ function updateDOM(next, idx) {
   let line = word.parentElement.parentElement;
   word.textContent = next;
   if (highlights) word.classList.add(outgoing ? 'outgoing' : 'incoming');
-  wordSpacing = adjustWordSpace(line,
-    initialMetrics, wordspaceMinMax, padding, radius);
+  wordSpacing = adjustWordSpace(line);
 }
 
 function update(updating = true) {

@@ -5,7 +5,7 @@
 
   @return: an array of original line widths
 */
-const lineateCircular = function (target, initialRadius, lines, opts = {}) {
+const createCircularDOM = function (target, initialRadius, lines, opts = {}) {
 
   let lineWidths = [];
   let fontSize = opts.fontSize;
@@ -59,7 +59,7 @@ const lineateCircular = function (target, initialRadius, lines, opts = {}) {
 }
 
 const adjustWordSpace = function (lineEle, initialMetrics, maxMin, padding, radius) {
-  // caculation in scale=1, not current scale
+  // calculation in scale=1, not current scale
   if (!Array.isArray(maxMin)) throw Error('[maxMin] required');
 
   lineEle.classList.remove("max-word-spacing");
@@ -102,12 +102,12 @@ const adjustWordSpace = function (lineEle, initialMetrics, maxMin, padding, radi
     opts.wordSpacing: float, in em
   @return: array of lines
 */
-const layoutCircular = function (words, radius, opts = {}) {
+const layoutCircularLines = function (words, radius, opts = {}) {
   let padding = opts.padding || 0;
   let fontName = opts.font || 'sans-serif';
   let offset = opts.offset || { x: 0, y: 0 };
   let lineHeightScale = opts.lineHeightScale || 1.2;
-  let wordSpacing = opts.wordSpacing || 0.25;
+  let wordSpacing = opts.wordSpacing || wordspaceMinMaxDefault[2];
   let fontSize = radius / 4, result;
   do {
     fontSize -= 0.1;
@@ -203,9 +203,11 @@ const lineWidths = function (center, rad, lh) {
   return result;
 }
 
-const getLineWidth = function (lineIdx) {
+const getLineWidth = function (lineIdx, wordSpacing = wordspaceMinMaxDefault[2]) {
   // return value in scaleRatio = 1 (initial state), not current scale (width on brower window)
-  let contentSpan = document.getElementById("l" + lineIdx).firstChild;
+  let lineEle = document.getElementById("l" + lineIdx);
+  lineEle.style.wordSpacing = wordSpacing + "em";
+  let contentSpan =lineEle.firstChild;
   return contentSpan.getBoundingClientRect().width / getScaleRatio();
 }
 
