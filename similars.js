@@ -61,8 +61,8 @@ function findSimilars(word, pos, state, timestamp) {
     if (sims.length > 1) {
       let elapsed = Date.now() - timestamp;
       similarCache[word] = sims; // to cache
-      console.log('[CACHE] (' + elapsed + 'ms) ' + word + '/' + pos
-        + ': ' + trunc(sims) + ' [' + Object.keys(similarCache).length + ']');
+      //console.log('[CACHE] (' + elapsed + 'ms) ' + word + '/' + pos
+        //+ ': ' + trunc(sims) + ' [' + Object.keys(similarCache).length + ']');
       return sims;
     }
   }

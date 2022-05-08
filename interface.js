@@ -20,9 +20,8 @@ function affinities() {
 
 function keyhandler(e) {
   if (e.code === 'KeyI') {
-    let stats = document.querySelector('#stats');
-    let curr = window.getComputedStyle(stats);
-    stats.style.display = curr.display === 'block' ? 'none' : 'block';
+    let curr = window.getComputedStyle(domStats);
+    domStats.style.display = curr.display === 'block' ? 'none' : 'block';
   }
   else if (e.code === 'KeyL') {
     logging = !logging;
@@ -45,10 +44,6 @@ function keyhandler(e) {
   else if (e.code === 'KeyE') {
     if (logging) console.log('[KEYB] stop');
     stop();
-  }
-  else if (e.code === 'KeyR') {
-    recursiveReplace = !recursiveReplace;
-    console.log('[KEYB] recursiveReplace: ' + recursiveReplace);
   }
   else if (e.code === 'KeyS') {
     if (!state.stepMode) {
@@ -87,7 +82,6 @@ function updateInfo() {
   data += `&nbsp; Leg: ${legs + 1}/${maxLegs}&nbsp; Affinity:`;
   data += ' rural=' + affvals.rural + ' urban=' + affvals.urban;
   data += ' shared=' + affvals.shared + ' free=' + affvals.free;
-  domStats = domStats || document.querySelector('#stats');
   domStats.innerHTML = data;
 
   progressBars.forEach((p, i) => {
@@ -109,10 +103,11 @@ function updateInfo() {
 }
 
 function createLegend() {
-  domLegend = document.createElement("div");
+  let domLegend = document.createElement("div");
   domLegend.id = "legend";
-  domLegend.style.width = initMetrics.radius * 2 + "px"
-  domLegend.style.height = initMetrics.radius * 2 + "px"
+  domLegend.style.width = initialMetrics.radius * 2 + "px"
+  domLegend.style.height = initialMetrics.radius * 2 + "px"
+
   let legendContent = document.createElement("div");
   legendContent.classList.add("legend-content");
   legendContent.innerHTML = `<div><svg class="rural-legend" style="fill: ${visBandColors[0]}">
@@ -127,14 +122,18 @@ function createLegend() {
   <div><svg class="overlap-legend">
   <rect style="fill: ${visBandColors[3]}" id="box" x="0" y="0" width="20" height="20"/>
   </svg> <span> found<span></div>`;
+
   if (hidingLegends) {
     legendContent.classList.add('hidden-legend')
   } else {
     legendContent.classList.remove('hidden-legend')
   }
+
   domLegend.append(legendContent);
-  domLegend.style.fontSize = (initMetrics.fontSize || 20.5) + 'px';
-  document.querySelector("#legend-container").append(domLegend)
+  domLegend.style.fontSize = (initialMetrics.fontSize || 20.5) + 'px';
+  document.querySelector("#legend-container").append(domLegend);
+  
+  return domLegend;
 }
 
 // Downloads data to a local file (tmp)
@@ -187,30 +186,31 @@ function originalAffinity(textA, textB, idsToCheck) {
 
 // toggle legends
 function toggleLegend(target) {
-  if (typeof target ==='boolean') {
+  let legendContent = document.querySelector('.legend-content');
+  if (typeof target === 'boolean') {
     if (target) {
-      document.querySelector('.legend-content').classList.add('hidden-legend')
+      legendContent.classList.add('hidden-legend')
     } else {
-      document.querySelector('.legend-content').classList.remove('hidden-legend')
+      legendContent.classList.remove('hidden-legend')
     }
     hidingLegends = target;
   } else {
     hidingLegends = !hidingLegends;
     if (hidingLegends) {
-      document.querySelector('.legend-content').classList.add('hidden-legend')
+      legendContent.classList.add('hidden-legend')
     } else {
-      document.querySelector('.legend-content').classList.remove('hidden-legend')
+      legendContent.classList.remove('hidden-legend')
     }
   }
 }
 
-function hideCursor(e){
-  let mouse = {x:e.pageX, y:e.pageY}; //clientXY?
-  let r = progressBounds.width/2;
-  let center = {x: progressBounds.x + window.scrollX + r, y:progressBounds.y + window.scrollY + r};
+function hideCursor(e) {
+  let mouse = { x: e.pageX, y: e.pageY }; //clientXY?
+  let r = progressBounds.width / 2;
+  let center = { x: progressBounds.x + window.scrollX + r, y: progressBounds.y + window.scrollY + r };
   if ((mouse.x - center.x) * (mouse.x - center.x) + (mouse.y - center.y) * (mouse.y - center.y) <= r * r) {
-    document.querySelector("#display-container").classList.add("hide-cursor");
+    displayContainer.classList.add("hide-cursor");
   } else {
-    document.querySelector("#display-container").classList.remove("hide-cursor");
+    displayContainer.classList.remove("hide-cursor");
   }
 }

@@ -9,10 +9,10 @@ const lineateCircular = function (target, initialRadius, lines, opts = {}) {
 
   let lineWidths = [];
   let fontSize = opts.fontSize;
-  let textContainer = document.createElement("div");
-  textContainer.id = "text-display";
-  textContainer.style.width = initialRadius * 2 + "px";
-  textContainer.style.height = initialRadius * 2 + "px";
+  let textDisplay = document.createElement("div");
+  textDisplay.id = "text-display";
+  textDisplay.style.width = initialRadius * 2 + "px";
+  textDisplay.style.height = initialRadius * 2 + "px";
 
   let wordIdx = 0;
   lines.forEach((l, li) => {
@@ -44,15 +44,16 @@ const lineateCircular = function (target, initialRadius, lines, opts = {}) {
       lineDiv.append(wrapperSpan);
     }
 
-    textContainer.append(lineDiv);
+    textDisplay.append(lineDiv);
     lineWidths.push(l.bounds[2]);
   });
 
-  target.append(textContainer);
+  target.append(textDisplay);
 
   return { // main::initMetrics
     fontSize,
     lineWidths,
+    textDisplay,
     radius: initialRadius,
   };
 }
@@ -72,7 +73,7 @@ const adjustWordSpace = function (lineEle, initialMetrics, maxMin, padding, radi
   let ws = parseFloat(wordSpacing.replace('px', '')) / initialMetrics.fontSize; // px => em
 
   // try to get within 5 pixels of current width ?
-  for (let tries = 0; Math.abs(origW - currentW) > 0.00555555 * initMetrics.radius && tries < 200; tries++) {
+  for (let tries = 0; Math.abs(origW - currentW) > 0.00555555 * initialMetrics.radius && tries < 200; tries++) {
     ws += (origW > currentW) ? step : -step;
     lineEle.style.wordSpacing = ws + "em";
     currentW = lineEle.firstChild.getBoundingClientRect().width / scaleRatio;
@@ -102,34 +103,35 @@ const adjustWordSpace = function (lineEle, initialMetrics, maxMin, padding, radi
   @return: array of lines
 */
 const layoutCircular = function (words, radius, opts = {}) {
-  let offset = opts.offset || { x: 0, y: 0 };
   let padding = opts.padding || 0;
   let fontName = opts.font || 'sans-serif';
+  let offset = opts.offset || { x: 0, y: 0 };
   let lineHeightScale = opts.lineHeightScale || 1.2;
   let wordSpacing = opts.wordSpacing || 0.25;
   let fontSize = radius / 4, result;
+  let leading = fontSize * lineHeightScale;
   do {
     fontSize -= 0.1;
-    result = fitToLineWidths
-      (offset, radius - padding, words, fontSize, fontSize * lineHeightScale, wordSpacing, fontName);
+    let metrics = { fontName, fontSize, leading, wordSpacing };
+    result = fitToLineWidths(offset, radius - padding, words, metrics);
   }
   while (result.words.length);
 
-  // console.log('Computed fontSize:', fontSize);
-
-  return result.rects.map((r, i) => ({ fontSize, wordSpacing, bounds: r, text: result.text[i] }));
+  let answer = result.rects.map((r, i) => ({ fontSize, wordSpacing, bounds: r, text: result.text[i] }));
+  console.log('Computed fontSize: '+fontSize, answer);
+  return answer;
 }
 
 /*
-  parameter: offset, radius, words, fontSize, lineHeight, wordSpacing, fontName
+  parameter: offset, radius, words, fontName, fontSize, lineHeight, wordSpacing, 
   @return: { text, rects, words }
 */
-const fitToLineWidths = function (offset, radius, words, fontSize, lineHeight, wordSpacing, fontName) {
-  // caculation in scale=1, not current scale
+const fitToLineWidths = function (offset, radius, words, metrics) {
+  // calculation in scale=1, not current scale
   //console.log('fitToLineWidths', fontSize);
-  fontName = fontName || 'sans-serif';
+  let { fontName, fontSize, leading, wordSpacing } = metrics;
   let tokens = words.slice();
-  let text = [], rects = lineWidths(offset, radius, lineHeight);
+  let text = [], rects = lineWidths(offset, radius, leading);
   rects.forEach(([x, y, w, h], i) => {
     let data = fitToBox(tokens, w, fontSize, fontName, wordSpacing);
     if (!data) { // fail to fit any words
@@ -158,9 +160,7 @@ const fitToBox = function (words, width, fontSize, fontName = 'sans-serif', word
   for (let n = words.length; i < n; ++i) {
     let next = ' ' + words[i];
     let nextWidth = measureWidth(next, fontSize, fontName, wordSpacing);
-    if (line.width + nextWidth > width) {
-      break; // done
-    }
+    if (line.width + nextWidth > width) break; // done
     line.text += next;
     line.width += nextWidth;
   }
@@ -173,7 +173,6 @@ const fitToBox = function (words, width, fontSize, fontName = 'sans-serif', word
   };
 }
 
-let canvasCtx; // don't recreate canvas
 const measureWidth = function (text, fontSizePx = 12, fontName = font, wordSpacing = 0) {
   // caculation in scale=1, not current scale
   canvasCtx = canvasCtx || document.createElement("canvas").getContext("2d");
@@ -181,8 +180,7 @@ const measureWidth = function (text, fontSizePx = 12, fontName = font, wordSpaci
   let spaceCount = text ? (text.split(" ").length - 1) : 0;
   return canvasCtx.measureText(text).width + spaceCount * (wordSpacing * fontSizePx);
 }
-
-let lineCtx; // don't recreate canvas
+let canvasCtx; // don't recreate canvas
 
 const chordLength = function (rad, d) {
   return 2 * Math.sqrt(rad * rad - (rad - d) * (rad - d));
@@ -205,32 +203,30 @@ const lineWidths = function (center, rad, lh) {
   return result;
 }
 
-const getLineWidth = function(lineIdx) {
-  //return value in scaleRatio = 1 (inital state), not current scale (width on brower window)
-  let lineDiv = document.getElementById("l" + lineIdx);
-  let contentSpan = lineDiv.firstChild;
-
+const getLineWidth = function (lineIdx) {
+  // return value in scaleRatio = 1 (initial state), not current scale (width on brower window)
+  let contentSpan = document.getElementById("l" + lineIdx).firstChild;
   return contentSpan.getBoundingClientRect().width / getScaleRatio();
 }
 
-const getLineWidthAfterSub = function(newWord, wordIdx, lineIdx){
-  //return value in scaleRatio = 1 (inital state), not current scale (width on brower window)
+const getLineWidthAfterSub = function (newWord, wordIdx, lineIdx) {
+  // return value in scaleRatio = 1 (initial state), not current scale (width on brower window)
   let targetSpan = document.getElementById("w" + wordIdx);
-  let oriWord = targetSpan.textContent;
-  targetSpan.textContent = newWord;
-  let targetLine = lineIdx ? document.getElementById("l" + lineIdx).firstChild : targetSpan.parentElement;
-  let w = targetLine.getBoundingClientRect().width / getScaleRatio();
-  targetSpan.textContent = oriWord;
-  return w;
+  let origWord = targetSpan.textContent;
+  targetSpan.textContent = newWord; // replace
+  let targetLine = targetSpan.parentElement;
+  if (lineIdx) targetLine = document.getElementById("l" + lineIdx).firstChild;
+  let lineWidth = targetLine.getBoundingClientRect().width / getScaleRatio();
+  targetSpan.textContent = origWord; // reset
+  return lineWidth;
 }
 
+
 const getLineWidthAfterSub_old = function (text, lineIndex) {
-  //return value in scaleRatio = 1 (inital state), not current scale (width on brower window)
+  // return value in scaleRatio = 1 (initial state), not current scale (width on brower window)
   const line = document.querySelector("#l" + lineIndex);
   const lineCss = window.getComputedStyle(line);
-
-  const tdisp = document.querySelector("#text-display");
-  const textCss = window.getComputedStyle(tdisp);
+  const textCss = window.getComputedStyle(textDisplay);
 
   const wordSpacing = parseFloat(lineCss.wordSpacing.replace("px", ""));
   const scaleRatio = getScaleRatio();
@@ -242,11 +238,5 @@ const getLineWidthAfterSub_old = function (text, lineIndex) {
   const lineWidth = lineCtx.measureText(text).width;
   return (lineWidth + (numSpaces * wordSpacing)) * scaleRatio;
 };
+let lineCtx; // don't recreate canvas
 
-const getAllLineWidths = function() {
-  let r = [];
-  for (let index = 0; index < lines.length; index++) {
-    r.push(getLineWidth(index));
-  }
-  return r;
-}

@@ -19,9 +19,6 @@ let lineHeightScale = 1.28;
 // min-length unless in similarOverrides
 let minWordLength = 4;
 
-// recursive replace or old-style 
-let recursiveReplace = true;
-
 // width of visualization bar (% of div size)
 let visBandWidth = 3;
 
@@ -87,59 +84,68 @@ let lex = RiTa.lexicon();
 let repIds = replaceables();
 let history = { rural: [], urban: [] };
 let strictRepIds = strictReplaceables(repIds);
-let domDisplay = document.querySelector('#display');
 
-let reader, worker, wordSpacing, spans, domLegend, domStats;
+let domStats = document.querySelector('#stats');
+let domDisplay = document.querySelector('#display');
+let displayContainer = document.querySelector("#display-container");
 let displayBounds = domDisplay.getBoundingClientRect();
+
+let reader, worker, wordSpacing, spans, initialMetrics, textDisplay;
 let font = window.getComputedStyle(domDisplay).fontFamily;
 let cpadding = window.getComputedStyle(domDisplay).padding;
 let padfloat = parseFloat(cpadding.replace('px', ''));
 let padding = (!padfloat || padfloat === NaN) ? 30 : padfloat;
 let radius = displayBounds.width / 2;
 
-// setup history and handlers
-Object.keys(history).map(k => sources[k].map((w, i) => history[k][i] = [w]));
-document.addEventListener('keyup', keyhandler);
-console.log('[INFO] Keys -> (h)ighlight (i)nfo (s)tep (e)nd\n'
-  + ' '.repeat(15) + '(l)og (v)erbose (r)ecursive un(d)elay');
-window.onresize = () => {
-  displayBounds = domDisplay.getBoundingClientRect();
-  radius = displayBounds.width / 2;
-  progressBounds = document.getElementById("progress4").getBoundingClientRect();
-  scaleToFit();
-}
-
-// create progress bars
-let progressBars = createProgressBars({ color: visBandColors, trailColor: visBandColors[4], strokeWidth: visBandWidth });
-
-// layout lines in circular display
-let initMetrics = { radius: Math.max(radius, 450) };
-let offset = {
-  x: displayBounds.x + initMetrics.radius,
-  y: displayBounds.y + initMetrics.radius
-};
-let opts = { offset, font, lineHeightScale, padding };
-let lines = layoutCircular(sources[state.domain], initMetrics.radius, opts);
-initMetrics.lineWidths = lineateCircular(domDisplay, initMetrics.radius, lines); // this is not the width of the text, but the width of the bounding box
-initMetrics.fontSize = lines[0].fontSize;
 if (1) { // DEBUG-ONLY
-  // walks.short = 2;
-  // walks.long = 4;
-  // updateDelay = 500;
-  // stepsPerLeg = 4;
-  // readDelay = 500;
+  readDelay = 50;
+  updateDelay = 300;
+  highlights = true;
   logging = true;
+  //verbose = true;
   //keyhandler({ code: 'KeyI' });
   //setTimeout(() => keyhandler({ code: 'KeyD' }, 300));
 }
-createLegend();
-scaleToFit();
-initMetrics.contentWidths = getAllLineWidths(); // this contains the widths of the text for each line
-let progressBounds= document.getElementById("progress4").getBoundingClientRect();
-document.querySelector("#display-container").addEventListener("mousemove", hideCursor);
-ramble();// go
+
+doLayout();
+//ramble();// go
 
 /////////////////////////////////////////////////////////
+
+function doLayout() {
+
+  // setup history and handlers
+  Object.keys(history).map(k => sources[k].map((w, i) => history[k][i] = [w]));
+  document.addEventListener('keyup', keyhandler);
+  console.log('[INFO] Keys -> (h)ighlight (i)nfo (s)tep (e)nd\n'
+    + ' '.repeat(15) + '(l)og (v)erbose un(d)elay (t)oggle-legend');
+
+  // init resize handler
+  window.onresize = () => {
+    displayBounds = domDisplay.getBoundingClientRect();
+    radius = displayBounds.width / 2;
+    scaleToFit();
+  }
+
+  // create progress bars
+  progressBars = createProgressBars({
+    color: visBandColors, trailColor: visBandColors[4], strokeWidth: visBandWidth
+  });
+
+  // layout lines in circular display
+  let initRadius = Math.max(radius, 450);
+  let offset = { x: displayBounds.x + initRadius, y: displayBounds.y + initRadius };
+  let opts = { offset, font, lineHeightScale, padding };
+  let lines = layoutCircular(sources[state.domain], initRadius, opts);
+  initialMetrics = lineateCircular(domDisplay, initRadius, lines);
+  textDisplay = initialMetrics.textDisplay;
+  domLegend = createLegend();
+
+  scaleToFit(); // size to window 
+
+  // screen widths of the text for each line
+  initialMetrics.contentWidths = lines.map((l, i) => getLineWidth(i));
+}
 
 function ramble() {
 
@@ -220,8 +226,10 @@ function replace() {
   let shadow = shadowTextName();
   let idx = RiTa.random(repIds.filter(id => !reader
     || !reader.selection().includes(sources[domain][id])));
-  let dword = recursiveReplace ? last(history[domain][idx]) : sources[domain][idx];
-  let sword = recursiveReplace ? last(history[shadow][idx]) : sources[shadow][idx];
+
+  idx = 4;
+  let dword = last(history[domain][idx]);
+  let sword = last(history[shadow][idx]);
   let data = { idx, dword, sword, state, timestamp: Date.now() };
   worker.postMessage({ event: 'lookup', data }); // do similar search
 }
@@ -244,7 +252,7 @@ function postReplace(e) {
     history[domain][idx].push(dnext);
     updateDOM(dnext, idx);
 
-    let snext = lengthAwareRandom(idx, sword, ssims);
+    let snext = lengthAwareRandom(idx, sword, ssims, { isShadow: true });
     history[shadow][idx].push(snext);
     updateState();
 
@@ -392,40 +400,57 @@ function unspanify() {
     ("word")).map(e => e.textContent);
 }
 
-function lengthAwareRandom(widx, word, options) {
-  let { domain } = state;
-  let scaleRatio = getScaleRatio();
-  let wordEle = document.querySelector(`#w${widx}`);
+function lengthAwareRandom(wordIdx, word, similars, opts) {
+  let isShadow = opts && opts.isShadow;
+  let wordEle = document.querySelector(`#w${wordIdx}`);
   let lineEle = wordEle.parentElement.parentElement;
   let lineIdx = parseInt((lineEle.id).slice(1));
-  let originalW = initMetrics.lineWidths[lineIdx] - (2 * padding);
-  let currentW = lineEle.firstChild.getBoundingClientRect().width / scaleRatio;
-  let filter, msg = '', wordW = getLineWidthAfterSub_old(word, lineIdx);
-  let hstack = history[domain][widx];
-  let last = hstack[hstack.length - 1];
-  if (originalW > currentW) {
-    filter = (o) => o !== last && getLineWidthAfterSub_old(o, lineIdx) > wordW;
-    msg += '   need longer';
+  let originalW = initialMetrics.contentWidths[lineIdx];//lineWidths[lineIdx] - (2 * padding);
+  let currentW = getLineWidth(lineIdx);//lineEle.firstChild.getBoundingClientRect().width /  getScaleRatio();
+  let diff = currentW - originalW, msg = lineIdx + '/' + wordIdx + ') \'' + lineEle.innerText + '\' ';
+  if (!isShadow) {
+    console.log('-'.repeat(70) + '\nwidths: ' + originalW, currentW, 'diff=' + diff);
+    console.log(msg);
+  }
+  if (diff > 0) {
+    if (!isShadow) {
+      console.log('Want shorter');
+      updateDelay = 300000;
+    }
+    filter = (w) => {
+      let lw = getLineWidthAfterSub(w, wordIdx, lineIdx);
+      if (!isShadow) console.log('  ' + w + ' -> ' + lw + ' ' + (lw < originalW));
+      return lw < originalW;
+    }
+  }
+  else if (diff < 0) {
+    if (!isShadow) {
+      console.log('Want longer');
+      updateDelay = 300000;
+    }
+    filter = (w) => {
+      let lw = getLineWidthAfterSub(w, wordIdx, lineIdx);
+      if (!isShadow) console.log('  ' + w + ' -> ' + lw + ' ' + (lw > originalW));
+      return lw > originalW;
+    }
   }
   else {
-    filter = (o, i) => o !== last && getLineWidthAfterSub_old(o, lineIdx) < wordW;
-    // console.log('  ', i, `orig: ${word}(${Math.round(wordW)})`
-    //   + ` check: ${o} (${Math.round(ow)})`);
-    msg += '    need shorter';
+    let result = RiTa.random(similars);
+    if (!isShadow) {
+      console.log(word + '->' + result);
+      console.log('post-width', getLineWidthAfterSub(result, wordIdx, lineIdx));
+      //console.log('-'.repeat(70));
+    }
+    return result;
   }
-
-  let choices = options.filter(filter);
-  if (!choices || !choices.length) {
-    choices = options;
-    msg += ' [random]';
+  let choices = similars.filter(filter);
+  if (!choices.length) choices = similars;
+  let result = RiTa.random(choices);
+  if (!isShadow) {
+    console.log(word + '->' + result);
+    console.log('post-width', getLineWidthAfterSub(result, wordIdx, lineIdx));
   }
-
-  let choice = RiTa.random(choices);
-  //console.log(msg + ', replaced ' + word + `(${Math.round(wordW)})`
-  // + ' with ' + choice + `(${Math.round(getLineWidthAfterSub_old(choice, lineIdx))})`
-  // + `,\n  h=${history[domain][widx]}, last=${last})`;
-
-  return choice;
+  return result;
 }
 
 function swapDomain() {
@@ -453,7 +478,7 @@ function updateDOM(next, idx) {
   word.textContent = next;
   if (highlights) word.classList.add(outgoing ? 'outgoing' : 'incoming');
   wordSpacing = adjustWordSpace(line,
-    initMetrics, wordspaceMinMax, padding, radius);
+    initialMetrics, wordspaceMinMax, padding, radius);
 }
 
 function update(updating = true) {
@@ -465,25 +490,26 @@ function update(updating = true) {
   ramble();
 }
 
-function log(msg) {
-  if (!logging) return;
-  console.log('[INFO] ' + msg);
-}
-
 function scaleToFit() {
-  document.querySelector('#text-display').style.transform
-    = "scale(" + radius / initMetrics.radius + ")";
-  document.querySelector('#legend').style.transform
-    = "scale(" + radius / initMetrics.radius + ")";
-  document.querySelector("#display-container").style.marginTop
-    = 0.1 * radius + "px";
+  progressBounds = document.getElementById("progress4")
+    .getBoundingClientRect();
+  let scaleRatio = radius / initialMetrics.radius;
+  textDisplay.style.transform = "scale(" + scaleRatio + ")";
+  domLegend.style.transform = "scale(" + scaleRatio + ")";
+  displayContainer.style.marginTop = 0.1 * radius + "px";
+  displayContainer.addEventListener("mousemove", hideCursor);
 }
 
 function last(arr) {
   if (arr && arr.length) return arr[arr.length - 1];
 }
 
-function getScaleRatio(){
-  return radius/initMetrics.radius;
+function getScaleRatio() {
+  return radius / initialMetrics.radius;
+}
+
+function log(msg) {
+  if (!logging) return;
+  console.log('[INFO] ' + msg);
 }
 
