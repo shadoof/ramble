@@ -109,21 +109,21 @@ const layoutCircular = function (words, radius, opts = {}) {
   let lineHeightScale = opts.lineHeightScale || 1.2;
   let wordSpacing = opts.wordSpacing || 0.25;
   let fontSize = radius / 4, result;
-  let leading = fontSize * lineHeightScale;
   do {
     fontSize -= 0.1;
+    let leading = fontSize * lineHeightScale;
     let metrics = { fontName, fontSize, leading, wordSpacing };
     result = fitToLineWidths(offset, radius - padding, words, metrics);
   }
   while (result.words.length);
 
   let answer = result.rects.map((r, i) => ({ fontSize, wordSpacing, bounds: r, text: result.text[i] }));
-  console.log('Computed fontSize: '+fontSize, answer);
+  //console.log('Computed fontSize: '+fontSize, answer);
   return answer;
 }
 
 /*
-  parameter: offset, radius, words, fontName, fontSize, lineHeight, wordSpacing, 
+  parameter: offset, radius, words, metrics: {fontName, fontSize, lineHeight, wordSpacing} 
   @return: { text, rects, words }
 */
 const fitToLineWidths = function (offset, radius, words, metrics) {
@@ -148,7 +148,7 @@ const fitToLineWidths = function (offset, radius, words, metrics) {
   parameter: words, width, fontSize, fontName
   @return: { words, text }
 */
-const fitToBox = function (words, width, fontSize, fontName = 'sans-serif', wordSpacing) {
+const fitToBox = function (words, width, fontSize, fontName, wordSpacing) {
   // caculation in scale=1, not current scale
   //console.log('fitToBox', words, width, fontSize);
   let i = 1, line = {

@@ -137,6 +137,7 @@ function doLayout() {
   let offset = { x: displayBounds.x + initRadius, y: displayBounds.y + initRadius };
   let opts = { offset, font, lineHeightScale, padding };
   let lines = layoutCircular(sources[state.domain], initRadius, opts);
+  //console.log(lines.map(l => l.bounds[2]));
   initialMetrics = lineateCircular(domDisplay, initRadius, lines);
   textDisplay = initialMetrics.textDisplay;
   domLegend = createLegend();
