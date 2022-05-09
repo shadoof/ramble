@@ -11,7 +11,7 @@ let updateDelay = 500
 let readDelay = stepsPerLeg * updateDelay * 2;
 
 // min/max CSS word-spacing (em)
-let wordspaceMinMaxDefault = [-0.1, .5, .25];
+let minWordSpace = -0.1, maxWordSpace = .5;
 
 // leading for text display
 let lineHeightScale = 1.28;
@@ -21,6 +21,9 @@ let minWordLength = 4;
 
 // width of visualization bar (% of div size)
 let visBandWidth = 3;
+
+// adjust word-spacing for initial text circle
+let adjustInitialWordspacing = true;
 
 // visualisation [ rural, urban, shared, free, initial ]
 let visBandColors = ['#9CC0E5', '#F59797', '#E7EBC5', '#C3ACB8', '#F3F3F3'];
@@ -54,9 +57,6 @@ let ignores = ["jerkies", "trite", "nary", "outta", "copras", "accomplis", "scad
 // set true to generate a new cache file
 let refreshCache = false;
 
-// adjust word-spacing for initial text circle
-let initialMaxWordSpace = .3;
-
 // keyboard toggle options
 let logging = true, verbose = false, highlights = false, hideLegend = true;
 
@@ -80,7 +80,6 @@ let state = {
   stops,
 };
 
-
 let lex = RiTa.lexicon();
 let repIds = replaceables();
 let history = { rural: [], urban: [] };
@@ -91,12 +90,12 @@ let domDisplay = document.querySelector('#display');
 let displayContainer = document.querySelector("#display-container");
 let displayBounds = domDisplay.getBoundingClientRect();
 
-let reader, worker, spans, initialMetrics, textDisplay;
+let reader, worker, spans, initialMetrics;
 let fontFamily = window.getComputedStyle(domDisplay).fontFamily;
 let cpadding = window.getComputedStyle(domDisplay).padding;
 let constraints = { None: 0, Shorter: 1, Longer: 2 };
 let padfloat = parseFloat(cpadding.replace('px', ''));
-let padding = (!padfloat || padfloat === NaN) ? 30 : padfloat;
+let padding = (padfloat && padfloat !== NaN) ? padfloat : 40;
 let radius = displayBounds.width / 2;
 
 let dbug = 1;
@@ -106,7 +105,6 @@ if (dbug) { // DEBUG-ONLY
   highlights = true;
   logging = true;
   stepMode = true;
-  //verbose = true;
   //keyhandler({ code: 'KeyI' });
   //setTimeout(() => keyhandler({ code: 'KeyD' }, 300));
 }
@@ -141,31 +139,33 @@ function doLayout() {
   let offset = { x: displayBounds.x + initRadius, y: displayBounds.y + initRadius };
   let opts = { offset, fontFamily, lineHeightScale, padding };
   let lines = layoutCircularLines(sources[state.domain], initRadius, opts);
-  //let initialMetrics = { fontSize: 0, lineWidths: 0, textDisplay: 0, initialRadius: 0 }
-  initialMetrics = createCircularDOM(domDisplay, initRadius, lines, lines[0].fontSize);
-  console.log(initialMetrics);
-  textDisplay = initialMetrics.textDisplay;
-  domLegend = createLegend();
+  initialMetrics = createCircularDOM(domDisplay, initRadius, lines);
 
+  // optionally adjust word-spacing for the circle
+  if (adjustInitialWordspacing) {
+    let outliers = initialMetrics.lineWidths.reduce((acc, _, i) => {
+      let lineEle = document.querySelector(`#l${i}`);
+      let ws = adjustWordSpace(lineEle, initialMetrics.lineWidths[i]);
+      if (ws === minWordSpace || ws === maxWordSpace) {
+        acc.push(i);
+      }
+      return acc;
+    }, []);
+    console.warn(outliers.length + ' lines at min/max word-spacing');
+  }
+
+  domLegend = createLegend();
   scaleToFit(); // size to window 
 
   // screen widths of the text for each line
-  // initialMetrics.minWidths = lines.map((l, i) => getLineWidth(i, wordspaceMinMaxDefault[0]));
-  // initialMetrics.maxWidths = lines.map((l, i) => getLineWidth(i, wordspaceMinMaxDefault[1]));
-  // initialMetrics.contentWidths = lines.map((l, i) => getLineWidth(i, wordspaceMinMaxDefault[2]));
-
-  // initialMetrics.contentWidths.forEach((w, i) => !i && console.log(i, 'content-width', w,
-  //   'line-width', initialMetrics.lineWidths[i],
-  //   'with-min-wordspace', initialMetrics.minWidths[i],
-  //   'with-max-wordspace', initialMetrics.maxWidths[i1]));
-
-  if (initialMaxWordSpace >= 0) {
-    initialMetrics.lineWidths.forEach((l, i) => console.log(i,adjustWordSpace
-      (document.querySelector(`#l${i}`),
-        initialMetrics.lineWidths[i],
-      { maxWordSpace: initialMaxWordSpace })));
-  }
-
+  /* initialMetrics.minWidths = lines.map((l, i) => getLineWidth(i, minWordSpace));
+  initialMetrics.maxWidths = lines.map((l, i) => getLineWidth(i, maxWordSpace));
+  initialMetrics.contentWidths = lines.map((l, i) => getLineWidth(i, 0.22));
+  initialMetrics.contentWidths.forEach((w, i) => !i && console.log(i, 'content-width', w,
+    'line-width', initialMetrics.lineWidths[i],
+    'with-min-wordspace', initialMetrics.minWidths[i],
+    'with-max-wordspace', initialMetrics.maxWidths[i1]));*/
+  console.log(initialMetrics);
 }
 
 function ramble() {
@@ -421,6 +421,9 @@ function unspanify() {
 }
 
 function contextualRandom(wordIdx, word, similars, opts) {
+
+  // WORKING HERE ****
+
   let isShadow = opts && opts.isShadow;
   if (isShadow) return RiTa.random(similars); // TODO:
   let wordEle = document.querySelector(`#w${wordIdx}`);
@@ -441,14 +444,14 @@ function contextualRandom(wordIdx, word, similars, opts) {
   return result;
 }
 
-/*  lengthAwareRandom(current):  WORKING HERE ****
+/*  lengthAwareRandom(current): 
     -- get replacement options
     -- make random replacement (default, strictly shorter, or strictly longer than current)
     -- calculate new width
     -- if width is longer than ideal, we shrink the word-space until it is near ideal
     -- if width is shorter than ideal, we grow the word-space until it is near ideal
-    -- if wordSpace is near min, we store the fact that we need a shorter word next time
-    -- if wordSpace is near max, we store the fact that we need a longer word next time
+    -- if word-space is near min, we store the fact that we need a shorter word next time
+    -- if word-space is near max, we store the fact that we need a longer word next time
       -- data-structure? array of needs ['shorter','longer','default'] 
  
     lengthAwareRandom(shadow):
@@ -538,7 +541,7 @@ function updateDOM(next, idx) {
 
   if (highlights) wordEle.classList.add(outgoing ? 'outgoing' : 'incoming');
   let wordSpace = adjustWordSpace(lineEle, initialMetrics.lineWidths[lineIdx]);
-  console.log('line#' + lineIdx + ' wordspace=' + wordSpace);
+  console.log('line#' + lineIdx + ' wordSpace=' + wordSpace);
 }
 
 function update(updating = true) {
@@ -551,13 +554,13 @@ function update(updating = true) {
 }
 
 function scaleToFit() {
-  progressBounds = document.getElementById("progress4")
-    .getBoundingClientRect();
   let scaleRatio = radius / initialMetrics.radius;
-  textDisplay.style.transform = "scale(" + scaleRatio + ")";
+  initialMetrics.textDisplay.style.transform = "scale(" + scaleRatio + ")";
   domLegend.style.transform = "scale(" + scaleRatio + ")";
   displayContainer.style.marginTop = 0.1 * radius + "px";
   if (!dbug) displayContainer.addEventListener("mousemove", hideCursor);
+  progressBounds = document.getElementById("progress4")
+    .getBoundingClientRect();
 }
 
 function last(arr) {
@@ -569,8 +572,7 @@ function getScaleRatio() {
 }
 
 function log(msg) {
-  if (!logging) return;
-  console.log('[INFO] ' + msg);
+  logging && console.log('[INFO] ' + msg);
 }
 
 function clamp(num, min, max) {
