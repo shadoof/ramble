@@ -130,11 +130,11 @@ body {
 }
 
 .max-word-spacing {
-  background-color: #eff;
+  background-color: #fdd;
 }
 
 .min-word-spacing {
-  background-color: #fdd;
+  background-color: #eff;
 }
 
 #text-display {
@@ -161,7 +161,8 @@ body {
   margin-top: 35px;
   margin-bottom: 5px;
   text-align: center;
-  display: none; /* start hidden */
+  display: none;
+  /* start hidden */
 }
 
 .free {
@@ -177,11 +178,11 @@ body {
 }
 
 .shared-rural {
-  transform: translate(-50%, -50%)  scaleX(-1);
-  -webkit-transform: translate(-50%, -50%)  scaleX(-1);
-  -moz-transform: translate(-50%, -50%)  scaleX(-1);
+  transform: translate(-50%, -50%) scaleX(-1);
+  -webkit-transform: translate(-50%, -50%) scaleX(-1);
+  -moz-transform: translate(-50%, -50%) scaleX(-1);
 }
- 
+
 .rural {
   transform: translate(-50%, -50%);
   -webkit-transform: translate(-50%, -50%);
@@ -195,9 +196,9 @@ body {
 }
 
 .urban {
-  transform: translate(-50%, -50%)  scaleX(-1);
-  -webkit-transform: translate(-50%, -50%)  scaleX(-1);
-  -moz-transform: translate(-50%, -50%)  scaleX(-1);
+  transform: translate(-50%, -50%) scaleX(-1);
+  -webkit-transform: translate(-50%, -50%) scaleX(-1);
+  -moz-transform: translate(-50%, -50%) scaleX(-1);
 }
 
 .urban-legend {
@@ -244,7 +245,7 @@ body {
 .legend-content {
   color: #B3B3B3;
   position: fixed;
-  bottom:-20px;
+  bottom: -20px;
   right: -70px;
 }
 
@@ -268,7 +269,7 @@ body {
   justify-content: center;
   bottom: 102.6%;
   right: 0;
-  background-color: rgba(255,255,255,0.8);
+  background-color: rgba(255, 255, 255, 0.8);
   opacity: 0;
   -webkit-transition: opacity 0.3s ease-in-out;
   -moz-transition: opacity 0.3s ease-in-out;

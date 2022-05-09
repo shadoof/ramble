@@ -100,6 +100,9 @@ const adjustWordSpace = function (lineEle, targetWidth, opts) {
 
   if (!initialMetrics) throw Error('requires initialMetrics');
 
+  if (highlightWs) ["max-word-spacing", "min-word-spacing"]
+    .forEach(c => lineEle.firstChild.classList.remove(c));
+
   let radius = initialMetrics.radius;
   let fontSize = initialMetrics.fontSize;
   let lineIdx = parseInt((lineEle.id).slice(1));
@@ -111,15 +114,22 @@ const adjustWordSpace = function (lineEle, targetWidth, opts) {
     + '"\n  width=' + currentWidth + '\n  target=' + targetWidth
     + '\n  wspace=' + wordSpacingEm + '\n  step=' + step);*/
 
-  let closeEnough = radius / 100;
+  let closeEnough = radius / 100, hitMin = false, hitMax = false;
   while (Math.abs(currentWidth - targetWidth) > closeEnough) {
     wordSpacingEm = clamp(wordSpacingEm + step, minWordSpace, maxWordSpace);
     lineEle.style.wordSpacing = wordSpacingEm + "em";
     currentWidth = getLineWidth(lineIdx);
-    if (wordSpacingEm === minWordSpace || wordSpacingEm === maxWordSpace) {
+    if (wordSpacingEm === minWordSpace) hitMin = true; 
+    if (wordSpacingEm === maxWordSpace) hitMax = true; 
+    if (hitMin || hitMax) {
       console.warn('[WARN] Wordspace at min/max: ' + wordSpacingEm);
       break;
     }
+  }
+
+  if (highlightWs && (hitMin || hitMax)) { // debugging only
+    if (hitMax) lineEle.firstChild.classList.add("max-word-spacing");
+    if (hitMin) lineEle.firstChild.classList.add("min-word-spacing");
   }
   //console.log(' ws=' + wordSpacingEm + ' current=' + currentWidth);
 
@@ -128,8 +138,8 @@ const adjustWordSpace = function (lineEle, targetWidth, opts) {
 
 const adjustWordSpaceOld = function (lineEle) {
   // calculation in scale=1, not current scale
-  let dbug = 0;
-  if (dbug) ["max-word-spacing", "min-word-spacing"]
+
+  if (highlightWs) ["max-word-spacing", "min-word-spacing"]
     .forEach(c => lineEle.classList.remove(c));
 
   let minWordSpace = minWordSpace;
@@ -148,7 +158,7 @@ const adjustWordSpaceOld = function (lineEle) {
     currentW = lineEle.firstChild.getBoundingClientRect().width / scaleRatio; // scale=1
   }
 
-  if (0) { // debugging only
+  if (highlightWs) { // debugging only
     if (ws >= maxWordSpace) line.classList.add("max-word-spacing");
     if (ws >= minWordSpace) line.classList.add("min-word-spacing");
   }
