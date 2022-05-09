@@ -123,7 +123,7 @@ function createLegend() {
   <rect style="fill: ${visBandColors[3]}" id="box" x="0" y="0" width="20" height="20"/>
   </svg> <span> found<span></div>`;
 
-  if (hidingLegends) {
+  if (hideLegend) {
     legendContent.classList.add('hidden-legend')
   } else {
     legendContent.classList.remove('hidden-legend')
@@ -193,10 +193,10 @@ function toggleLegend(target) {
     } else {
       legendContent.classList.remove('hidden-legend')
     }
-    hidingLegends = target;
+    hideLegend = target;
   } else {
-    hidingLegends = !hidingLegends;
-    if (hidingLegends) {
+    hideLegend = !hideLegend;
+    if (hideLegend) {
       legendContent.classList.add('hidden-legend')
     } else {
       legendContent.classList.remove('hidden-legend')
