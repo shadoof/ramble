@@ -80,24 +80,27 @@ let state = {
   stops,
 };
 
+
 let lex = RiTa.lexicon();
 let repIds = replaceables();
 let history = { rural: [], urban: [] };
-let strictRepIds = strictReplaceables(repIds);
+let similarConstraints = Array(replaceables.length).fill(0);
 
 let domStats = document.querySelector('#stats');
 let domDisplay = document.querySelector('#display');
 let displayContainer = document.querySelector("#display-container");
 let displayBounds = domDisplay.getBoundingClientRect();
 
-let reader, worker, wordSpacing, spans, initialMetrics, textDisplay;
-let font = window.getComputedStyle(domDisplay).fontFamily;
+let reader, worker, spans, initialMetrics, textDisplay;
+let fontFamily = window.getComputedStyle(domDisplay).fontFamily;
 let cpadding = window.getComputedStyle(domDisplay).padding;
+let constraints = { None: 0, Shorter: 1, Longer: 2 };
 let padfloat = parseFloat(cpadding.replace('px', ''));
 let padding = (!padfloat || padfloat === NaN) ? 30 : padfloat;
 let radius = displayBounds.width / 2;
 
-if (1) { // DEBUG-ONLY
+let dbug = 1;
+if (dbug) { // DEBUG-ONLY
   readDelay = 50;
   updateDelay = 300;
   highlights = true;
@@ -108,7 +111,7 @@ if (1) { // DEBUG-ONLY
 }
 
 doLayout();
-//ramble();// go
+ramble();// go
 
 /////////////////////////////////////////////////////////
 
@@ -135,10 +138,11 @@ function doLayout() {
   // layout lines in circular display
   let initRadius = Math.max(radius, 450);
   let offset = { x: displayBounds.x + initRadius, y: displayBounds.y + initRadius };
-  let opts = { offset, font, lineHeightScale, padding };
+  let opts = { offset, fontFamily,  lineHeightScale, padding };
   let lines = layoutCircularLines(sources[state.domain], initRadius, opts);
   //let initialMetrics = { fontSize: 0, lineWidths: 0, textDisplay: 0, initialRadius: 0 }
-  initialMetrics = createCircularDOM(domDisplay, initRadius, lines);
+  initialMetrics = createCircularDOM(domDisplay, initRadius, lines, lines[0].fontSize);
+  console.log(initialMetrics);
   textDisplay = initialMetrics.textDisplay;
   domLegend = createLegend();
 
@@ -148,7 +152,8 @@ function doLayout() {
   initialMetrics.minWidths = lines.map((l, i) => getLineWidth(i, wordspaceMinMaxDefault[0]));
   initialMetrics.maxWidths = lines.map((l, i) => getLineWidth(i, wordspaceMinMaxDefault[1]));
   initialMetrics.contentWidths = lines.map((l, i) => getLineWidth(i, wordspaceMinMaxDefault[2]));
-  initialMetrics.contentWidths.forEach((w, i) => console.log(i, 'content-width', w,
+
+  initialMetrics.contentWidths.forEach((w, i) => !i && console.log(i, 'content-width', w,
     'line-width', initialMetrics.lineWidths[i],
     'with-min-wordspace', initialMetrics.minWidths[i],
     'with-max-wordspace', initialMetrics.maxWidths[i]));
@@ -255,11 +260,12 @@ function postReplace(e) {
   if (dsims.length && ssims.length) {
 
     // pick a random similar to replace in display text
-    let dnext = lengthAwareRandom(idx, dword, dsims);
+    let dnext = contextualRandom(idx, dword, dsims);
     history[domain][idx].push(dnext);
     updateDOM(dnext, idx);
 
-    let snext = lengthAwareRandom(idx, sword, ssims, { isShadow: true });
+    // pick a random similar to store in shadow text
+    let snext = contextualRandom(idx, sword, ssims, { isShadow: true });
     history[shadow][idx].push(snext);
     updateState();
 
@@ -407,6 +413,26 @@ function unspanify() {
     ("word")).map(e => e.textContent);
 }
 
+function contextualRandom(wordIdx, word, similars, opts) {
+  let isShadow = opts && opts.isShadow;
+  if (isShadow) return RiTa.random(similars); // TODO:
+  let wordEle = document.querySelector(`#w${wordIdx}`);
+  let lineEle = wordEle.parentElement.parentElement;
+  let lineIdx = parseInt(lineEle.id.slice(1));
+  let targetWidth = initialMetrics.lineWidths[lineIdx]; //scale=1
+  let initialWidth = initialMetrics.contentWidths[lineIdx]; //scale=1
+  let currentWidth = currentLineWidth(lineIdx);  //scale=1
+  let newWidth, result;
+  if (similarConstraints[lineIdx] === constraints.NONE) {
+    result = RiTa.random(similars);
+    newWidth = getLineWidthAfterSub(result, wordIdx, lineIdx); //scale=1
+    console.log('-'.repeat(70) + '\nReplacing ' + word + ' with ' + result
+      + '\n  initial: ' + initialWidth + '\n  oldWidth: ' + currentWidth
+      + '\n  newWidth: ' + newWidth + '\n  targetWidth: ' + targetWidth);
+    updateDelay = 300000;
+  }
+  return result;
+}
 
 /*  lengthAwareRandom(current):  WORKING HERE ****
     -- get replacement options
@@ -420,7 +446,7 @@ function unspanify() {
 
     lengthAwareRandom(shadow):
 */
-function lengthAwareRandom(wordIdx, word, similars, opts) {
+function lengthAwareRandomX(wordIdx, word, similars, opts) {
   let isShadow = opts && opts.isShadow;
   let wordEle = document.querySelector(`#w${wordIdx}`);
   let lineEle = wordEle.parentElement.parentElement;
@@ -494,12 +520,18 @@ function shadowTextName(domain) {
 }
 
 function updateDOM(next, idx) {
+  
   let { outgoing } = state;
-  let word = document.querySelector(`#w${idx}`);
-  let line = word.parentElement.parentElement;
-  word.textContent = next;
-  if (highlights) word.classList.add(outgoing ? 'outgoing' : 'incoming');
-  wordSpacing = adjustWordSpace(line);
+  let wordEle = document.querySelector(`#w${idx}`);
+  let lineEle = wordEle.parentElement.parentElement;
+  let lineIdx = parseFloat(lineEle.id.slice(1));
+  console.log('updateDOM', next, idx, lineIdx);
+  //console.log('replacing ' + word.textContent + ' with ' + next);
+  wordEle.textContent = next;
+
+  if (highlights) wordEle.classList.add(outgoing ? 'outgoing' : 'incoming');
+  let wordSpace = adjustWordSpace(lineEle, initialMetrics.lineWidths[lineIdx]);
+  console.log('line#' + lineIdx + ' wordspace=' + wordSpace);
 }
 
 function update(updating = true) {
@@ -518,7 +550,7 @@ function scaleToFit() {
   textDisplay.style.transform = "scale(" + scaleRatio + ")";
   domLegend.style.transform = "scale(" + scaleRatio + ")";
   displayContainer.style.marginTop = 0.1 * radius + "px";
-  displayContainer.addEventListener("mousemove", hideCursor);
+  if (!dbug) displayContainer.addEventListener("mousemove", hideCursor);
 }
 
 function last(arr) {
@@ -534,3 +566,6 @@ function log(msg) {
   console.log('[INFO] ' + msg);
 }
 
+const clamp = function (num, min, max) {
+  return Math.min(Math.max(num, min), max);
+}
