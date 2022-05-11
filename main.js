@@ -10,8 +10,8 @@ let updateDelay = 500
 // time on new text before updates (ms) 
 let readDelay = stepsPerLeg * updateDelay * 2;
 
-// min/max CSS word-spacing (em)
-let minWordSpace = -0.1, maxWordSpace = .5;
+// min/max/start CSS word-spacing (em)
+let minWordSpace = -0.1, maxWordSpace = 0.5, initialWordSpace = 0.22;
 
 // leading for text display
 let lineHeightScale = 1.28;
@@ -23,7 +23,7 @@ let minWordLength = 4;
 let visBandWidth = 3;
 
 // adjust word-spacing for initial text circle
-let adjustInitialWordspacing = true;
+let adjustInitialWordspacing = false;
 
 // visualisation [ rural, urban, shared, free, initial ]
 let visBandColors = ['#9CC0E5', '#F59797', '#E7EBC5', '#C3ACB8', '#F3F3F3'];
@@ -96,24 +96,30 @@ let cpadding = window.getComputedStyle(domDisplay).padding;
 let constraints = { None: 0, Shorter: 1, Longer: 2 };
 let padfloat = parseFloat(cpadding.replace('px', ''));
 let padding = (padfloat && padfloat !== NaN) ? padfloat : 40;
-let radius = displayBounds.width / 2;
-
-let dbug = 1;
-if (dbug) { // DEBUG-ONLY
-  readDelay = 50;
-  updateDelay = 3000;
-  highlights = true;
-  logging = true;
-  stepMode = true;
-  highlightWs = true;
-  //keyhandler({ code: 'KeyI' });
-  //setTimeout(() => keyhandler({ code: 'KeyD' }, 300));
-}
+let radius = displayBounds.width / 2, dbug = true;
 
 doLayout();
 //ramble();// go
 
 /////////////////////////////////////////////////////////
+
+function contextualRandom(wordIdx, word, similars, opts) {
+
+  let isShadow = opts && opts.isShadow;
+  if (isShadow) return RiTa.random(similars); 
+  let wordEle = document.querySelector(`#w${wordIdx}`);
+  let lineEle = wordEle.parentElement.parentElement;
+  let lineIdx = parseInt(lineEle.id.slice(1));
+  let targetWidth = initialMetrics.lineWidths[lineIdx]; //scale=1
+  let initialWidth = initialMetrics.contentWidths[lineIdx]; //scale=1
+  let currentWidth = getLineWidth(lineIdx);  //scale=1
+  let wordSpacingPx = window.getComputedStyle(lineEle).wordSpacing.replace('px', '');
+  let wordSpacingEm = parseFloat(wordSpacingPx) / initialMetrics.fontSize; // px => em
+
+  // NEXT:
+
+  return result;
+}
 
 function doLayout() {
 
@@ -121,7 +127,7 @@ function doLayout() {
   Object.keys(history).map(k => sources[k].map((w, i) => history[k][i] = [w]));
   document.addEventListener('keyup', keyhandler);
   console.log('[INFO] Keys -> (h)ighlight (i)nfo (s)tep (e)nd\n'
-    + ' '.repeat(15) + '(l)og (v)erbose un(d)elay (t)oggle-legend');
+    + ' '.repeat(15) + '(l)og (v)erbose (d)elay-skip (k)ey-toggle');
 
   // init resize handler
   window.onresize = () => {
@@ -144,27 +150,12 @@ function doLayout() {
 
   // optionally adjust word-spacing for the circle
   if (adjustInitialWordspacing) {
-    let outliers = initialMetrics.lineWidths.reduce((acc, _, i) => {
-      let lineEle = document.querySelector(`#l${i}`);
-      let ws = adjustWordSpace(lineEle, initialMetrics.lineWidths[i]);
-      if (ws === minWordSpace || ws === maxWordSpace) acc.push(i);
-      return acc;
-    }, []);
-    console.warn(outliers.length + ' lines at min/max word-spacing', outliers);
+    initialMetrics.lineWidths.forEach((lw, i) => adjustWordSpace
+      (document.querySelector(`#l${i}`), lw));
   }
 
   domLegend = createLegend();
   scaleToFit(); // size to window 
-
-  // screen widths of the text for each line
-  /* initialMetrics.minWidths = lines.map((l, i) => getLineWidth(i, minWordSpace));
-  initialMetrics.maxWidths = lines.map((l, i) => getLineWidth(i, maxWordSpace));
-  initialMetrics.contentWidths = lines.map((l, i) => getLineWidth(i, 0.22));
-  initialMetrics.contentWidths.forEach((w, i) => !i && console.log(i, 'content-width', w,
-    'line-width', initialMetrics.lineWidths[i],
-    'with-min-wordspace', initialMetrics.minWidths[i],
-    'with-max-wordspace', initialMetrics.maxWidths[i1]));*/
-  console.log(initialMetrics);
 }
 
 function ramble() {
@@ -400,7 +391,7 @@ function isReplaceable(word) {
 }
 
 /* compute id set for strict replacements (unused) */
-function strictReplaceables() { 
+function strictReplaceables() {
   return repIds.filter(idx =>
     sources.rural[idx] !== sources.urban[idx]);
 }
@@ -410,30 +401,6 @@ function unspanify() {
     ("word")).map(e => e.textContent);
 }
 
-function contextualRandom(wordIdx, word, similars, opts) {
-
-  // WORKING HERE ****
-  // NEXT: handle cases where we are at words-spacing bounds of 
-
-  let isShadow = opts && opts.isShadow;
-  if (isShadow) return RiTa.random(similars); // TODO:
-  let wordEle = document.querySelector(`#w${wordIdx}`);
-  let lineEle = wordEle.parentElement.parentElement;
-  let lineIdx = parseInt(lineEle.id.slice(1));
-  let targetWidth = initialMetrics.lineWidths[lineIdx]; //scale=1
-  let initialWidth = initialMetrics.contentWidths[lineIdx]; //scale=1
-  let currentWidth = getLineWidth(lineIdx);  //scale=1
-  // let newWidth, result;
-  // if (!similarConstraints[lineIdx] === constraints.NONE) {
-  //   result = RiTa.random(similars);
-  //   newWidth = getLineWidthAfterSub(result, wordIdx, lineIdx); //scale=1
-  //   console.log('-'.repeat(70) + '\nReplacing ' + word + ' with ' + result
-  //     + '\n  initial: ' + initialWidth + '\n  oldWidth: ' + currentWidth
-  //     + '\n  newWidth: ' + newWidth + '\n  targetWidth: ' + targetWidth);
-  //   //updateDelay = 300000;
-  // }
-  return result;
-}
 
 /*  lengthAwareRandom(current): 
     -- get replacement options

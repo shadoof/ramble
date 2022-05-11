@@ -14,7 +14,7 @@ const layoutCircularLines = function (words, radius, opts = {}) {
   let offset = opts.offset || { x: 0, y: 0 };
   let lineHeightScale = opts.lineHeightScale || 1.2;
 
-  let wordSpacing = opts.wordSpacing || 0.22;
+  let wordSpacing = opts.wordSpacing || initialWordSpace;
   let fontFamily = opts.fontFamily || 'times';
   let fontSize = radius / 4, result;
 
@@ -114,7 +114,7 @@ const adjustWordSpace = function (lineEle, targetWidth, opts) {
     + '"\n  width=' + currentWidth + '\n  target=' + targetWidth
     + '\n  wspace=' + wordSpacingEm + '\n  step=' + step);*/
 
-  let closeEnough = radius / 100, hitMin = false, hitMax = false;
+  let closeEnough = radius / 50, hitMin = false, hitMax = false;
   while (Math.abs(currentWidth - targetWidth) > closeEnough) {
     wordSpacingEm = clamp(wordSpacingEm + step, minWordSpace, maxWordSpace);
     lineEle.style.wordSpacing = wordSpacingEm + "em";

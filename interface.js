@@ -59,9 +59,9 @@ function keyhandler(e) {
     reader.unpauseThen(update);
     console.log('[KEYB] skip-delay');
   }
-  else if (e.code === 'KeyT') {
+  else if (e.code === 'KeyK') {
     toggleLegend();
-    console.log('[KEYB] toggleLegend')
+    console.log('[KEYB] toggleKey')
   }
 }
 
