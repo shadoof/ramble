@@ -1,4 +1,4 @@
-const pbID2Affvals = ['initial', 'free', 'shared', 'urban', 'rural'];
+const affinityLabels = ['initial', 'free', 'shared', 'urban', 'rural'];
 
 // affinities for visualization band and stats panel
 function affinities() {
@@ -59,9 +59,14 @@ function keyhandler(e) {
     reader.unpauseThen(update);
     console.log('[KEYB] skip-delay');
   }
-  else if (e.code === 'KeyK') {
+  else if (e.code === 'KeyC') {
     toggleLegend();
-    console.log('[KEYB] toggleKey')
+    console.log('[KEYB] color-map')
+  }
+  else if (e.code === 'KeyW') {
+    highlightWs = !highlightWs;
+    adjustWordSpacing(highlightWs);
+    console.log('[KEYB] wordspace-classes: ' + highlightWs);
   }
 }
 
@@ -86,7 +91,7 @@ function updateInfo() {
 
   progressBars.forEach((p, i) => {
     let num = 0;
-    let barname = pbID2Affvals[i];
+    let barname = affinityLabels[i];
     if (updating) {
       if (barname === 'free') {
         num = 100;
@@ -102,11 +107,12 @@ function updateInfo() {
   });
 }
 
-function createLegend() {
+function createLegend(metrics) {
+
   let domLegend = document.createElement("div");
   domLegend.id = "legend";
-  domLegend.style.width = initialMetrics.radius * 2 + "px"
-  domLegend.style.height = initialMetrics.radius * 2 + "px"
+  domLegend.style.width = metrics.radius * 2 + "px"
+  domLegend.style.height = metrics.radius * 2 + "px"
 
   let legendContent = document.createElement("div");
   legendContent.classList.add("legend-content");
@@ -130,9 +136,9 @@ function createLegend() {
   }
 
   domLegend.append(legendContent);
-  domLegend.style.fontSize = (initialMetrics.fontSize || 20.5) + 'px';
+  domLegend.style.fontSize = (metrics.fontSize || 20.5) + 'px';
   document.querySelector("#legend-container").append(domLegend);
-  
+
   return domLegend;
 }
 
@@ -165,7 +171,7 @@ function createProgressBars(opts = {}) {
       trailColor: opts.trailColor ? (i === 0
         ? opts.trailColor : 'rgba(0,0,0,0)') : 'rgba(0,0,0,0)',
       color: opts.color && opts.color[i]
-        ? opts.color[pbID2Affvals.length - 1 - i]
+        ? opts.color[affinityLabels.length - 1 - i]
         : "#ddd"
     });
     pbars.push(pbar);

@@ -86,12 +86,16 @@ const createCircularDOM = function (target, initialRadius, lines) {
 
   target.append(textDisplay);
 
-  return { // main::initMetrics
+  let initialMetrics = {
     fontSize,
     lineWidths,
     textDisplay,
     radius: initialRadius
   };
+
+  domLegend = createLegend( initialMetrics);
+  
+  return  initialMetrics;
 }
 
 // adjust word-spacing to get as close to target-width given min/max
@@ -108,7 +112,7 @@ const adjustWordSpace = function (lineEle, targetWidth, opts) {
   let lineIdx = parseInt((lineEle.id).slice(1));
   let currentWidth = getLineWidth(lineIdx);
   let wordSpacingPx = window.getComputedStyle(lineEle).wordSpacing.replace('px', '');
-  let wordSpacingEm = parseFloat(wordSpacingPx) / fontSize; // px => em
+  let wordSpacingEm = (parseFloat(wordSpacingPx) / fontSize); // px => em
   let step = currentWidth > targetWidth ? -0.01 : 0.01;
   /*console.log('adjustWordSpace: "' + lineEle.textContent
     + '"\n  width=' + currentWidth + '\n  target=' + targetWidth
@@ -119,8 +123,8 @@ const adjustWordSpace = function (lineEle, targetWidth, opts) {
     wordSpacingEm = clamp(wordSpacingEm + step, minWordSpace, maxWordSpace);
     lineEle.style.wordSpacing = wordSpacingEm + "em";
     currentWidth = getLineWidth(lineIdx);
-    if (wordSpacingEm === minWordSpace) hitMin = true; 
-    if (wordSpacingEm === maxWordSpace) hitMax = true; 
+    if (wordSpacingEm === minWordSpace) hitMin = true;
+    if (wordSpacingEm === maxWordSpace) hitMax = true;
     if (hitMin || hitMax) {
       console.warn('[WARN] Wordspace at min/max: ' + wordSpacingEm);
       break;
