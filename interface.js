@@ -65,7 +65,7 @@ function keyhandler(e) {
   }
   else if (e.code === 'KeyW') {
     highlightWs = !highlightWs;
-    adjustWordSpacing(highlightWs);
+    adjustAllWordSpacing(highlightWs);
     console.log('[KEYB] wordspace-classes: ' + highlightWs);
   }
 }

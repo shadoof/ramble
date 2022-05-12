@@ -58,7 +58,7 @@ let ignores = ["jerkies", "trite", "nary", "outta", "copras", "accomplis", "scad
 let refreshCache = false;
 
 // keyboard toggle options
-let logging = true, verbose = false, highlights = false, hideLegend = true, highlightWs = true;
+let logging = true, verbose = false, highlights = false, hideLegend = true, highlightWs = false;
 
 let sources = {
   rural: ['by', 'the', 'time', 'the', 'light', 'has', 'faded', ',', 'as', 'the', 'last', 'of', 'the', 'reddish', 'gold', 'illumination', 'comes', 'to', 'rest', ',', 'then', 'imperceptibly', 'spreads', 'out', 'over', 'the', 'moss', 'and', 'floor', 'of', 'the', 'woods', 'on', 'the', 'westerly', 'facing', 'lakeside', 'slopes', ',', 'you', 'or', 'I', 'will', 'have', 'set', 'out', 'on', 'several', 'of', 'yet', 'more', 'circuits', 'at', 'every', 'time', 'and', 'in', 'all', 'directions', ',', 'before', 'or', 'after', 'this', 'or', 'that', 'circadian', ',', 'usually', 'diurnal', ',', 'event', 'on', 'mildly', 'rambling', 'familiar', 'walks', ',', 'as', 'if', 'these', 'exertions', 'might', 'be', 'journeys', 'of', 'adventure', 'whereas', 'always', 'our', 'gestures', ',', 'guided', 'by', 'paths', ',', 'are', 'also', 'more', 'like', 'traces', 'of', 'universal', 'daily', 'ritual', ':', 'just', 'before', 'or', 'with', 'the', 'dawn', ',', 'after', 'a', 'morning', 'dip', ',', 'in', 'anticipation', 'of', 'breakfast', ',', 'whenever', 'the', 'fish', 'are', 'still', 'biting', ',', 'as', 'and', 'when', 'the', 'industrious', 'creatures', 'are', 'building', 'their', 'nests', 'and', 'shelters', ',', 'after', 'our', 'own', 'trials', 'of', 'work', ',', 'while', 'the', 'birds', 'still', 'sing', ',', 'in', 'quiet', 'moments', 'after', 'lunch', ',', 'most', 'particularly', 'after', 'dinner', ',', 'at', 'sunset', ',', 'to', 'escape', ',', 'to', 'avoid', 'being', 'found', ',', 'to', 'seem', 'to', 'be', 'lost', 'right', 'here', 'in', 'this', 'place', 'where', 'you', 'or', 'I', 'have', 'always', 'wanted', 'to', 'be', 'and', 'where', 'we', 'might', 'sometimes', 'now', 'or', 'then', 'have', 'discovered', 'some', 'singular', 'hidden', 'beauty', ',', 'or', 'one', 'another', ',', 'or', 'stumbled', 'and', 'injured', 'ourselves', 'beyond', 'the', 'hearing', 'and', 'call', 'of', 'other', 'voices', ',', 'or', 'met', 'with', 'other', 'danger', ',', 'animal', 'or', 'inhuman', ',', 'the', 'one', 'tearing', 'and', 'rending', 'and', 'opening', 'up', 'the', 'darkness', 'within', 'us', 'to', 'bleed', ',', 'yet', 'we', 'suppress', 'any', 'sound', 'that', 'might', 'have', 'expressed', 'the', 'terror', 'and', 'passion', 'and', 'horror', 'and', 'pain', 'so', 'that', 'I', 'or', 'you', 'may', 'continue', 'on', 'this', 'ramble', ',', 'this', 'before', 'or', 'after', 'walk', ',', 'and', 'still', 'return', ';', 'or', 'the', 'other', ',', 'the', 'quiet', 'evacuation', 'of', 'the', 'light', ',', 'the', 'way', ',', 'as', 'we', 'have', 'kept', 'on', 'walking', ',', 'it', 'falls', 'on', 'us', 'and', 'removes', 'us', 'from', 'existence', 'since', 'in', 'any', 'case', 'we', 'are', 'all', 'but', 'never', 'there', ',', 'always', 'merely', 'passing', 'through', 'and', 'by', 'and', 'over', 'the', 'moss', ',', 'under', 'the', 'limbs', 'of', 'the', 'evergreens', ',', 'beside', 'the', 'lake', ',', 'within', 'the', 'sound', 'of', 'its', 'lapping', 'waves', ',', 'annihilated', ',', 'gone', ',', 'quite', 'gone', ',', 'now', 'simply', 'gone', 'and', ',', 'in', 'being', 'or', 'walking', 'in', 'these', 'ways', ',', 'giving', 'up', 'all', 'living', 'light', 'for', 'settled', ',', 'hearth', 'held', 'fire', 'in', 'its', 'place', ',', 'returned'],
@@ -98,25 +98,72 @@ let padfloat = parseFloat(cpadding.replace('px', ''));
 let padding = (padfloat && padfloat !== NaN) ? padfloat : 40;
 let radius = displayBounds.width / 2, dbug = true;
 
+if (dbug) {
+  highlightWs = true;
+  highlights = true;
+  readDelay = 1;
+}
 doLayout();
-//ramble();// go
+ramble();// go
 
 /////////////////////////////////////////////////////////
+
+// compute the word-spacing needed to achieve target width
+// start at min word-spacing and takes small steps until max
+const wordSpaceForSub = function (lineEle, lineIdx, wordEle, newWord, targetWidth, currentWs) {
+
+  let origWord = wordEle.textContent;  // store original word
+  wordEle.textContent = newWord; // replace the word
+
+  // loop from min-to-max to find needed word-spacing for target-width
+  let closeEnough = radius / 100, wordSpacingEm = minWordSpace;
+  let step = 0.05, currentWidth = Infinity;
+  while (Math.abs(currentWidth - targetWidth) > closeEnough) {
+    lineEle.style.wordSpacing = wordSpacingEm + "em";
+    currentWidth = getLineWidth(lineIdx);
+    console.log('ws=', wordSpacingEm, '->' + currentWidth);
+    if (wordSpacingEm >= maxWordSpace || currentWidth > targetWidth) break;
+    wordSpacingEm += step;
+  }
+  console.log('RESULT=', wordSpacingEm, '->' + currentWidth, 'for target', targetWidth);
+
+  lineEle.style.wordSpacing = currentWs + 'em'; // reset spacing
+  wordEle.textContent = origWord; // reset word
+
+  return wordSpacingEm;
+}
+
+function getWordSpaceEm(lineEle) {
+  let wordSpacingPx = window.getComputedStyle(lineEle).wordSpacing.replace('px', '');
+  return parseFloat(wordSpacingPx) / initialMetrics.fontSize; // px => em
+}
 
 function contextualRandom(wordIdx, word, similars, opts) {
 
   let isShadow = opts && opts.isShadow;
   if (isShadow) return RiTa.random(similars);
+
   let wordEle = document.querySelector(`#w${wordIdx}`);
   let lineEle = wordEle.parentElement.parentElement;
   let lineIdx = parseInt(lineEle.id.slice(1));
-  let targetWidth = initialMetrics.lineWidths[lineIdx]; //scale=1
-  let initialWidth = initialMetrics.contentWidths[lineIdx]; //scale=1
-  let currentWidth = getLineWidth(lineIdx);  //scale=1
-  let wordSpacingPx = window.getComputedStyle(lineEle).wordSpacing.replace('px', '');
-  let wordSpacingEm = parseFloat(wordSpacingPx) / initialMetrics.fontSize; // px => em
+  let targetWidth = initialMetrics.lineWidths[lineIdx];
+  let wordSpacingEm = getWordSpaceEm(lineEle);
 
-  // NEXT:
+  // similars.filter((cand,i) => {
+  //   let { min, max } = getLineWidthsAfterSub(cand, wordIdx);
+  //   console.log('  ' + i + ') ' + word, min, max);
+  // });
+
+  // // NEXT:
+
+  let result = RiTa.random(similars);
+  console.log(lineIdx + '/' + wordIdx + ') ' + word + ' -> ' + result, 'currentWs=', wordSpacingEm, 'targetWs=' + targetWidth);
+  //wordEle.textContent = result;
+
+  // can we hit the target width with this word ?
+  let ws = wordSpaceForSub(lineEle, lineIdx, wordEle, word, targetWidth, wordSpacingEm);
+  //adjustWordSpace(lineEle, targetWidth, { restore: true });
+  console.log('ws=' + ws + ' for "' + lineEle.firstChild.innerText.replace(word, result) + '"');
 
   return result;
 }
@@ -149,12 +196,12 @@ function doLayout() {
   initialMetrics = createCircularDOM(domDisplay, initRadius, lines);
 
   scaleToFit(); // size to window 
-  adjustWordSpacing(adjustInitialWordspacing);
+  adjustAllWordSpacing(adjustInitialWordspacing);
 }
 
-function adjustWordSpacing(val) {
+function adjustAllWordSpacing(isDynamic) {
   document.querySelectorAll('.line').forEach((l, i) => {
-    if (val) {
+    if (isDynamic) {
       adjustWordSpace(l, initialMetrics.lineWidths[i])
     }
     else {
@@ -162,12 +209,6 @@ function adjustWordSpacing(val) {
         .forEach(c => l.firstChild.classList.remove(c));
     }
   });
-  // if (val)
-  //   ((lw, i) => adjustWordSpace(document.querySelector(`#l${i}`), lw));
-  // else {
-  //   ["max-word-spacing", "min-word-spacing"]
-  //     .forEach(c => lineEle.firstChild.classList.remove(c));
-  // }
 }
 
 function ramble() {
@@ -248,7 +289,8 @@ function replace() {
   let idx = RiTa.random(repIds.filter(id => !reader
     || !reader.selection().includes(sources[domain][id])));
 
-  //idx = 4;
+  //idx = 261;
+  updateDelay = 10000000;
   let dword = last(history[domain][idx]);
   let sword = last(history[shadow][idx]);
   let data = { idx, dword, sword, state, timestamp: Date.now() };
@@ -505,13 +547,13 @@ function updateDOM(next, idx) {
   let wordEle = document.querySelector(`#w${idx}`);
   let lineEle = wordEle.parentElement.parentElement;
   let lineIdx = parseFloat(lineEle.id.slice(1));
-  console.log('updateDOM', next, idx, lineIdx);
-  //console.log('replacing ' + word.textContent + ' with ' + next);
+  //console.log('updateDOM', next, idx, lineIdx);
+  console.log('replacing ' + wordEle.textContent + ' with ' + next);
   wordEle.textContent = next;
 
   if (highlights) wordEle.classList.add(outgoing ? 'outgoing' : 'incoming');
   let wordSpace = adjustWordSpace(lineEle, initialMetrics.lineWidths[lineIdx]);
-  console.log('line#' + lineIdx + ' wordSpace=' + wordSpace);
+  console.log('line#' + lineIdx + ' wordSpace=' + wordSpace);//+'\n  '+ wordEle.parentElement.innerHTML);
 }
 
 function update(updating = true) {
@@ -531,6 +573,7 @@ function scaleToFit() {
   if (!dbug) displayContainer.addEventListener("mousemove", hideCursor);
   progressBounds = document.getElementById("progress4")
     .getBoundingClientRect();
+  log('scaleRatio=' + scaleRatio);
 }
 
 function trunc(arr, len = 100) {
