@@ -81,7 +81,7 @@ let state = {
 };
 
 let lex = RiTa.lexicon();
-let repIds = replaceables();
+let repids = replaceables();
 let history = { rural: [], urban: [] };
 let similarConstraints = Array(replaceables.length).fill(0);
 
@@ -117,25 +117,23 @@ const wordSpaceForSub = function (lineEle, lineIdx, wordEle, newWord, targetWidt
 
   // loop from min-to-max to find needed word-spacing for target-width
   let closeEnough = radius / 100, wordSpacingEm = minWordSpace;
-  let step = 0.05, currentWidth = Infinity;
+  let step = 0.05, currentWidth = Infinity, failed = false;
   while (Math.abs(currentWidth - targetWidth) > closeEnough) {
     lineEle.style.wordSpacing = wordSpacingEm + "em";
     currentWidth = getLineWidth(lineIdx);
-    console.log('ws=', wordSpacingEm, '->' + currentWidth);
-    if (wordSpacingEm >= maxWordSpace || currentWidth > targetWidth) break;
+    //console.log('ws=', wordSpacingEm, '->' + currentWidth);
+    if (wordSpacingEm >= maxWordSpace || currentWidth > (targetWidth + closeEnough)) { // fail
+      failed = true;
+      break;
+    }
     wordSpacingEm += step;
   }
-  console.log('RESULT=', wordSpacingEm, '->' + currentWidth, 'for target', targetWidth);
+  //console.log('RESULT=', wordSpacingEm, '->' + currentWidth, 'for target', targetWidth);
 
   lineEle.style.wordSpacing = currentWs + 'em'; // reset spacing
   wordEle.textContent = origWord; // reset word
 
-  return wordSpacingEm;
-}
-
-function getWordSpaceEm(lineEle) {
-  let wordSpacingPx = window.getComputedStyle(lineEle).wordSpacing.replace('px', '');
-  return parseFloat(wordSpacingPx) / initialMetrics.fontSize; // px => em
+  return wordSpacingEm;//failed ? undefined : wordSpacingEm;
 }
 
 function contextualRandom(wordIdx, word, similars, opts) {
@@ -148,22 +146,35 @@ function contextualRandom(wordIdx, word, similars, opts) {
   let lineIdx = parseInt(lineEle.id.slice(1));
   let targetWidth = initialMetrics.lineWidths[lineIdx];
   let wordSpacingEm = getWordSpaceEm(lineEle);
+  let hstack = history[state.domain][wordIdx];
+  let lastIndex = hstack.length > 1 ? hstack.length - 2 : hstack.length - 1;
+  let last = hstack[lastIndex];
+  let options = similars.filter((cand, i) => {
+    if (cand !== last) {
+      let ws = wordSpaceForSub(lineEle, lineIdx, wordEle, cand, targetWidth, wordSpacingEm);
+      let ok = ws >= minWordSpace && ws <= maxWordSpace * .99;
+      //console.log(i, cand, ws, ok);
+      return ok;
+    }
+  });
 
-  // similars.filter((cand,i) => {
-  //   let { min, max } = getLineWidthsAfterSub(cand, wordIdx);
-  //   console.log('  ' + i + ') ' + word, min, max);
-  // });
+  if (options.length === 0) {
+    console.log('[WARN] line#'+lineIdx+' no good opts for ' + word + ' ' + JSON.stringify(similars));
+    options = similars;
+  }
+  else {
+    //console.log('found '+options.length+' sims: '+JSON.stringify(options));
+  }
 
-  // // NEXT:
-
-  let result = RiTa.random(similars);
-  console.log(lineIdx + '/' + wordIdx + ') ' + word + ' -> ' + result, 'currentWs=', wordSpacingEm, 'targetWs=' + targetWidth);
+  let result = RiTa.random(options);
+  // console.log(lineIdx + '/' + wordIdx + ') ' + word + ' -> ' + result,
+  //   'currentWs=', wordSpacingEm, 'targetWs=' + targetWidth, 'last=', last);
   //wordEle.textContent = result;
 
   // can we hit the target width with this word ?
-  let ws = wordSpaceForSub(lineEle, lineIdx, wordEle, word, targetWidth, wordSpacingEm);
+  //let ws = wordSpaceForSub(lineEle, lineIdx, wordEle, word, targetWidth, wordSpacingEm);
   //adjustWordSpace(lineEle, targetWidth, { restore: true });
-  console.log('ws=' + ws + ' for "' + lineEle.firstChild.innerText.replace(word, result) + '"');
+  //console.log(lineIdx, 'ws=' + ws + ' for "' + lineEle.firstChild.innerText.replace(word, result) + '"');
 
   return result;
 }
@@ -286,11 +297,11 @@ function updateState() {
 function replace() {
   let { domain } = state;
   let shadow = shadowTextName();
-  let idx = RiTa.random(repIds.filter(id => !reader
+  let idx = RiTa.random(repids.filter(id => !reader
     || !reader.selection().includes(sources[domain][id])));
 
   //idx = 261;
-  updateDelay = 10000000;
+  //updateDelay = 10000000;
   let dword = last(history[domain][idx]);
   let sword = last(history[shadow][idx]);
   let data = { idx, dword, sword, state, timestamp: Date.now() };
@@ -347,7 +358,7 @@ function restore() {
   let displayWords = unspanify();
 
   // get all possible restorations
-  let choices = repIds
+  let choices = repids
     .map(idx => ({ idx, word: displayWords[idx] }))
     .filter(({ word, idx }) => history[domain][idx].length > 1
       && isReplaceable(word));
@@ -375,10 +386,11 @@ function restore() {
     //ts = Date.now(); // perf. timing
   }
   else {
-    let id = repIds.find(idx => history[domain][idx].length > 1);
+    let id = repids.find(idx => history[domain][idx].length > 1);
     let word = sources[domain][id], hist = history[domain][id];
-    console.warn('[WARN] Invalid-state, numMods:'
+    console.log('[WARN] Invalid-state, numMods:'
       + numMods() + ' idx=' + id + '/' + word + ' history=', hist);
+    displayWords.forEach((w,i) => console.log(i, w, JSON.stringify(history[domain][i])));
     return stop();
   }
 
@@ -389,7 +401,7 @@ function restore() {
 
 /* total number of replacements made in display text */
 function numMods() {
-  return repIds.reduce((total, idx) =>
+  return repids.reduce((total, idx) =>
     total + history[state.domain][idx].length - 1, 0);
 }
 
@@ -446,7 +458,7 @@ function isReplaceable(word) {
 
 /* compute id set for strict replacements (unused) */
 function strictReplaceables() {
-  return repIds.filter(idx =>
+  return repids.filter(idx =>
     sources.rural[idx] !== sources.urban[idx]);
 }
 
@@ -548,12 +560,12 @@ function updateDOM(next, idx) {
   let lineEle = wordEle.parentElement.parentElement;
   let lineIdx = parseFloat(lineEle.id.slice(1));
   //console.log('updateDOM', next, idx, lineIdx);
-  console.log('replacing ' + wordEle.textContent + ' with ' + next);
+  //console.log('replacing ' + wordEle.textContent + ' with ' + next);
   wordEle.textContent = next;
 
   if (highlights) wordEle.classList.add(outgoing ? 'outgoing' : 'incoming');
   let wordSpace = adjustWordSpace(lineEle, initialMetrics.lineWidths[lineIdx]);
-  console.log('line#' + lineIdx + ' wordSpace=' + wordSpace);//+'\n  '+ wordEle.parentElement.innerHTML);
+  //console.log('line#' + lineIdx + ' wordSpace=' + wordSpace);//+'\n  '+ wordEle.parentElement.innerHTML);
 }
 
 function update(updating = true) {
@@ -583,6 +595,17 @@ function trunc(arr, len = 100) {
     : arr;
   if (arr.length <= len) return arr;
   return arr.substring(0, len) + '...';
+}
+
+function getWordSpaceEm(lineEle) {
+  let wordSpacingPx = window.getComputedStyle(lineEle).wordSpacing.replace('px', '');
+  return parseFloat(wordSpacingPx) / initialMetrics.fontSize; // px => em
+}
+
+function between(actual, min, max, range = (max - min) / 10) {
+  let c1 = actual >= (min - Math.abs(range))
+  let c2 = actual <= (max + Math.abs(range));
+  return c1 && c2;
 }
 
 function last(arr) {

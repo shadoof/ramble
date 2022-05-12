@@ -10,7 +10,62 @@ const sources = {
   pos: ['in', 'dt', 'nn', 'dt', 'jj', 'vbz', 'vbn', ',', 'in', 'dt', 'jj', 'in', 'dt', 'jj', 'jj', 'nn', 'vbz', 'to', 'nn', ',', 'rb', 'rb', 'nns', 'in', 'in', 'dt', 'nn', 'cc', 'nn', 'in', 'dt', 'nns', 'in', 'dt', 'rb', 'vbg', 'nn', 'vbz', ',', 'prp', 'cc', 'prp', 'md', 'vbp', 'vbn', 'in', 'in', 'jj', 'in', 'rb', 'jjr', 'nns', 'in', 'dt', 'nn', 'cc', 'in', 'dt', 'nns', ',', 'in', 'cc', 'in', 'dt', 'cc', 'in', 'nn', ',', 'rb', 'jj', ',', 'nn', 'in', 'rb', 'jj', 'jj', 'nns', ',', 'in', 'in', 'dt', 'nns', 'md', 'vb', 'nns', 'in', 'nn', 'in', 'rb', 'prp$', 'nns', ',', 'vbn', 'in', 'nns', ',', 'vbp', 'rb', 'jjr', 'vb', 'nns', 'in', 'jj', 'rb', 'jj', ':', 'rb', 'in', 'cc', 'in', 'dt', 'nn', ',', 'in', 'dt', 'nn', 'nn', ',', 'in', 'nn', 'in', 'nn', ',', 'wrb', 'dt', 'nns', 'vbp', 'rb', 'vbg', ',', 'in', 'cc', 'wrb', 'dt', 'jj', 'nns', 'vbp', 'vbg', 'prp$', 'nns', 'cc', 'vbz', ',', 'in', 'prp$', 'jj', 'nns', 'in', 'nn', ',', 'in', 'dt', 'nns', 'rb', 'vb', ',', 'in', 'jj', 'nns', 'in', 'nn', ',', 'rbs', 'rb', 'in', 'nn', ',', 'in', 'nn', ',', 'to', 'vb', ',', 'to', 'vb', 'vbg', 'vbd', ',', 'to', 'vb', 'to', 'vb', 'vbd', 'jj', 'rb', 'in', 'dt', 'nn', 'wrb', 'prp', 'cc', 'prp', 'vbp', 'rb', 'vbd', 'to', 'vb', 'cc', 'wrb', 'prp', 'md', 'rb', 'rb', 'cc', 'rb', 'vbp', 'vbn', 'dt', 'jj', 'vbn', 'nn', ',', 'cc', 'cd', 'dt', ',', 'cc', 'vbd', 'cc', 'vbn', 'prp', 'in', 'dt', 'vbg', 'cc', 'vb', 'in', 'jj', 'nns', ',', 'cc', 'vbd', 'in', 'jj', 'nn', ',', 'jj', 'cc', 'jj', ',', 'dt', 'cd', 'vbg', 'cc', 'nn', 'cc', 'vbg', 'in', 'dt', 'nn', 'in', 'prp', 'to', 'vb', ',', 'rb', 'prp', 'vbp', 'dt', 'jj', 'in', 'md', 'vbp', 'vbn', 'dt', 'nn', 'cc', 'nn', 'cc', 'nn', 'cc', 'nn', 'rb', 'in', 'prp', 'cc', 'prp', 'md', 'vb', 'in', 'dt', 'nn', ',', 'dt', 'in', 'cc', 'in', 'vb', ',', 'cc', 'rb', 'jj', ';', 'cc', 'dt', 'jj', ',', 'dt', 'jj', 'nn', 'in', 'dt', 'jj', ',', 'dt', 'nn', ',', 'in', 'prp', 'vbp', 'vbd', 'in', 'vbg', ',', 'prp', 'vbz', 'in', 'prp', 'cc', 'vbz', 'prp', 'in', 'nn', 'in', 'in', 'dt', 'nn', 'prp', 'vbp', 'dt', 'cc', 'rb', 'rb', ',', 'rb', 'rb', 'vbg', 'in', 'cc', 'in', 'cc', 'in', 'dt', 'nn', ',', 'in', 'dt', 'nns', 'in', 'dt', 'nns', ',', 'in', 'dt', 'nn', ',', 'in', 'dt', 'jj', 'in', 'prp$', 'nn', 'vbz', ',', 'vbd', ',', 'vbn', ',', 'rb', 'vbn', ',', 'rb', 'rb', 'vbn', 'cc', ',', 'in', 'vbg', 'cc', 'vbg', 'in', 'dt', 'nns', ',', 'vbg', 'in', 'dt', 'vbg', 'jj', 'in', 'vbd', ',', 'nn', 'vbn', 'nn', 'in', 'prp$', 'nn', ',', 'vbd']
 };
 
-function findSimilars(word, pos) {
+let overrides = {
+  avoid: ['elude', 'escape', 'evade'],
+  neighbors: ['brothers', 'brethren', 'fellows'],
+  rending: ['ripping', 'cleaving', 'rupturing', 'splitting', 'severing'],
+  inhuman: ['grievous', 'grim', 'hard', 'heavy', 'onerous', 'oppressive', 'rough', 'rugged', 'severe', 'austere', 'inclement', 'intemperate'],
+  sometimes: ['occasionally', 'intermittently', 'periodically', 'recurrently', 'infrequently', 'rarely', 'irregularly', 'sporadically', 'variously'],
+  adventure: ['experience', 'exploit', 'occasion', 'ordeal', 'venture', 'expedition', 'mission'],
+  unfamiliar: ['unconventional', 'pioneering', 'unaccustomed', 'unprecedented'],
+  coiled: ['twisted', 'twisting', 'curling', 'curving', 'serpentine', 'corkscrewed', 'jagged', 'meandering', 'spiraled'],
+  particularly: ['specifically', 'generally', 'aptly'],
+  unsettled: ['unresolved', 'uncertain', 'undecided', 'rootless'],
+  dip: ['blip', 'chip', 'clip', 'drip', 'grip', 'microchip', 'quip', 'roundtrip', 'ship', 'slip', 'snip', 'strip', 'trip', 'whip'],
+  set: ['caressed', 'digressed', 'forget', 'progressed', 'redressed', 'regressed', 'seat']
+};
+
+let state = { sources, ignores }, similarCache = {};
+
+function findSimilars(idx, word, pos, state) {
+
+  let { ignores, sources } = state;
+  //console.log('findSimilars:', ignores, sources);
+  let limit = -1;
+  if (word in similarCache) {
+    return similarCache[word]; // from cache
+  }
+  else {
+    let rhymes = RiTa.rhymes(word, { pos, limit });
+    let sounds = RiTa.soundsLike(word, { pos, limit });
+    let spells = RiTa.spellsLike(word, { pos, limit });
+    let sims = new Set([...rhymes, ...sounds, ...spells]);
+
+    sims = [...sims].filter(sim =>
+      !ignores.includes(sim)
+      && !word.includes(sim)
+      && !sim.includes(word)
+      && isReplaceable(word, state));
+
+    if (sims.length > 1) {
+      let elapsed = Date.now() - timestamp;
+      similarCache[word] = sims; // to cache
+      //console.log('[CACHE] (' + elapsed + 'ms) ' + word + '/' + pos
+      //+ ': ' + trunc(sims) + ' [' + Object.keys(similarCache).length + ']');
+      return sims;
+    }
+  }
+
+  let inSource = sources.rural[idx] === word || sources.urban[idx] === word && sources.pos[idx] === pos;
+  if (inSource) {
+    console.warn('[WARN] No similars for: "' + word + '"/' + pos
+      + (inSource ? ' *** [In Source] ' : ''));
+  }
+
+  return [];
+}
+
+function findSimilarsX(word, pos) {
 
   let limit = -1;
 
@@ -32,10 +87,15 @@ function findSimilars(word, pos) {
 function quotify(arr) {
   return JSON.stringify(arr).replace(/["]/g,"'");//arr.map((a,i) => {" '" + a + "',").join('');
 }
-
+function isReplaceable(word, state) {
+  //console.log(state);
+  let { stops, overrides, minWordLength } = state;
+  return (word.length >= minWordLength || overrides[word])
+    && !stops.includes(word);
+}
 ////////////////////////////////////////////////////////
 
-let idx, counter, word = 'light';
+let idx, counter, word = 'animal';
 let uidx = sources.urban.indexOf(word);
 let ridx = sources.rural.indexOf(word);
 if (uidx > -1) {
@@ -47,7 +107,7 @@ else {
   counter = sources.urban[idx];
 }
 let pos = sources.pos[idx];
-let sims = findSimilars(word, pos);
-let csims = findSimilars(counter, pos);
+let sims = findSimilars(idx, word, pos, state);
+let csims = findSimilars(idx, counter, pos, state);
 console.log(idx, word + '/' + counter, pos, '\n\n' + word + ': '
   + quotify(sims), word !== counter ? ('\n\n' + counter + ': ' + quotify(csims)) : '');

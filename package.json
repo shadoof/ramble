@@ -7,6 +7,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "rita": "^2.4.501"
+    "rita": "^2.8.1"
   }
 }

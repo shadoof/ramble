@@ -4,7 +4,7 @@ const affinityLabels = ['initial', 'free', 'shared', 'urban', 'rural'];
 function affinities() {
   let data = { rural: 0, urban: 0, shared: 0, free: 0 };
   let current = unspanify();
-  repIds.forEach(idx => {
+  repids.forEach(idx => {
     let visible = current[idx];
     let rurMatch = sources.rural[idx] === visible;
     let urbMatch = sources.urban[idx] === visible;
@@ -15,7 +15,7 @@ function affinities() {
   });
   // normalize (4 values should sum to 1)
   return Object.fromEntries(Object.entries(data).map
-    (([k, v]) => [k, v / repIds.length]));
+    (([k, v]) => [k, v / repids.length]));
 }
 
 function keyhandler(e) {

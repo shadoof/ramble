@@ -5,7 +5,6 @@ importScripts('cache.js');
 const lex = RiTa.lexicon();
 
 let similarCache = typeof cache !== 'undefined' ? cache : {};
-
 let eventHandlers = {
   init: function (data, worker) {
     const num = Object.entries(data.overrides).length;
@@ -26,8 +25,8 @@ let eventHandlers = {
   lookup: function (data, worker) {
     const { idx, dword, sword, state, timestamp } = data;
     const { sources } = state, pos = sources.pos[idx];
-    const dsims = findSimilars(dword, pos, state, timestamp);
-    const ssims = findSimilars(sword, pos, state, timestamp);
+    const dsims = findSimilars(idx, dword, pos, state, timestamp);
+    const ssims = findSimilars(idx, sword, pos, state, timestamp);
     worker.postMessage({ idx, dword, sword, dsims, ssims, timestamp });
   }
 }
@@ -38,7 +37,7 @@ this.onmessage = function (e) {
   eventHandlers[event](data, this);
 }
 
-function findSimilars(word, pos, state, timestamp) {
+function findSimilars(idx, word, pos, state, timestamp) {
 
   let { ignores, sources } = state;
   //console.log('findSimilars:', ignores, sources);
@@ -62,17 +61,22 @@ function findSimilars(word, pos, state, timestamp) {
       let elapsed = Date.now() - timestamp;
       similarCache[word] = sims; // to cache
       //console.log('[CACHE] (' + elapsed + 'ms) ' + word + '/' + pos
-        //+ ': ' + trunc(sims) + ' [' + Object.keys(similarCache).length + ']');
+      //+ ': ' + trunc(sims) + ' [' + Object.keys(similarCache).length + ']');
       return sims;
     }
   }
 
-  console.warn('no similars for: "' + word + '"/' + pos
-    + ((sources.rural.includes(word) || sources.urban.includes(word))
-      ? ' *** [In Source]' : ''));
+  let inSource = sources.rural[idx] === word || sources.urban[idx] === word && sources.pos[idx] === pos;
+  if (inSource && !sourceMisses.has(word + '/' + pos)) {
+    sourceMisses.add(word + '/' + pos)
+    console.warn('[WARN] No similars for: "' + word + '"/' + pos
+      + (inSource ? ' *** [In Source] ' + JSON.stringify(Array.from(sourceMisses)) : ''));
+  }
+  //if (inSource) throw Error('[WARN] No similars for: "' + word + '"/' + pos);
 
   return [];
 }
+let sourceMisses = new Set();
 
 function isReplaceable(word, state) {
   //console.log(state);

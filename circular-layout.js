@@ -126,13 +126,11 @@ const adjustWordSpace = function (lineEle, targetWidth, opts) {
 
     lineEle.style.wordSpacing = wordSpacingEm + "em";
     currentWidth = getLineWidth(lineIdx);
-    console.log('ws2=', wordSpacingEm, '->' + currentWidth);
-
     wordSpacingEm = clamp(wordSpacingEm + step, minWordSpace, maxWordSpace);
     if (wordSpacingEm === minWordSpace) hitMin = true;
     if (wordSpacingEm === maxWordSpace) hitMax = true;
     if (hitMin || hitMax) {
-      console.warn('[WARN] Wordspace at min/max: ' + wordSpacingEm);
+      console.log('[WARN] Wordspace at min/max: ' + wordSpacingEm);
       break;
     }
   }
@@ -141,7 +139,6 @@ const adjustWordSpace = function (lineEle, targetWidth, opts) {
     if (hitMax) lineEle.firstChild.classList.add("max-word-spacing");
     if (hitMin) lineEle.firstChild.classList.add("min-word-spacing");
   }
-  console.log(' ws2=' + wordSpacingEm + ' current=' + currentWidth);
 
   //  if (restore) lineEle.style.wordSpacing = originalWordSpacing + "em";
 
