@@ -55,13 +55,6 @@ function findSimilars(idx, word, pos, state) {
       return sims;
     }
   }
-
-  let inSource = sources.rural[idx] === word || sources.urban[idx] === word && sources.pos[idx] === pos;
-  if (inSource) {
-    console.warn('[WARN] No similars for: "' + word + '"/' + pos
-      + (inSource ? ' *** [In Source] ' : ''));
-  }
-
   return [];
 }
 
@@ -85,29 +78,49 @@ function findSimilarsX(word, pos) {
 }
 
 function quotify(arr) {
-  return JSON.stringify(arr).replace(/["]/g,"'");//arr.map((a,i) => {" '" + a + "',").join('');
+  return JSON.stringify(arr).replace(/["]/g, "'");//arr.map((a,i) => {" '" + a + "',").join('');
 }
 function isReplaceable(word, state) {
   //console.log(state);
-  let { stops, overrides, minWordLength } = state;
+  let { stops, minWordLength } = state;
   return (word.length >= minWordLength || overrides[word])
     && !stops.includes(word);
 }
 ////////////////////////////////////////////////////////
+let missing = ["animal/jj", "sunset/nn", "most/rbs", "circadian/nn", "simply/rb", "will/md",
+  "familiar/jj", "mildly/rb", "marshaling/vbg", "singular/jj", "since/in", "beyond/in", 
+];
 
-let idx, counter, word = 'animal';
-let uidx = sources.urban.indexOf(word);
-let ridx = sources.rural.indexOf(word);
-if (uidx > -1) {
-  idx = uidx;
-  counter = sources.rural[idx];
+
+missing.forEach((w, i) => {
+  let [word,pos] = w.split('/');
+  lookupWord(word, pos);
+});
+
+function lookupWord(word, pos) {
+  let idx, counter;//, word = 'animal';
+  let uidx = sources.urban.indexOf(word);
+  let ridx = sources.rural.indexOf(word);
+  if (uidx > -1) {
+    idx = uidx;
+    counter = sources.rural[idx];
+  }
+  else if (ridx > -1) {
+    idx = ridx;
+    counter = sources.urban[idx];
+  }
+
+  if (typeof idx === 'undefined') {
+    console.log('remove '+word+'/'+pos);
+    return;
+  }
+  if (pos && pos !== sources.pos[idx]) {
+    throw Error(word + " '" + pos + '\'!=\'' + sources.pos[idx]+"'");
+  }
+
+  let sims = findSimilars(idx, word, pos, state);
+  let csims = findSimilars(idx, counter, pos, state);
+  // console.log(idx, word + '/' + counter, pos, word + ': '
+  //   + quotify(sims), word !== counter ? ('' + counter + ': ' + quotify(csims)) : '');
+  console.log('{ word: "'+word+'", pos: "'+pos+'" }'+(word !== counter ?', { word: "'+counter+'", pos: "'+pos+'"}':'')+',');
 }
-else {
-  idx = ridx;
-  counter = sources.urban[idx];
-}
-let pos = sources.pos[idx];
-let sims = findSimilars(idx, word, pos, state);
-let csims = findSimilars(idx, counter, pos, state);
-console.log(idx, word + '/' + counter, pos, '\n\n' + word + ': '
-  + quotify(sims), word !== counter ? ('\n\n' + counter + ': ' + quotify(csims)) : '');
