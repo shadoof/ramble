@@ -44,7 +44,7 @@ const layoutCircularLines = function (words, radius, opts = {}) {
 */
 const createCircularDOM = function (target, initialRadius, lines) {
 
-  let lineWidths = [];
+  let lineWidths = []
   let fontSize = lines[0].fontSize;
 
   let textDisplay = document.createElement("div");
@@ -79,7 +79,7 @@ const createCircularDOM = function (target, initialRadius, lines) {
       });
       lineDiv.append(wrapperSpan);
     }
-
+    
     textDisplay.append(lineDiv);
     lineWidths.push(l.bounds[2]);
   });
@@ -130,7 +130,7 @@ const adjustWordSpace = function (lineEle, targetWidth, opts) {
     if (wordSpacingEm === minWordSpace) hitMin = true;
     if (wordSpacingEm === maxWordSpace) hitMax = true;
     if (hitMin || hitMax) {
-      console.log('[WARN] Wordspace at min/max: ' + wordSpacingEm);
+      console.log('[WARN] line#'+lineIdx+' Wordspace at max: ' + wordSpacingEm);
       break;
     }
   }

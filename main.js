@@ -96,7 +96,7 @@ let cpadding = window.getComputedStyle(domDisplay).padding;
 let constraints = { None: 0, Shorter: 1, Longer: 2 };
 let padfloat = parseFloat(cpadding.replace('px', ''));
 let padding = (padfloat && padfloat !== NaN) ? padfloat : 40;
-let radius = displayBounds.width / 2, dbug = true;
+let radius = displayBounds.width / 2, dbug = false;
 
 if (dbug) {
   highlightWs = true;
@@ -145,21 +145,24 @@ function contextualRandom(wordIdx, word, similars, opts) {
   let lineEle = wordEle.parentElement.parentElement;
   let lineIdx = parseInt(lineEle.id.slice(1));
   let targetWidth = initialMetrics.lineWidths[lineIdx];
+  let contentWidth = initialMetrics.contentWidths[lineIdx];
+  let direction = targetWidth - contentWidth > 0 ? 'reduce' : 'increase';
   let wordSpacingEm = getWordSpaceEm(lineEle);
   let hstack = history[state.domain][wordIdx];
   let lastIndex = hstack.length > 1 ? hstack.length - 2 : hstack.length - 1;
-  let last = hstack[lastIndex];
+  let last = hstack[lastIndex], msg = '';
   let options = similars.filter((cand, i) => {
     if (cand !== last) {
       let ws = wordSpaceForSub(lineEle, lineIdx, wordEle, cand, targetWidth, wordSpacingEm);
       let ok = ws >= minWordSpace && ws <= maxWordSpace * .99;
-      //console.log(i, cand, ws, ok);
+      msg += '\n' + i + ') ' + cand + ' ws=' + ws + ' valid=' + ok;
       return ok;
     }
   });
 
   if (options.length === 0) {
-    console.log('[WARN] line#'+lineIdx+' no good opts for ' + word + ' ' + JSON.stringify(similars));
+    console.log('[WARN] line#' + lineIdx + ' no valid option to ' + direction
+      + ' wordspace for "' + word + '" in ' + JSON.stringify(similars), msg);
     options = similars;
   }
   else {
@@ -205,7 +208,8 @@ function doLayout() {
   let opts = { offset, fontFamily, lineHeightScale, padding };
   let lines = layoutCircularLines(sources[state.domain], initRadius, opts);
   initialMetrics = createCircularDOM(domDisplay, initRadius, lines);
-
+  initialMetrics.contentWidths = initialMetrics.lineWidths.map((_, i) => getLineWidth(i));
+  console.log(initialMetrics);
   scaleToFit(); // size to window 
   adjustAllWordSpacing(adjustInitialWordspacing);
 }
@@ -390,7 +394,7 @@ function restore() {
     let word = sources[domain][id], hist = history[domain][id];
     console.log('[WARN] Invalid-state, numMods:'
       + numMods() + ' idx=' + id + '/' + word + ' history=', hist);
-    displayWords.forEach((w,i) => console.log(i, w, JSON.stringify(history[domain][i])));
+    displayWords.forEach((w, i) => console.log(i, w, JSON.stringify(history[domain][i])));
     return stop();
   }
 
