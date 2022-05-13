@@ -95,7 +95,7 @@ let fontFamily = window.getComputedStyle(domDisplay).fontFamily;
 let cpadding = window.getComputedStyle(domDisplay).padding;
 let constraints = { None: 0, Shorter: 1, Longer: 2 };
 let padfloat = parseFloat(cpadding.replace('px', ''));
-let padding = (padfloat && padfloat !== NaN) ? padfloat : 40;
+let padding = (padfloat && padfloat !== NaN) ? padfloat : 45;
 let radius = displayBounds.width / 2, dbug = false;
 
 if (dbug) {

@@ -189,10 +189,6 @@ const fitToLineWidths = function (offset, radius, words, metrics) {
   let text = [], rects = lineWidths(offset, radius, leading);
   rects.forEach(([x, y, w, h], i) => {
     let data = fitToBox(tokens, w, fontSize, fontFamily, wordSpacing);
-    if (!data) { // fail to fit any words
-      text.push('');
-      return;
-    }
     text.push(data.used);
     tokens = data.unused;
   });
@@ -206,15 +202,20 @@ const fitToLineWidths = function (offset, radius, words, metrics) {
 const fitToBox = function (words, maxWidth, fontSize, fontName, wordSpacing) {
   // caculation in scale=1, not current scale
   //console.log('fitToBox', words, width, fontSize);
+  if (words.length === 0) return {
+    unused: words, used: "",
+  }; // no more word, line should be empty
   let i = 1, line = {
     text: words[0],
     width: measureWidth(words[0], fontSize, fontName, wordSpacing)
   };
 
-  if (line.width > maxWidth) return; // can't fit first word
+  if (line.width > maxWidth) return {
+    unused: words, used: "",
+  }; // can't fit first word, line should be empty
 
   for (let n = words.length; i < n; ++i) {
-    let next = ' ' + words[i];
+    let next = (RiTa.isPunct(words[i]) ? '' : ' ') + words[i];
     let nextWidth = measureWidth(next, fontSize, fontName, wordSpacing);
     if (line.width + nextWidth > maxWidth) break; // done
     line.text += next;
