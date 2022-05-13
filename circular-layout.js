@@ -271,6 +271,7 @@ const getLineWidth = function (line, wordSpacing) {
   let currentSpacing = lineEle.style.wordSpacing;
   if (wordSpacing) lineEle.style.wordSpacing = wordSpacing + "em"; // set ws
   let contentSpan = lineEle.firstChild;
+  if (!contentSpan) return 0
   let width = contentSpan.getBoundingClientRect().width / getScaleRatio();
   if (wordSpacing) lineEle.style.wordSpacing = currentSpacing; // reset ws
   return width;
