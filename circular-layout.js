@@ -241,22 +241,30 @@ const measureWidth = function (text, fontSizePx = 12, fontName = fontFamily, wor
 let canvasCtx; // don't recreate canvas
 
 const chordLength = function (rad, d) {
-  return 2 * Math.sqrt(rad * rad - (rad - d) * (rad - d));
+  // d is the distance to the circle center
+  return 2 * Math.sqrt(rad * rad - d*d);
 }
 
 const lineWidths = function (center, rad, lh) {
+  // should start from middle
   let result = [];
-  let num = Math.floor((rad * 2) / lh);
-  let gap = ((rad * 2) - (lh * num)) / 2;
-  for (let i = 0; i < num; i++) {
-    let d = gap + lh / 2 + (i * lh); // distance from top to the middle of the textline
-    let cl = chordLength(rad, d > rad ? d + lh : d);
-    let x = center.x - cl / 2;
-    let y = center.y - (rad - d + lh / 2);
-    if (cl) {
-      //console.log(i, d, d > r, cl);
-      result.push([x, y, cl, lh]);
-    }
+  let halfLh = lh/2;
+  let middlecl = chordLength(rad, halfLh);
+  result.push([center.x - middlecl/2, center.y - halfLh, middlecl, lh]); // the middle one
+  let numInEachPart = Math.floor((rad - halfLh) / lh);
+  let gap = (rad - numInEachPart * lh) / (numInEachPart + 1);
+  // fill in upper part
+  for (let i = 0; i < numInEachPart; i++) {
+    let d = (i+1) * (gap + lh) + halfLh; // distance to rect top
+    let cl = chordLength(rad, d);
+    if (cl) result.unshift([center.x - cl/2, center.y - d, cl, lh]);
+  }
+  // fill in lower part
+  for (let i = 0; i < numInEachPart; i++) {
+    let d = i * lh + (i+1) * gap + halfLh; // distance to rect top
+    let d2 = (i+1) * (gap + lh) + halfLh; // distance to rect bottom
+    let cl = chordLength(rad, d2);
+    if (cl) result.push([center.x - cl/2, center.y + d, cl, lh])
   }
   return result;
 }
