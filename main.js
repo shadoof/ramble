@@ -5,7 +5,7 @@ let walks = { short: 2, long: 16 };
 let stepsPerLeg = 50;
 
 // time between word replacements (ms)
-let updateDelay = 500
+let updateDelay = 800
 
 // time on new text before updates (ms) 
 let readDelay = stepsPerLeg * updateDelay * 2;
@@ -94,7 +94,6 @@ let displayBounds = domDisplay.getBoundingClientRect();
 let reader, worker, spans, initialMetrics;
 let fontFamily = window.getComputedStyle(domDisplay).fontFamily;
 let cpadding = window.getComputedStyle(domDisplay).padding;
-let constraints = { None: 0, Shorter: 1, Longer: 2 };
 let padfloat = parseFloat(cpadding.replace('px', ''));
 let padding = (padfloat && padfloat !== NaN) ? padfloat : 50;
 let radius = displayBounds.width / 2, dbug = false;
@@ -154,7 +153,7 @@ function contextualRandom(wordIdx, word, similars, opts) {
   let last = hstack[lastIndex];
 
   return RiTa.random(similars);
-  
+
   if (similars.length === 1 && similars[0] === last) {
     console.warn('[WARN] @' + wordIdx + '.' + lineIdx
       + ' single option for "' + word + '", reusing "' + last + '"');
@@ -220,19 +219,18 @@ function doLayout() {
 
   // layout lines in circular display
   let initRadius = Math.max(radius, 450);
-  let offset = { x: displayBounds.x + initRadius, y: displayBounds.y + initRadius };
-  let opts = { offset, fontFamily, lineHeightScale, padding };
+  let offset = { x: displayBounds.x + initRadius, y: displayBounds.y + initRadius - 5 };
+  let opts = { offset, fontFamily, lineHeightScale, wordSpace: initialWordSpace, padding };
   let lines = layoutCircularLines(sources[state.domain], initRadius, opts);
   initialMetrics = createCircularDOM(domDisplay, initRadius, lines);
   initialMetrics.contentWidths = initialMetrics.lineWidths.map((_, i) => getLineWidth(i));
-  console.log(initialMetrics);
 
   progressBarsBaseMatrix = [
-    [1,0,0,1,0,0], // bg
-    [1,0,0,1,0,0], // free
-    [-1,0,0,1,initRadius*2,0], //shared
-    [-1,0,0,1,initRadius*2,0], //urban
-    [1,0,0,1,0,0], //rural
+    [1, 0, 0, 1, 0, 0], // bg
+    [1, 0, 0, 1, 0, 0], // free
+    [-1, 0, 0, 1, initRadius * 2, 0], //shared
+    [-1, 0, 0, 1, initRadius * 2, 0], //urban
+    [1, 0, 0, 1, 0, 0], //rural
   ];
   // create progress bars
   progressBars = createProgressBars({
@@ -250,7 +248,7 @@ function adjustAllWordSpacing(isDynamic) {
     }
     else {
       ["max-word-spacing", "min-word-spacing"]
-        .forEach(c => {if (l.firstChild) l.firstChild.classList.remove(c)});
+        .forEach(c => { if (l.firstChild) l.firstChild.classList.remove(c) });
     }
   });
 }
@@ -265,7 +263,7 @@ function ramble() {
 
   if (!reader) { // first time
 
-    log(`Opts { read: ${readDelay}ms, update: ${updateDelay}ms }`);
+    log(`opts { read: ${readDelay}ms, update: ${updateDelay}ms }`);
 
     if (!worker) {
       worker = new Worker("similars.js");
@@ -575,14 +573,14 @@ function swapDomain() {
     let p = document.getElementById("progress2");
     p.classList.add('shared-rural');
     p.classList.remove('shared-urban');
-    progressBarsBaseMatrix[2] = [-1,0,0,1,initialMetrics.radius * 2, 0];
-    updateProgressBar(p, 2,progressBarsBaseMatrix, radius / initialMetrics.radius);
+    progressBarsBaseMatrix[2] = [-1, 0, 0, 1, initialMetrics.radius * 2, 0];
+    updateProgressBar(p, 2, progressBarsBaseMatrix, radius / initialMetrics.radius);
   } else {
     let p = document.getElementById("progress2");
     p.classList.remove('shared-rural');
     p.classList.add('shared-urban');
-    progressBarsBaseMatrix[2] = [1,0,0,1,0,0];
-    updateProgressBar(p, 2,progressBarsBaseMatrix,radius / initialMetrics.radius);
+    progressBarsBaseMatrix[2] = [1, 0, 0, 1, 0, 0];
+    updateProgressBar(p, 2, progressBarsBaseMatrix, radius / initialMetrics.radius);
   }
 }
 
@@ -619,8 +617,8 @@ function scaleToFit() {
   let scaleRatio = radius / initialMetrics.radius;
   initialMetrics.textDisplay.style.transform = "scale(" + scaleRatio + ")";
   domLegend.style.transform = "scale(" + scaleRatio + ")";
-  document.querySelectorAll(".progress").forEach((p,i)=> {
-    updateProgressBar(p,i,progressBarsBaseMatrix,scaleRatio);
+  document.querySelectorAll(".progress").forEach((p, i) => {
+    updateProgressBar(p, i, progressBarsBaseMatrix, scaleRatio);
   });
   displayContainer.style.marginTop = 0.1 * radius + "px";
   if (!dbug) displayContainer.addEventListener("mousemove", hideCursor);

@@ -232,6 +232,6 @@ function updateProgressBar(p, i, m, r) {
   })
   str = str.substring(0,str.length - 1);
   str += ")";
-  console.log(str);
+  //console.log(str);
   p.style.transform = str;
 }

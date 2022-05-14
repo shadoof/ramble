@@ -14,14 +14,14 @@ const layoutCircularLines = function (words, radius, opts = {}) {
   let offset = opts.offset || { x: 0, y: 0 };
   let lineHeightScale = opts.lineHeightScale || 1.2;
 
-  let wordSpacing = opts.wordSpacing || initialWordSpace;
+  let wordSpace = opts.wordSpace || 0;
   let fontFamily = opts.fontFamily || 'times';
   let fontSize = radius / 4, result;
 
   do {
     fontSize -= 0.1;
     let leading = fontSize * lineHeightScale;
-    let metrics = { fontFamily, fontSize, leading, wordSpacing };
+    let metrics = { fontFamily, fontSize, leading, wordSpacing: wordSpace };
     result = fitToLineWidths(offset, radius - padding, words, metrics);
   }
   while (result.words.length);
@@ -29,7 +29,7 @@ const layoutCircularLines = function (words, radius, opts = {}) {
   //if (opts.forceFontSize) fontSize = opts.forceFontSize;
 
   let answer = result.rects.map((r, i) => ({
-    fontSize, wordSpacing, bounds: r, text: result.text[i], fontFamily
+    fontSize, wordSpacing: wordSpace, bounds: r, text: result.text[i], fontFamily
   }));
 
   return answer; // [fontSize, wordSpacing, bounds, text, fontFamily]
