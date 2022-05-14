@@ -221,7 +221,7 @@ function adjustAllWordSpacing(isDynamic) {
     }
     else {
       ["max-word-spacing", "min-word-spacing"]
-        .forEach(c => l.firstChild.classList.remove(c));
+        .forEach(c => {if (l.firstChild) l.firstChild.classList.remove(c)});
     }
   });
 }
