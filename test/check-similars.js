@@ -77,20 +77,21 @@ function findSimilarsX(word, pos) {
   return sims;
 }
 
-function quotify(arr) {
+function quotify(arr) { 
   return JSON.stringify(arr).replace(/["]/g, "'");//arr.map((a,i) => {" '" + a + "',").join('');
 }
+
 function isReplaceable(word, state) {
   //console.log(state);
   let { stops, minWordLength } = state;
   return (word.length >= minWordLength || overrides[word])
     && !stops.includes(word);
 }
+
 ////////////////////////////////////////////////////////
 let missing = ["animal/jj", "sunset/nn", "most/rbs", "circadian/nn", "simply/rb", "will/md",
   "familiar/jj", "mildly/rb", "marshaling/vbg", "singular/jj", "since/in", "beyond/in", 
 ];
-
 
 missing.forEach((w, i) => {
   let [word,pos] = w.split('/');
