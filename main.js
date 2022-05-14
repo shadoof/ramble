@@ -95,7 +95,7 @@ let fontFamily = window.getComputedStyle(domDisplay).fontFamily;
 let cpadding = window.getComputedStyle(domDisplay).padding;
 let constraints = { None: 0, Shorter: 1, Longer: 2 };
 let padfloat = parseFloat(cpadding.replace('px', ''));
-let padding = (padfloat && padfloat !== NaN) ? padfloat : 40;
+let padding = (padfloat && padfloat !== NaN) ? padfloat : 45;
 let radius = displayBounds.width / 2, dbug = false;
 
 if (dbug) {
@@ -197,11 +197,6 @@ function doLayout() {
     scaleToFit();
   }
 
-  // create progress bars
-  progressBars = createProgressBars({
-    color: visBandColors, trailColor: visBandColors[4], strokeWidth: visBandWidth
-  });
-
   // layout lines in circular display
   let initRadius = Math.max(radius, 450);
   let offset = { x: displayBounds.x + initRadius, y: displayBounds.y + initRadius };
@@ -210,6 +205,10 @@ function doLayout() {
   initialMetrics = createCircularDOM(domDisplay, initRadius, lines);
   initialMetrics.contentWidths = initialMetrics.lineWidths.map((_, i) => getLineWidth(i));
   console.log(initialMetrics);
+   // create progress bars
+   progressBars = createProgressBars({
+    color: visBandColors, trailColor: visBandColors[4], strokeWidth: visBandWidth
+  });
   scaleToFit(); // size to window 
   adjustAllWordSpacing(adjustInitialWordspacing);
 }
@@ -585,6 +584,9 @@ function scaleToFit() {
   let scaleRatio = radius / initialMetrics.radius;
   initialMetrics.textDisplay.style.transform = "scale(" + scaleRatio + ")";
   domLegend.style.transform = "scale(" + scaleRatio + ")";
+  document.querySelectorAll(".progress").forEach(p => {
+    p.style.transform = "scale(" + scaleRatio + ")";
+  });
   displayContainer.style.marginTop = 0.1 * radius + "px";
   if (!dbug) displayContainer.addEventListener("mousemove", hideCursor);
   progressBounds = document.getElementById("progress4")
