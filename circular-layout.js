@@ -189,6 +189,10 @@ const fitToLineWidths = function (offset, radius, words, metrics) {
   let text = [], rects = lineWidths(offset, radius, leading);
   rects.forEach(([x, y, w, h], i) => {
     let data = fitToBox(tokens, w, fontSize, fontFamily, wordSpacing);
+    if (!data) { // fail to fit any words
+      text.push('');
+      return;
+    }
     text.push(data.used);
     tokens = data.unused;
   });
@@ -202,20 +206,15 @@ const fitToLineWidths = function (offset, radius, words, metrics) {
 const fitToBox = function (words, maxWidth, fontSize, fontName, wordSpacing) {
   // caculation in scale=1, not current scale
   //console.log('fitToBox', words, width, fontSize);
-  if (words.length === 0) return {
-    unused: words, used: "",
-  }; // no more word, line should be empty
   let i = 1, line = {
     text: words[0],
     width: measureWidth(words[0], fontSize, fontName, wordSpacing)
   };
 
-  if (line.width > maxWidth) return {
-    unused: words, used: "",
-  }; // can't fit first word, line should be empty
+  if (line.width > maxWidth) return; // can't fit first word
 
   for (let n = words.length; i < n; ++i) {
-    let next = (RiTa.isPunct(words[i]) ? '' : ' ') + words[i];
+    let next = ' ' + words[i];
     let nextWidth = measureWidth(next, fontSize, fontName, wordSpacing);
     if (line.width + nextWidth > maxWidth) break; // done
     line.text += next;
@@ -242,30 +241,22 @@ const measureWidth = function (text, fontSizePx = 12, fontName = fontFamily, wor
 let canvasCtx; // don't recreate canvas
 
 const chordLength = function (rad, d) {
-  // d is the distance to the circle center
-  return 2 * Math.sqrt(rad * rad - d*d);
+  return 2 * Math.sqrt(rad * rad - (rad - d) * (rad - d));
 }
 
 const lineWidths = function (center, rad, lh) {
-  // should start from middle
   let result = [];
-  let halfLh = lh/2;
-  let middlecl = chordLength(rad, halfLh);
-  result.push([center.x - middlecl/2, center.y - halfLh, middlecl, lh]); // the middle one
-  let numInEachPart = Math.floor((rad - halfLh) / lh);
-  let gap = (rad - numInEachPart * lh) / (numInEachPart + 1);
-  // fill in upper part
-  for (let i = 0; i < numInEachPart; i++) {
-    let d = (i+1) * (gap + lh) + halfLh; // distance to rect top
-    let cl = chordLength(rad, d);
-    if (cl) result.unshift([center.x - cl/2, center.y - d, cl, lh]);
-  }
-  // fill in lower part
-  for (let i = 0; i < numInEachPart; i++) {
-    let d = i * lh + (i+1) * gap + halfLh; // distance to rect top
-    let d2 = (i+1) * (gap + lh) + halfLh; // distance to rect bottom
-    let cl = chordLength(rad, d2);
-    if (cl) result.push([center.x - cl/2, center.y + d, cl, lh])
+  let num = Math.floor((rad * 2) / lh);
+  let gap = ((rad * 2) - (lh * num)) / 2;
+  for (let i = 0; i < num; i++) {
+    let d = gap + lh / 2 + (i * lh); // distance from top to the middle of the textline
+    let cl = chordLength(rad, d > rad ? d + lh : d);
+    let x = center.x - cl / 2;
+    let y = center.y - (rad - d + lh / 2);
+    if (cl) {
+      //console.log(i, d, d > r, cl);
+      result.push([x, y, cl, lh]);
+    }
   }
   return result;
 }
@@ -280,7 +271,6 @@ const getLineWidth = function (line, wordSpacing) {
   let currentSpacing = lineEle.style.wordSpacing;
   if (wordSpacing) lineEle.style.wordSpacing = wordSpacing + "em"; // set ws
   let contentSpan = lineEle.firstChild;
-  if (!contentSpan) return 0
   let width = contentSpan.getBoundingClientRect().width / getScaleRatio();
   if (wordSpacing) lineEle.style.wordSpacing = currentSpacing; // reset ws
   return width;
