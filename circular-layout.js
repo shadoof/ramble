@@ -106,7 +106,7 @@ const adjustWordSpace = function (lineEle, targetWidth, opts) {
   if (!initialMetrics) throw Error('requires initialMetrics');
 
   if (highlightWs) ["max-word-spacing", "min-word-spacing"]
-    .forEach(c => lineEle.firstChild.classList.remove(c));
+    .forEach(c => {if(lineEle.firstChild) lineEle.firstChild.classList.remove(c)});
 
   //let restore = opts && opts.restore;
   let radius = initialMetrics.radius;
@@ -136,8 +136,10 @@ const adjustWordSpace = function (lineEle, targetWidth, opts) {
   }
 
   if (/*!restore && */highlightWs && (hitMin || hitMax)) { // debugging only
-    if (hitMax) lineEle.firstChild.classList.add("max-word-spacing");
-    if (hitMin) lineEle.firstChild.classList.add("min-word-spacing");
+    if (lineEle.firstChild) {
+      if (hitMax) lineEle.firstChild.classList.add("max-word-spacing");
+      if (hitMin) lineEle.firstChild.classList.add("min-word-spacing");
+    }
   }
 
   //  if (restore) lineEle.style.wordSpacing = originalWordSpacing + "em";
@@ -240,11 +242,11 @@ const measureWidth = function (text, fontSizePx = 12, fontName = fontFamily, wor
 }
 let canvasCtx; // don't recreate canvas
 
-const chordLength = function (rad, d) {
+const chordLength_old = function (rad, d) {
   return 2 * Math.sqrt(rad * rad - (rad - d) * (rad - d));
 }
 
-const lineWidths = function (center, rad, lh) {
+const lineWidths_old = function (center, rad, lh) {
   let result = [];
   let num = Math.floor((rad * 2) / lh);
   let gap = ((rad * 2) - (lh * num)) / 2;
@@ -261,6 +263,50 @@ const lineWidths = function (center, rad, lh) {
   return result;
 }
 
+const chordLength = function(rad, dis){
+  return 2 * Math.sqrt(rad * rad - dis * dis);
+}
+
+const lineWidths = function(center, rad, lh) {
+  let numOfLine = Math.floor((2 * rad) / lh);
+  let gap = ((2 * rad) - (numOfLine * lh)) / (numOfLine + 1);
+  if (numOfLine % 2 === 1) {
+    let numInEachPart = (numOfLine - 1) / 2;
+    let halfLh = lh/2;
+    let middleCl = chordLength(rad, halfLh);
+    let result = [[center.x - middleCl/2, center.y - halfLh, middleCl, lh]];
+    for (let i = 0; i < numInEachPart; i++) {
+      let d = halfLh + ((i + 1) * (gap + lh));
+      let cl = chordLength(rad, d);
+      if (cl) result.unshift([center.x - cl/2, center.y - d, cl, lh]);
+    }
+    for (let i = 0; i < numInEachPart; i++) {
+      let d = halfLh + (i * lh + (i + 1) * gap);
+      let d2 = halfLh + ((i + 1) * (gap + lh));
+      let cl = chordLength(rad, d2);
+      if (cl) result.push([center.x - cl/2, center.y + d, cl, lh]);
+    }
+    return result;
+  } else {
+    let numInEachPart = (numOfLine / 2) - 1;
+    let halfGap = gap/2;
+    let middleCl = chordLength(rad, lh + halfGap);
+    let result = [[center.x - middleCl/2, center.y - (halfGap + lh), middleCl, lh], [center.x - middleCl/2, center.y + (halfGap), middleCl, lh]];
+    for (let i = 0; i < numInEachPart; i++) {
+      let d = (halfGap + lh) + ((i + 1) * (gap + lh));
+      let cl = chordLength(rad, d);
+      if (cl) result.unshift([center.x - cl/2, center.y - d, cl, lh]);
+    }
+    for (let i = 0; i < numInEachPart; i++) {
+      let d = (halfGap + lh) + (i * lh + (i + 1) * gap);
+      let d2 = (halfGap + lh) + ((i + 1) * (gap + lh));
+      let cl = chordLength(rad, d2);
+      if (cl) result.push([center.x - cl/2, center.y + d, cl, lh]);
+    }
+    return result;
+  }
+}
+
 const getLineWidth = function (line, wordSpacing) {
   // return value in scaleRatio = 1 (initial state)
   if (line instanceof HTMLElement) {
@@ -271,7 +317,7 @@ const getLineWidth = function (line, wordSpacing) {
   let currentSpacing = lineEle.style.wordSpacing;
   if (wordSpacing) lineEle.style.wordSpacing = wordSpacing + "em"; // set ws
   let contentSpan = lineEle.firstChild;
-  let width = contentSpan.getBoundingClientRect().width / getScaleRatio();
+  let width = !contentSpan ? 0 : contentSpan.getBoundingClientRect().width / getScaleRatio();
   if (wordSpacing) lineEle.style.wordSpacing = currentSpacing; // reset ws
   return width;
 }
