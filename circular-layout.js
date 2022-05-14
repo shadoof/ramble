@@ -275,12 +275,12 @@ const lineWidths = function(center, rad, lh) {
     let halfLh = lh/2;
     let middleCl = chordLength(rad, halfLh);
     let result = [[center.x - middleCl/2, center.y - halfLh, middleCl, lh]];
-    for (let i = 0; i < numInEachPart; i++) {
+    for (let i = 0; i < numInEachPart - 1; i++) {
       let d = halfLh + ((i + 1) * (gap + lh));
       let cl = chordLength(rad, d);
       if (cl) result.unshift([center.x - cl/2, center.y - d, cl, lh]);
     }
-    for (let i = 0; i < numInEachPart; i++) {
+    for (let i = 0; i < numInEachPart - 1; i++) {
       let d = halfLh + (i * lh + (i + 1) * gap);
       let d2 = halfLh + ((i + 1) * (gap + lh));
       let cl = chordLength(rad, d2);
@@ -292,12 +292,12 @@ const lineWidths = function(center, rad, lh) {
     let halfGap = gap/2;
     let middleCl = chordLength(rad, lh + halfGap);
     let result = [[center.x - middleCl/2, center.y - (halfGap + lh), middleCl, lh], [center.x - middleCl/2, center.y + (halfGap), middleCl, lh]];
-    for (let i = 0; i < numInEachPart; i++) {
+    for (let i = 0; i < numInEachPart - 1; i++) {
       let d = (halfGap + lh) + ((i + 1) * (gap + lh));
       let cl = chordLength(rad, d);
       if (cl) result.unshift([center.x - cl/2, center.y - d, cl, lh]);
     }
-    for (let i = 0; i < numInEachPart; i++) {
+    for (let i = 0; i < numInEachPart - 1; i++) {
       let d = (halfGap + lh) + (i * lh + (i + 1) * gap);
       let d2 = (halfGap + lh) + ((i + 1) * (gap + lh));
       let cl = chordLength(rad, d2);

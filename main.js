@@ -11,7 +11,7 @@ let updateDelay = 500
 let readDelay = stepsPerLeg * updateDelay * 2;
 
 // min/max/start CSS word-spacing (em)
-let minWordSpace = -0.1, maxWordSpace = 0.5, initialWordSpace = 0.22;
+let minWordSpace = -0.1, maxWordSpace = 0.5, initialWordSpace = 0.1;
 
 // leading for text display
 let lineHeightScale = 1.28;
@@ -96,7 +96,7 @@ let fontFamily = window.getComputedStyle(domDisplay).fontFamily;
 let cpadding = window.getComputedStyle(domDisplay).padding;
 let constraints = { None: 0, Shorter: 1, Longer: 2 };
 let padfloat = parseFloat(cpadding.replace('px', ''));
-let padding = (padfloat && padfloat !== NaN) ? padfloat : 40;
+let padding = (padfloat && padfloat !== NaN) ? padfloat : 50;
 let radius = displayBounds.width / 2, dbug = false;
 
 if (dbug) {
