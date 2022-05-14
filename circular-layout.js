@@ -130,7 +130,7 @@ const adjustWordSpace = function (lineEle, targetWidth, opts) {
     if (wordSpacingEm === minWordSpace) hitMin = true;
     if (wordSpacingEm === maxWordSpace) hitMax = true;
     if (hitMin || hitMax) {
-      console.log('[WARN] line#'+lineIdx+' Wordspace at max: ' + wordSpacingEm);
+      //console.log('[WARN] @'+lineIdx+' Wordspace at max: ' + wordSpacingEm);
       break;
     }
   }

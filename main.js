@@ -45,7 +45,8 @@ let similarOverrides = {
   particularly: ['specifically', 'generally', 'aptly'],
   unsettled: ['unresolved', 'uncertain', 'undecided', 'rootless'],
   dip: ['blip', 'chip', 'clip', 'drip', 'grip', 'microchip', 'quip', 'roundtrip', 'ship', 'slip', 'snip', 'strip', 'trip', 'whip'],
-  set: ['caressed', 'digressed', 'forget', 'progressed', 'redressed', 'regressed', 'seat']
+  set: ['caressed', 'digressed', 'forget', 'progressed', 'redressed', 'regressed', 'seat'],
+  sunset: ['dawning', 'daybreak', 'daylight', 'morning', 'sunrise', 'sunup', 'daytime', 'forenoon', 'crepuscule', 'dusk', 'evening', 'gloaming', 'night', 'nightfall', 'sundown', 'twilight', 'subset', 'inset', 'alphabet', 'mindset', 'quintet'],
 };
 
 // words considered un-replaceable
@@ -117,14 +118,14 @@ const wordSpaceForSub = function (lineEle, lineIdx, wordEle, newWord, targetWidt
 
   // loop from min-to-max to find needed word-spacing for target-width
   let closeEnough = radius / 100, wordSpacingEm = minWordSpace;
-  let step = 0.05, currentWidth = Infinity, failed = false;
+  let step = 0.01, currentWidth = Infinity, failed = false;
   while (Math.abs(currentWidth - targetWidth) > closeEnough) {
     lineEle.style.wordSpacing = wordSpacingEm + "em";
     currentWidth = getLineWidth(lineIdx);
     //console.log('ws=', wordSpacingEm, '->' + currentWidth);
-    if (wordSpacingEm >= maxWordSpace || currentWidth > (targetWidth + closeEnough)) { // fail
+    if (0 && wordSpacingEm >= maxWordSpace || currentWidth > (targetWidth + closeEnough)) { // fail
       failed = true;
-      break;
+      break; // short-circuit
     }
     wordSpacingEm += step;
   }
@@ -150,35 +151,55 @@ function contextualRandom(wordIdx, word, similars, opts) {
   let wordSpacingEm = getWordSpaceEm(lineEle);
   let hstack = history[state.domain][wordIdx];
   let lastIndex = hstack.length > 1 ? hstack.length - 2 : hstack.length - 1;
-  let last = hstack[lastIndex], msg = '';
+  let last = hstack[lastIndex];
+
+  return RiTa.random(similars);
+  
+  if (similars.length === 1 && similars[0] === last) {
+    console.warn('[WARN] @' + wordIdx + '.' + lineIdx
+      + ' single option for "' + word + '", reusing "' + last + '"');
+    return last;
+  }
+
+  let relaxConstraints = false;
+  let currentRealWs = wordSpaceForSub(lineEle, lineIdx, wordEle, word, targetWidth, wordSpacingEm);
+  let dbug = 1, msg = dbug ? '\n       -- ' + word + ' ws=' + currentRealWs : 0;
+  let wordSpaceList = Array(similars.length).fill(Infinity);
   let options = similars.filter((cand, i) => {
     if (cand !== last) {
       let ws = wordSpaceForSub(lineEle, lineIdx, wordEle, cand, targetWidth, wordSpacingEm);
       let ok = ws >= minWordSpace && ws <= maxWordSpace * .99;
-      msg += '\n' + i + ') ' + cand + ' ws=' + ws + ' valid=' + ok;
+      if (dbug) msg += '\n       ' + i + ') ' + cand + ' ws=' + ws + ' valid=' + ok;
+      wordSpaceList[i] = ws;
       return ok;
     }
   });
 
   if (options.length === 0) {
-    console.log('[WARN] line#' + lineIdx + ' no valid option to ' + direction
-      + ' wordspace for "' + word + '" in ' + JSON.stringify(similars), msg);
     options = similars;
+    if (false) {
+      relaxConstraints = true;
+      options = similars.filter((cand, i) => cand !== last && wordSpaceList[i] < currentRealWs);
+      if (dbug) msg = '[WARN] line#' + lineIdx + ' no ideal options to ' + direction
+        + ' wordspace for "' + word + '" in\n       [' + similars + ']' + msg;
+      if (options.length === 0 || (options.length === 1 && options[0] === last)) {
+        if (dbug) msg += '\n      cannot reduce set ***';
+        options = similars;
+      }
+      else {
+        if (dbug) msg += '\n       reducing set to [' + options + ']';
+      }
+      console.log(msg);
+    }
   }
   else {
     //console.log('found '+options.length+' sims: '+JSON.stringify(options));
   }
 
   let result = RiTa.random(options);
-  // console.log(lineIdx + '/' + wordIdx + ') ' + word + ' -> ' + result,
-  //   'currentWs=', wordSpacingEm, 'targetWs=' + targetWidth, 'last=', last);
-  //wordEle.textContent = result;
-
-  // can we hit the target width with this word ?
-  //let ws = wordSpaceForSub(lineEle, lineIdx, wordEle, word, targetWidth, wordSpacingEm);
-  //adjustWordSpace(lineEle, targetWidth, { restore: true });
-  //console.log(lineIdx, 'ws=' + ws + ' for "' + lineEle.firstChild.innerText.replace(word, result) + '"');
-
+  if (dbug && relaxConstraints) console.log('@' + lineIdx + '.' + wordIdx + ' ' + word
+    + '->' + result + ' ws=' + wordSpacingEm + ' targetW=' + targetWidth + ' last=' + last);
+  //relaxConstraints && console.log('* SELECTED: ' + result);
   return result;
 }
 
@@ -316,10 +337,7 @@ function postReplace(e) {
 
   let { idx, dword, sword, dsims, ssims, timestamp } = e.data;
   let { domain, stepMode } = state;
-  if (idx < 0) {
-    // TODO: write cache
-    return;
-  }
+  if (idx < 0) { return; }// TODO: write cache here
 
   let shadow = shadowTextName();
   let delayMs, pos = sources.pos[idx];
@@ -337,22 +355,22 @@ function postReplace(e) {
 
     let ms = Date.now() - timestamp;
     delayMs = Math.max(1, updateDelay - ms);
-    if ((logging && verbose) || stepMode) console.log(`${numMods()}) @${idx} `
-      + `${dword}->${dnext}(${domain.substring(0, 1)}), `
-      + `${sword}->${snext}(${shadow.substring(0, 1)}) `
-      + `[${pos}] elapsed=${ms} delay=${delayMs}`);
+    if ((logging && verbose) || stepMode) {
+      console.log(`${numMods()}) @${lineIdFromWordId(idx)}.${idx} `
+        + `${dword}->${dnext}(${domain.substring(0, 1)}), `
+        + `${sword}->${snext}(${shadow.substring(0, 1)}) `
+        + `[${pos}] elapsed=${ms} delay=${delayMs}`);
+    }
     //console.log(`${numMods()}) ${Date.now()-ts}ms`);
     //ts = Date.now(); // timing
   }
   else {
-    console.warn(`[FAIL] @${idx} `
-      + `${dword}->${dsims.length}, `
-      + `${sword}->${ssims.length} [${pos}]`);
+    console.log(`[FAIL] @${lineIdFromWordId(idx)}.${idx} `
+      + `${dword}->${dsims.length}, ${sword}->${ssims.length} [${pos}]`);
   }
 
   if (!stepMode) state.loopId = setTimeout(ramble, delayMs);
 }
-
 
 /* selects an index to restore (from history) in displayed text */
 function restore() {
@@ -383,8 +401,10 @@ function restore() {
     // do replacement
     updateDOM(next, idx);
 
-    if ((logging && verbose) || stepMode) console.log(`${numMods()}] `
-      + `@${idx} ${domain}: ${word} -> ${next} [${pos}]`);
+    if ((logging && verbose) || stepMode) {
+      console.log(`${numMods()}] @${lineIdFromWordId(idx)}.${idx} `
+        + `${domain}: ${word} -> ${next} [${pos}]`);
+    }
 
     //console.log(`${numMods()}] ${Date.now()-ts}ms`);
     //ts = Date.now(); // perf. timing
@@ -569,7 +589,7 @@ function updateDOM(next, idx) {
 
   if (highlights) wordEle.classList.add(outgoing ? 'outgoing' : 'incoming');
   let wordSpace = adjustWordSpace(lineEle, initialMetrics.lineWidths[lineIdx]);
-  //console.log('line#' + lineIdx + ' wordSpace=' + wordSpace);//+'\n  '+ wordEle.parentElement.innerHTML);
+  //console.log('@' + lineIdx + '.'+idx+' wordSpace=' + wordSpace);//+'\n  '+ wordEle.parentElement.innerHTML);
 }
 
 function update(updating = true) {
@@ -604,6 +624,12 @@ function trunc(arr, len = 100) {
 function getWordSpaceEm(lineEle) {
   let wordSpacingPx = window.getComputedStyle(lineEle).wordSpacing.replace('px', '');
   return parseFloat(wordSpacingPx) / initialMetrics.fontSize; // px => em
+}
+
+function lineIdFromWordId(idx) {
+  let wordEle = document.getElementById("w" + idx);
+  let lineEle = wordEle.parentElement.parentElement;
+  return parseInt(lineEle.id.slice(1));
 }
 
 function between(actual, min, max, range = (max - min) / 10) {

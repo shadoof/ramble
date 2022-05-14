@@ -57,7 +57,7 @@ function findSimilars(idx, word, pos, state, timestamp) {
       && !sim.includes(word)
       && isReplaceable(word, state));
 
-    if (sims.length > 1) {
+    if (sims.length) {
       let elapsed = Date.now() - timestamp;
       similarCache[word] = sims; // to cache
       //console.log('[CACHE] (' + elapsed + 'ms) ' + word + '/' + pos

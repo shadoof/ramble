@@ -22,17 +22,18 @@ let overrides = {
   particularly: ['specifically', 'generally', 'aptly'],
   unsettled: ['unresolved', 'uncertain', 'undecided', 'rootless'],
   dip: ['blip', 'chip', 'clip', 'drip', 'grip', 'microchip', 'quip', 'roundtrip', 'ship', 'slip', 'snip', 'strip', 'trip', 'whip'],
-  set: ['caressed', 'digressed', 'forget', 'progressed', 'redressed', 'regressed', 'seat']
+  set: ['caressed', 'digressed', 'forget', 'progressed', 'redressed', 'regressed', 'seat'],
+  sunset: ['dawning', 'daybreak', 'daylight', 'morning', 'sunrise', 'sunup', 'daytime', 'forenoon', 'crepuscule', 'dusk', 'evening', 'gloaming', 'night', 'nightfall', 'sundown', 'twilight', 'subset', 'inset', 'alphabet', 'mindset', 'quintet']
 };
 
-let state = { sources, ignores }, similarCache = {};
+let state = { sources, ignores, stops, minWordLength }, similarCache = {};
 
 function findSimilars(idx, word, pos, state) {
 
   let { ignores, sources } = state;
   //console.log('findSimilars:', ignores, sources);
   let limit = -1;
-  if (word in similarCache) {
+  if (0 && word in similarCache) {
     return similarCache[word]; // from cache
   }
   else {
@@ -47,9 +48,9 @@ function findSimilars(idx, word, pos, state) {
       && !sim.includes(word)
       && isReplaceable(word, state));
 
-    if (sims.length > 1) {
-      let elapsed = Date.now() - timestamp;
-      similarCache[word] = sims; // to cache
+    if (sims.length) {
+      // let elapsed = Date.now() - timestamp;
+      // similarCache[word] = sims; // to cache
       //console.log('[CACHE] (' + elapsed + 'ms) ' + word + '/' + pos
       //+ ': ' + trunc(sims) + ' [' + Object.keys(similarCache).length + ']');
       return sims;
@@ -77,7 +78,7 @@ function findSimilarsX(word, pos) {
   return sims;
 }
 
-function quotify(arr) { 
+function quotify(arr) {
   return JSON.stringify(arr).replace(/["]/g, "'");//arr.map((a,i) => {" '" + a + "',").join('');
 }
 
@@ -90,13 +91,14 @@ function isReplaceable(word, state) {
 
 ////////////////////////////////////////////////////////
 let missing = ["animal/jj", "sunset/nn", "most/rbs", "circadian/nn", "simply/rb", "will/md",
-  "familiar/jj", "mildly/rb", "marshaling/vbg", "singular/jj", "since/in", "beyond/in", 
+  "familiar/jj", "mildly/rb", "marshaling/vbg", "singular/jj", "since/in", "beyond/in",
 ];
 
 missing.forEach((w, i) => {
-  let [word,pos] = w.split('/');
+  let [word, pos] = w.split('/');
   lookupWord(word, pos);
 });
+lookupWord('sunset', 'nn');
 
 function lookupWord(word, pos) {
   let idx, counter;//, word = 'animal';
@@ -112,16 +114,22 @@ function lookupWord(word, pos) {
   }
 
   if (typeof idx === 'undefined') {
-    console.log('remove '+word+'/'+pos);
+    console.log('remove ' + word + '/' + pos);
     return;
   }
   if (pos && pos !== sources.pos[idx]) {
-    throw Error(word + " '" + pos + '\'!=\'' + sources.pos[idx]+"'");
+    throw Error(word + " '" + pos + '\'!=\'' + sources.pos[idx] + "'");
   }
 
   let sims = findSimilars(idx, word, pos, state);
   let csims = findSimilars(idx, counter, pos, state);
-  // console.log(idx, word + '/' + counter, pos, word + ': '
-  //   + quotify(sims), word !== counter ? ('' + counter + ': ' + quotify(csims)) : '');
-  console.log('{ word: "'+word+'", pos: "'+pos+'" }'+(word !== counter ?', { word: "'+counter+'", pos: "'+pos+'"}':'')+',');
+  if (1) {
+    console.log(idx, word + '/' + counter, pos, word + ': '
+      + quotify(sims), word !== counter ? ('' + counter + ': ' + quotify(csims)) : '');
+  }
+  else {
+    console.log('{ word: "' + word + '", pos: "' + pos + '" }'
+      + (word !== counter ? ', { word: "' + counter + '", pos: "' + pos + '"}' : '') + ',');
+  }
+
 }
