@@ -163,6 +163,8 @@ function createProgressBars(opts = {}) {
   const pbars = [];
   let progress = document.querySelectorAll(".progress");
   progress.forEach((t, i) => {
+    t.style.width = initialMetrics.radius * 2 + "px";
+    t.style.height = initialMetrics.radius * 2 + "px";
     let pbar = new ProgressBar.Circle(t, {
       duration: opts.duration || (i > 0 ? 3000 : -100),
       // keep the absolute width same, see css options for strict bars
@@ -219,4 +221,17 @@ function hideCursor(e) {
   } else {
     displayContainer.classList.remove("hide-cursor");
   }
+}
+
+function updateProgressBar(p, i, m, r) {
+  let arr = m[i];
+  let str = "matrix(";
+  arr.forEach(n => {
+    let nstr = n * r + ",";
+    str += nstr;
+  })
+  str = str.substring(0,str.length - 1);
+  str += ")";
+  console.log(str);
+  p.style.transform = str;
 }

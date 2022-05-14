@@ -2,6 +2,7 @@ body {
   background: #fdfdfd;
   padding: 0;
   margin: 0;
+  overflow: hidden;
 }
 
 #center-wrapper {
@@ -47,58 +48,46 @@ body {
   vertical-align: middle;
 }
 
+#progress-bars {
+  aspect-ratio: 1;
+  min-width: 0;
+  z-index: 1;
+  height: 95%;
+  margin-left: auto;
+  margin-right: auto;
+  position: absolute;
+  vertical-align: middle;
+}
+
 .progress {
   position: absolute;
   width: auto;
   height: auto;
+  aspect-ratio: 1/1;
+  position: absolute;
+  transform-origin: top left;
+  -webkit-transform-origin: top left;
+  -moz-transform-origin: top left;
 }
 
 #progress0 {
   z-index: 0;
-  width: calc(calc(min(95vh, 95vw) - 50px)*0.98);
-  aspect-ratio: 1/1;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  -webkit-transform: translate(-50%, -50%);
-  -moz-transform: translate(-50%, -50%);
 }
 
 #progress1 {
   z-index: 1;
-  width: calc(calc(min(95vh, 95vw) - 50px)*0.98);
-  aspect-ratio: 1/1;
-  position: absolute;
-  top: 50%;
-  left: 50%;
 }
 
 #progress2 {
   z-index: 2;
-  width: calc(calc(min(95vh, 95vw) - 50px)*0.98);
-  aspect-ratio: 1/1;
-  position: absolute;
-  top: 50%;
-  left: 50%;
 }
 
 #progress3 {
   z-index: 3;
-  width: calc(calc(min(95vh, 95vw) - 50px)*0.98);
-  aspect-ratio: 1/1;
-  position: absolute;
-  top: 50%;
-  left: 50%;
 }
 
 #progress4 {
   z-index: 4;
-  width: calc(calc(min(95vh, 95vw) - 50px)*0.98);
-  aspect-ratio: 1/1;
-  position: absolute;
-  top: 50%;
-  left: 50%;
 }
 
 .word {
@@ -166,27 +155,27 @@ body {
 }
 
 .free {
-  transform: translate(-50%, -50%);
+  /* transform: translate(-50%, -50%);
   -webkit-transform: translate(-50%, -50%);
-  -moz-transform: translate(-50%, -50%);
+  -moz-transform: translate(-50%, -50%); */
 }
 
 .shared-urban {
-  transform: translate(-50%, -50%);
+  /* transform: translate(-50%, -50%);
   -webkit-transform: translate(-50%, -50%);
-  -moz-transform: translate(-50%, -50%);
+  -moz-transform: translate(-50%, -50%); */
 }
 
 .shared-rural {
-  transform: translate(-50%, -50%) scaleX(-1);
-  -webkit-transform: translate(-50%, -50%) scaleX(-1);
-  -moz-transform: translate(-50%, -50%) scaleX(-1);
+  /* transform: translate(50%, 0%) scaleX(-1);
+  -webkit-transform: translate(50%, 0%) scaleX(-1);
+  -moz-transform: translate(50%, 0%) scaleX(-1); */
 }
 
 .rural {
-  transform: translate(-50%, -50%);
+  /* transform: translate(-50%, -50%);
   -webkit-transform: translate(-50%, -50%);
-  -moz-transform: translate(-50%, -50%);
+  -moz-transform: translate(-50%, -50%); */
 }
 
 .rural-legend {
@@ -196,9 +185,9 @@ body {
 }
 
 .urban {
-  transform: translate(-50%, -50%) scaleX(-1);
-  -webkit-transform: translate(-50%, -50%) scaleX(-1);
-  -moz-transform: translate(-50%, -50%) scaleX(-1);
+  /* transform: translate(50%, 0%) scaleX(-1);
+  -webkit-transform: translate(50%, 0%) scaleX(-1);
+  -moz-transform: translate(50%, 0%) scaleX(-1); */
 }
 
 .urban-legend {

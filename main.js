@@ -197,11 +197,6 @@ function doLayout() {
     scaleToFit();
   }
 
-  // create progress bars
-  progressBars = createProgressBars({
-    color: visBandColors, trailColor: visBandColors[4], strokeWidth: visBandWidth
-  });
-
   // layout lines in circular display
   let initRadius = Math.max(radius, 450);
   let offset = { x: displayBounds.x + initRadius, y: displayBounds.y + initRadius };
@@ -210,6 +205,19 @@ function doLayout() {
   initialMetrics = createCircularDOM(domDisplay, initRadius, lines);
   initialMetrics.contentWidths = initialMetrics.lineWidths.map((_, i) => getLineWidth(i));
   console.log(initialMetrics);
+
+  progressBarsBaseMatrix = [
+    [1,0,0,1,0,0], // bg
+    [1,0,0,1,0,0], // free
+    [-1,0,0,1,initRadius*2,0], //shared
+    [-1,0,0,1,initRadius*2,0], //urban
+    [1,0,0,1,0,0], //rural
+  ];
+  // create progress bars
+  progressBars = createProgressBars({
+    color: visBandColors, trailColor: visBandColors[4], strokeWidth: visBandWidth
+  });
+
   scaleToFit(); // size to window 
   adjustAllWordSpacing(adjustInitialWordspacing);
 }
@@ -544,11 +552,17 @@ function swapDomain() {
   state.domain = shadowTextName();
   log(`Domain switch -> '${state.domain}'`);
   if (state.domain === 'rural') {
-    document.getElementById("progress2").classList.add('shared-rural');
-    document.getElementById("progress2").classList.remove('shared-urban');
+    let p = document.getElementById("progress2");
+    p.classList.add('shared-rural');
+    p.classList.remove('shared-urban');
+    progressBarsBaseMatrix[2] = [-1,0,0,1,initialMetrics.radius * 2, 0];
+    updateProgressBar(p, 2,progressBarsBaseMatrix, radius / initialMetrics.radius);
   } else {
-    document.getElementById("progress2").classList.remove('shared-rural');
-    document.getElementById("progress2").classList.add('shared-urban');
+    let p = document.getElementById("progress2");
+    p.classList.remove('shared-rural');
+    p.classList.add('shared-urban');
+    progressBarsBaseMatrix[2] = [1,0,0,1,0,0];
+    updateProgressBar(p, 2,progressBarsBaseMatrix,radius / initialMetrics.radius);
   }
 }
 
@@ -585,6 +599,9 @@ function scaleToFit() {
   let scaleRatio = radius / initialMetrics.radius;
   initialMetrics.textDisplay.style.transform = "scale(" + scaleRatio + ")";
   domLegend.style.transform = "scale(" + scaleRatio + ")";
+  document.querySelectorAll(".progress").forEach((p,i)=> {
+    updateProgressBar(p,i,progressBarsBaseMatrix,scaleRatio);
+  });
   displayContainer.style.marginTop = 0.1 * radius + "px";
   if (!dbug) displayContainer.addEventListener("mousemove", hideCursor);
   progressBounds = document.getElementById("progress4")
