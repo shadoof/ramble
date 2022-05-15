@@ -93,6 +93,13 @@ const createCircularDOM = function (target, initialRadius, lines) {
     radius: initialRadius
   };
 
+  let measureCanvas = document.createElement("canvas");
+  measureCanvas.id = "measure-ctx";
+  target.append(measureCanvas);
+
+  measureCtx = measureCanvas.getContext('2d');
+  measureCtx.font = fontSize + 'px ' + fontFamily
+  //console.log('measureCtx.font', measureCtx.font);
   domLegend = createLegend(initialMetrics);
 
   return initialMetrics;
@@ -101,6 +108,7 @@ const createCircularDOM = function (target, initialRadius, lines) {
 // adjust word-spacing to get as close to target-width given min/max
 // start at current word-spacing and takes small steps toward target
 const adjustWordSpace = function (lineEle, targetWidth, opts) {
+  //console.log('adjustWordSpace',lineEle, targetWidth, opts);
   // calculation in scale=1, not current scale
 
   if (!initialMetrics) throw Error('requires initialMetrics');
@@ -130,7 +138,7 @@ const adjustWordSpace = function (lineEle, targetWidth, opts) {
     if (wordSpacingEm === minWordSpace) hitMin = true;
     if (wordSpacingEm === maxWordSpace) hitMax = true;
     if (hitMin || hitMax) {
-      //console.log('[WARN] @'+lineIdx+' Wordspace at max: ' + wordSpacingEm);
+      console.log('[WARN] @'+lineIdx+' Wordspace at max: ' + wordSpacingEm);
       break;
     }
   }
@@ -310,10 +318,6 @@ const lineWidths = function (center, rad, lh) {
 
 const getLineWidth = function (line, wordSpacing) {
   // return value in scaleRatio = 1 (initial state)
-  if (line instanceof HTMLElement) {
-    /// working here  (getLineWidthsAfterSub not working)
-    console.log("getLineWidth:", line.firstChild.textContent, wordSpacing, line.style.wordSpacing);
-  }
   let lineEle = line instanceof HTMLElement ? line : document.getElementById("l" + line);
   let currentSpacing = lineEle.style.wordSpacing;
   if (wordSpacing) lineEle.style.wordSpacing = wordSpacing + "em"; // set ws

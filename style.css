@@ -122,10 +122,14 @@ body {
 
 .max-word-spacing {
   background-color: #ffd;
+  border: solid #eee;
+  border-width: thin;
 }
 
 .min-word-spacing {
   background-color: #eff;
+  border: solid #eee;
+  border-width: thin;
 }
 
 #text-display {

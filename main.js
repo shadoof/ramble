@@ -88,19 +88,21 @@ let similarConstraints = Array(replaceables.length).fill(0);
 
 let domStats = document.querySelector('#stats');
 let domDisplay = document.querySelector('#display');
+let measureDiv = document.querySelector('#measure-line');
 let displayContainer = document.querySelector("#display-container");
 let displayBounds = domDisplay.getBoundingClientRect();
 
-let reader, worker, spans, initialMetrics;
+let reader, worker, spans, initialMetrics, measureCtx;
 let fontFamily = window.getComputedStyle(domDisplay).fontFamily;
 let cpadding = window.getComputedStyle(domDisplay).padding;
 let padfloat = parseFloat(cpadding.replace('px', ''));
 let padding = (padfloat && padfloat !== NaN) ? padfloat : 50;
-let radius = displayBounds.width / 2, dbug = false;
+let radius = displayBounds.width / 2, dbug = 1;
 
 if (dbug) {
   highlightWs = true;
   highlights = true;
+  logging = verbose = true;
   readDelay = 1;
 }
 doLayout();
@@ -108,98 +110,58 @@ ramble();// go
 
 /////////////////////////////////////////////////////////
 
-// compute the word-spacing needed to achieve target width
-// start at min word-spacing and takes small steps until max
-const wordSpaceForSub = function (lineEle, lineIdx, wordEle, newWord, targetWidth, currentWs) {
 
-  let origWord = wordEle.textContent;  // store original word
-  wordEle.textContent = newWord; // replace the word
-
-  // loop from min-to-max to find needed word-spacing for target-width
-  let closeEnough = radius / 100, wordSpacingEm = minWordSpace;
-  let step = 0.01, currentWidth = Infinity, failed = false;
-  while (Math.abs(currentWidth - targetWidth) > closeEnough) {
-    lineEle.style.wordSpacing = wordSpacingEm + "em";
-    currentWidth = getLineWidth(lineIdx);
-    //console.log('ws=', wordSpacingEm, '->' + currentWidth);
-    if (0 && wordSpacingEm >= maxWordSpace || currentWidth > (targetWidth + closeEnough)) { // fail
-      failed = true;
-      break; // short-circuit
-    }
-    wordSpacingEm += step;
-  }
-  //console.log('RESULT=', wordSpacingEm, '->' + currentWidth, 'for target', targetWidth);
-
-  lineEle.style.wordSpacing = currentWs + 'em'; // reset spacing
-  wordEle.textContent = origWord; // reset word
-
-  return wordSpacingEm;//failed ? undefined : wordSpacingEm;
-}
-
-function contextualRandom(wordIdx, word, similars, opts) {
+// look at each similar, ignore those that, with min or max word-spacing
+// would result in line more than 5% off the target-width
+function contextualRandom(wordIdx, oldWord, similars, opts) {
 
   let isShadow = opts && opts.isShadow;
   if (isShadow) return RiTa.random(similars);
 
+  updateDelay = 10000000;
+
   let wordEle = document.querySelector(`#w${wordIdx}`);
   let lineEle = wordEle.parentElement.parentElement;
-  let lineIdx = parseInt(lineEle.id.slice(1));
+  let lineIdx = parseInt((lineEle.id).slice(1));
+  let text = lineEle.textContent;
+
+  // find target width and min/max allowable
   let targetWidth = initialMetrics.lineWidths[lineIdx];
-  let contentWidth = initialMetrics.contentWidths[lineIdx];
-  let direction = targetWidth - contentWidth > 0 ? 'reduce' : 'increase';
-  let wordSpacingEm = getWordSpaceEm(lineEle);
-  let hstack = history[state.domain][wordIdx];
-  let lastIndex = hstack.length > 1 ? hstack.length - 2 : hstack.length - 1;
-  let last = hstack[lastIndex];
+  let minAllowedWidth = targetWidth * .95;
+  let maxAllowedWidth = targetWidth * 1.05;
+  console.log('lineIdx=' + lineIdx + ' text: "' + text
+    + '"\nminAllowedWidth=' + minAllowedWidth + ' target='
+    + targetWidth + ' maxAllowedWidth=' + maxAllowedWidth);
 
-  return RiTa.random(similars);
+  // get current line and word widths
+  let currentLineWidthCtx = textWidthCtx(text);
+  let currentLineWidthDom = textWidthDom(lineIdx);
+  let currentLineWidthIm = initialMetrics.contentWidths[lineIdx];
+  let currentLineWidthBcr = lineEle.firstChild.getBoundingClientRect().width;
+  console.log('current-width(#' + lineIdx + '): ctx=' + currentLineWidthCtx
+    + ' dom=' + currentLineWidthDom + ' im=' + currentLineWidthIm + ' bcr=' + currentLineWidthBcr);
 
-  if (similars.length === 1 && similars[0] === last) {
-    console.warn('[WARN] @' + wordIdx + '.' + lineIdx
-      + ' single option for "' + word + '", reusing "' + last + '"');
-    return last;
-  }
+  if (currentLineWidthCtx > maxAllowedWidth) throw Error('original(#' + lineIdx + ') too long: ' + currentLineWidthCtx);
+  if (currentLineWidthCtx < minAllowedWidth) throw Error('original(#' + lineIdx + ') too short: ' + currentLineWidthCtx);
 
-  let relaxConstraints = false;
-  let currentRealWs = wordSpaceForSub(lineEle, lineIdx, wordEle, word, targetWidth, wordSpacingEm);
-  let dbug = 1, msg = dbug ? '\n       -- ' + word + ' ws=' + currentRealWs : 0;
-  let wordSpaceList = Array(similars.length).fill(Infinity);
-  let options = similars.filter((cand, i) => {
-    if (cand !== last) {
-      let ws = wordSpaceForSub(lineEle, lineIdx, wordEle, cand, targetWidth, wordSpacingEm);
-      let ok = ws >= minWordSpace && ws <= maxWordSpace * .99;
-      if (dbug) msg += '\n       ' + i + ') ' + cand + ' ws=' + ws + ' valid=' + ok;
-      wordSpaceList[i] = ws;
-      return ok;
-    }
-  });
+  return RiTa.random(options);
+}
 
-  if (options.length === 0) {
-    options = similars;
-    if (false) {
-      relaxConstraints = true;
-      options = similars.filter((cand, i) => cand !== last && wordSpaceList[i] < currentRealWs);
-      if (dbug) msg = '[WARN] line#' + lineIdx + ' no ideal options to ' + direction
-        + ' wordspace for "' + word + '" in\n       [' + similars + ']' + msg;
-      if (options.length === 0 || (options.length === 1 && options[0] === last)) {
-        if (dbug) msg += '\n      cannot reduce set ***';
-        options = similars;
-      }
-      else {
-        if (dbug) msg += '\n       reducing set to [' + options + ']';
-      }
-      console.log(msg);
-    }
-  }
-  else {
-    //console.log('found '+options.length+' sims: '+JSON.stringify(options));
-  }
+function textWidthCtx(text, wordSpacingEm = 0) { // scale = 1
+  let width = measureCtx.measureText(text).width;
+  let numSpaces = text.split(' ').length - 1;
+  return width + (numSpaces * wordSpacingEm * initialMetrics.fontSize);
+}
 
-  let result = RiTa.random(options);
-  if (dbug && relaxConstraints) console.log('@' + lineIdx + '.' + wordIdx + ' ' + word
-    + '->' + result + ' ws=' + wordSpacingEm + ' targetW=' + targetWidth + ' last=' + last);
-  //relaxConstraints && console.log('* SELECTED: ' + result);
-  return result;
+function textWidthDom(lineIdx, wordSpacing = 0) {
+  // return value in scaleRatio = 1 (initial state)
+  let lineEle = document.getElementById("l" + lineIdx);
+  if (typeof wordSpacing === 'string') throw Error('str-ws');
+  let currentSpacing = lineEle.style.wordSpacing;
+  lineEle.style.wordSpacing = wordSpacing + "em"; // set ws
+  let width = lineEle.firstChild.getBoundingClientRect().width / getScaleRatio();
+  lineEle.style.wordSpacing = currentSpacing; // reset ws
+  return width;
 }
 
 function doLayout() {
@@ -247,8 +209,8 @@ function adjustAllWordSpacing(isDynamic) {
       adjustWordSpace(l, initialMetrics.lineWidths[i])
     }
     else {
-      ["max-word-spacing", "min-word-spacing"]
-        .forEach(c => { if (l.firstChild) l.firstChild.classList.remove(c) });
+      ["max-word-spacing", "min-word-spacing"].forEach
+        (cl => l.firstChild && l.firstChild.classList.remove(cl));
     }
   });
 }
@@ -330,12 +292,16 @@ function replace() {
   let shadow = shadowTextName();
   let idx = RiTa.random(repids.filter(id => !reader
     || !reader.selection().includes(sources[domain][id])));
-
   //idx = 261;
-  //updateDelay = 10000000;
+  //updateDelay = 10000000; // tmp-remove
   let dword = last(history[domain][idx]);
   let sword = last(history[shadow][idx]);
   let data = { idx, dword, sword, state, timestamp: Date.now() };
+
+  let lidx = lineIdFromWordId(idx); // tmp-remove
+  let le = document.getElementById('l' + lidx);
+  le.firstChild.classList.add("min-word-spacing");
+
   worker.postMessage({ event: 'lookup', data }); // do similar search
 }
 
@@ -620,11 +586,15 @@ function scaleToFit() {
   document.querySelectorAll(".progress").forEach((p, i) => {
     updateProgressBar(p, i, progressBarsBaseMatrix, scaleRatio);
   });
+
   displayContainer.style.marginTop = 0.1 * radius + "px";
   if (!dbug) displayContainer.addEventListener("mousemove", hideCursor);
   progressBounds = document.getElementById("progress4")
     .getBoundingClientRect();
-  log('scaleRatio=' + scaleRatio);
+
+  measureCtx.font = initialMetrics.fontSize + ' ' + fontFamily; // update measure ctx
+  log(`opts { scale: ${scaleRatio} font: ${measureCtx.font.replace(/,.*/, '')} }`);
+  //console.log(measureCtx.font);
 }
 
 function trunc(arr, len = 100) {
@@ -643,6 +613,11 @@ function getWordSpaceEm(lineEle) {
 
 function lineIdFromWordId(idx) {
   let wordEle = document.getElementById("w" + idx);
+  let lineEle = wordEle.parentElement.parentElement;
+  return parseInt(lineEle.id.slice(1));
+}
+
+function lineIdFromWordEle(wordEle) {
   let lineEle = wordEle.parentElement.parentElement;
   return parseInt(lineEle.id.slice(1));
 }
@@ -667,4 +642,10 @@ function log(msg) {
 
 function clamp(num, min, max) {
   return Math.min(Math.max(num, min), max);
+}
+
+let lastSelected = function (wordIdx) {
+  let hstack = history[state.domain][wordIdx];
+  let lastIndex = hstack.length > 1 ? hstack.length - 2 : hstack.length - 1;
+  return hstack[lastIndex];
 }

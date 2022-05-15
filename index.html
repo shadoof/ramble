@@ -2,42 +2,50 @@
 <html lang="en">
 
 <head>
-    <script src="lib/rita.js"></script>
-    <script>
-        // Load/display the app version number
-        fetch('package.json').then(res => res.json())
-            .then(pkg => console.log(`[INFO] ${pkg.name} v${pkg.version}`))
-            .catch(e => console.log('[WARN] No Version', e));
-    </script>
-    <script src="lib/progressbar.js"></script>
-    <link rel="stylesheet" href="style.css">
-    <meta charset="utf-8">
+  <script src="lib/rita.js"></script>
+  <script>
+    // Load/display the app version number
+    fetch('package.json').then(res => res.json())
+      .then(pkg => console.log(`[INFO] ${pkg.name} v${pkg.version}`))
+      .catch(e => console.log('[WARN] No Version', e));
+  </script>
+  <script src="lib/progressbar.js"></script>
+  <link rel="stylesheet" href="style.css">
+  <meta charset="utf-8">
 </head>
 
 <body>
-    <div id="center-wrapper">
-        <div id="centered-container">
-            <div id="container">
-                <div id="display-container">
-                    <div id="display"></div>
-                    <div id="legend-container"></div>
-                    <div id="progress-bars">
-                        <div id="progress0" class="progress initial"></div>
-                        <div id="progress1" class="progress free"></div>
-                        <div id="progress2" class="progress shared-rural"></div>
-                        <div id="progress3" class="progress urban"></div>
-                        <div id="progress4" class="progress rural"></div>
-                    </div>
-                </div>
-            </div>
+  <div id="center-wrapper">
+    <div id="centered-container">
+      <div id="container">
+        <div id="display-container">
+          <div id="display"></div>
+          <div id="legend-container"></div>
+          <div id="progress-bars">
+            <div id="progress0" class="progress initial"></div>
+            <div id="progress1" class="progress free"></div>
+            <div id="progress2" class="progress shared-rural"></div>
+            <div id="progress3" class="progress urban"></div>
+            <div id="progress4" class="progress rural"></div>
+          </div>
         </div>
-        <div id="stats">statistics</div>
+      </div>
     </div>
-    <script src="circular-layout.js"></script>
-    <script src="interface.js"></script>
-    <script src="cache.js"></script>
-    <script src="reader.js"></script>
-    <script src="main.js"></script>
+    <div id="stats">statistics</div>
+
+    <!-- <div class="line" id="measure-line" style="visibility: hidden;">
+      <span class="wrapper" style="display: inline-block;">
+        <span class="word" id="measure-word">measure</span>
+      </span>
+    </div> -->
+    
+    <!-- <canvas id="measure-ctx" style="visibility: hidden;"></canvas> -->
+  </div>
+  <script src="circular-layout.js"></script>
+  <script src="interface.js"></script>
+  <script src="cache.js"></script>
+  <script src="reader.js"></script>
+  <script src="main.js"></script>
 </body>
 
 </html>
