@@ -79,7 +79,7 @@ const createCircularDOM = function (target, initialRadius, lines) {
       });
       lineDiv.append(wrapperSpan);
     }
-    
+
     textDisplay.append(lineDiv);
     lineWidths.push(l.bounds[2]);
   });
@@ -106,7 +106,7 @@ const adjustWordSpace = function (lineEle, targetWidth, opts) {
   if (!initialMetrics) throw Error('requires initialMetrics');
 
   if (highlightWs) ["max-word-spacing", "min-word-spacing"]
-    .forEach(c => {if(lineEle.firstChild) lineEle.firstChild.classList.remove(c)});
+    .forEach(c => { if (lineEle.firstChild) lineEle.firstChild.classList.remove(c) });
 
   //let restore = opts && opts.restore;
   let radius = initialMetrics.radius;
@@ -263,45 +263,46 @@ const lineWidths_old = function (center, rad, lh) {
   return result;
 }
 
-const chordLength = function(rad, dis){
+const chordLength = function (rad, dis) {
   return 2 * Math.sqrt(rad * rad - dis * dis);
 }
 
-const lineWidths = function(center, rad, lh) {
+const lineWidths = function (center, rad, lh) {
   let numOfLine = Math.floor((2 * rad) / lh);
   let gap = ((2 * rad) - (numOfLine * lh)) / (numOfLine + 1);
   if (numOfLine % 2 === 1) {
     let numInEachPart = (numOfLine - 1) / 2;
-    let halfLh = lh/2;
+    let halfLh = lh / 2;
     let middleCl = chordLength(rad, halfLh);
-    let result = [[center.x - middleCl/2, center.y - halfLh, middleCl, lh]];
+    let result = [[center.x - middleCl / 2, center.y - halfLh, middleCl, lh]];
     for (let i = 0; i < numInEachPart - 1; i++) {
       let d = halfLh + ((i + 1) * (gap + lh));
       let cl = chordLength(rad, d);
-      if (cl) result.unshift([center.x - cl/2, center.y - d, cl, lh]);
+      if (cl) result.unshift([center.x - cl / 2, center.y - d, cl, lh]);
     }
     for (let i = 0; i < numInEachPart - 1; i++) {
       let d = halfLh + (i * lh + (i + 1) * gap);
       let d2 = halfLh + ((i + 1) * (gap + lh));
       let cl = chordLength(rad, d2);
-      if (cl) result.push([center.x - cl/2, center.y + d, cl, lh]);
+      if (cl) result.push([center.x - cl / 2, center.y + d, cl, lh]);
     }
     return result;
   } else {
     let numInEachPart = (numOfLine / 2) - 1;
-    let halfGap = gap/2;
+    let halfGap = gap / 2;
     let middleCl = chordLength(rad, lh + halfGap);
-    let result = [[center.x - middleCl/2, center.y - (halfGap + lh), middleCl, lh], [center.x - middleCl/2, center.y + (halfGap), middleCl, lh]];
+    let result = [[center.x - middleCl / 2, center.y - (halfGap + lh), middleCl, lh],
+    [center.x - middleCl / 2, center.y + (halfGap), middleCl, lh]];
     for (let i = 0; i < numInEachPart - 1; i++) {
       let d = (halfGap + lh) + ((i + 1) * (gap + lh));
       let cl = chordLength(rad, d);
-      if (cl) result.unshift([center.x - cl/2, center.y - d, cl, lh]);
+      if (cl) result.unshift([center.x - cl / 2, center.y - d, cl, lh]);
     }
     for (let i = 0; i < numInEachPart - 1; i++) {
       let d = (halfGap + lh) + (i * lh + (i + 1) * gap);
       let d2 = (halfGap + lh) + ((i + 1) * (gap + lh));
       let cl = chordLength(rad, d2);
-      if (cl) result.push([center.x - cl/2, center.y + d, cl, lh]);
+      if (cl) result.push([center.x - cl / 2, center.y + d, cl, lh]);
     }
     return result;
   }
