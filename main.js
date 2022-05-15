@@ -144,7 +144,7 @@ function contextualRandom(wordIdx, oldWord, similars, opts) {
   if (currentLineWidthCtx > maxAllowedWidth) throw Error('original(#' + lineIdx + ') too long: ' + currentLineWidthCtx);
   if (currentLineWidthCtx < minAllowedWidth) throw Error('original(#' + lineIdx + ') too short: ' + currentLineWidthCtx);
 
-  return RiTa.random(options);
+  return RiTa.random(similars);
 }
 
 function textWidthCtx(text, wordSpacingEm = 0) { // scale = 1
