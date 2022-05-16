@@ -90,9 +90,11 @@ let domStats = document.querySelector('#stats');
 let domDisplay = document.querySelector('#display');
 let measureDiv = document.querySelector('#measure-line');
 let displayContainer = document.querySelector("#display-container");
+let measureCanvas = document.querySelector("#measure-ctx");
+let measureCtx = measureCanvas.getContext('2d');
 let displayBounds = domDisplay.getBoundingClientRect();
 
-let reader, worker, spans, initialMetrics, measureCtx;
+let reader, worker, spans, initialMetrics;
 let fontFamily = window.getComputedStyle(domDisplay).fontFamily;
 let cpadding = window.getComputedStyle(domDisplay).padding;
 let padfloat = parseFloat(cpadding.replace('px', ''));
@@ -185,7 +187,7 @@ function doLayout() {
   let opts = { offset, fontFamily, lineHeightScale, wordSpace: initialWordSpace, padding };
   let lines = layoutCircularLines(sources[state.domain], initRadius, opts);
   initialMetrics = createCircularDOM(domDisplay, initRadius, lines);
-  initialMetrics.contentWidths = initialMetrics.lineWidths.map((_, i) => getLineWidth(i));
+  initialMetrics.contentWidths = getInitialContentWidths(lines.length);
 
   progressBarsBaseMatrix = [
     [1, 0, 0, 1, 0, 0], // bg
@@ -592,7 +594,7 @@ function scaleToFit() {
   progressBounds = document.getElementById("progress4")
     .getBoundingClientRect();
 
-  measureCtx.font = initialMetrics.fontSize + ' ' + fontFamily; // update measure ctx
+  measureCtx.font = window.getComputedStyle(document.getElementById("l0")).font // update measure ctx
   log(`opts { scale: ${scaleRatio} font: ${measureCtx.font.replace(/,.*/, '')} }`);
   //console.log(measureCtx.font);
 }

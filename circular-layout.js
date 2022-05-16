@@ -92,14 +92,6 @@ const createCircularDOM = function (target, initialRadius, lines) {
     textDisplay,
     radius: initialRadius
   };
-
-  let measureCanvas = document.createElement("canvas");
-  measureCanvas.id = "measure-ctx";
-  target.append(measureCanvas);
-
-  measureCtx = measureCanvas.getContext('2d');
-  measureCtx.font = fontSize + 'px ' + fontFamily
-  //console.log('measureCtx.font', measureCtx.font);
   domLegend = createLegend(initialMetrics);
 
   return initialMetrics;
@@ -243,12 +235,11 @@ const fitToBox = function (words, maxWidth, fontSize, fontName, wordSpacing) {
 // TODO: should measure with the DOM, not canvas
 const measureWidth = function (text, fontSizePx = 12, fontName = fontFamily, wordSpacing = 0) {
   // caculation in scale=1, not current scale
-  canvasCtx = canvasCtx || document.createElement("canvas").getContext("2d");
-  canvasCtx.font = fontSizePx + 'px ' + fontName;
+  measureCtx = measureCtx || document.createElement("canvas").getContext("2d");
+  measureCtx.font = fontSizePx + 'px ' + fontName;
   let spaceCount = text ? (text.split(" ").length - 1) : 0;
-  return canvasCtx.measureText(text).width + (spaceCount * (wordSpacing * fontSizePx));
+  return measureCtx.measureText(text).width + (spaceCount * (wordSpacing * fontSizePx));
 }
-let canvasCtx; // don't recreate canvas
 
 const chordLength_old = function (rad, d) {
   return 2 * Math.sqrt(rad * rad - (rad - d) * (rad - d));
@@ -366,4 +357,13 @@ const getLineWidthAfterSubOld = function (newWord, wordIdx, lineIdx) {
   let lineWidth = targetLine.getBoundingClientRect().width / getScaleRatio();
   targetSpan.textContent = origWord; // reset ???
   return lineWidth;
+}
+
+const getInitialContentWidths = function (n) {
+  let r = [];
+  for (let i = 0; i < n; i++) {
+    const lineEle = document.getElementById("l" + i);
+    r.push(lineEle.firstElementChild.getBoundingClientRect().width);
+  }
+  return r;
 }
