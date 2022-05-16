@@ -49,7 +49,7 @@ body {
   margin-left: auto;
   margin-right: auto;
   position: relative;
-  font-family: "Source Serif Pro", "Iowan Old Style", "Apple Garamond", "Palatino Linotype", "Times New Roman", "Droid Serif", Times, serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  font-family: "Source Serif Pro";
   vertical-align: middle;
 }
 
@@ -236,7 +236,7 @@ body {
   margin-left: auto;
   margin-right: auto;
   position: absolute;
-  font-family: "Source Serif Pro", "Iowan Old Style", "Apple Garamond", "Palatino Linotype", "Times New Roman", "Droid Serif", Times, serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  font-family: "Source Serif Pro";
   vertical-align: middle;
 }
 
