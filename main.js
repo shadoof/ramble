@@ -94,7 +94,7 @@ let measureCanvas = document.querySelector("#measure-ctx");
 let measureCtx = measureCanvas.getContext('2d');
 let displayBounds = domDisplay.getBoundingClientRect();
 
-let reader, worker, spans, initialMetrics;
+let reader, worker, spans, initialMetrics, scaleRatio;
 let fontFamily = window.getComputedStyle(domDisplay).fontFamily;
 let cpadding = window.getComputedStyle(domDisplay).padding;
 let padfloat = parseFloat(cpadding.replace('px', ''));
@@ -161,7 +161,7 @@ function textWidthDom(lineIdx, wordSpacing = 0) {
   if (typeof wordSpacing === 'string') throw Error('str-ws');
   let currentSpacing = lineEle.style.wordSpacing;
   lineEle.style.wordSpacing = wordSpacing + "em"; // set ws
-  let width = lineEle.firstChild.getBoundingClientRect().width / getScaleRatio();
+  let width = lineEle.firstChild.getBoundingClientRect().width / scaleRatio;
   lineEle.style.wordSpacing = currentSpacing; // reset ws
   return width;
 }
@@ -485,7 +485,7 @@ function lengthAwareRandomX(wordIdx, word, similars, opts) {
   let lineIdx = parseInt((lineEle.id).slice(1));
   let originalW = initialMetrics.contentWidths[lineIdx];//lineWidths[lineIdx] - (2 * padding);
   let originalW2 = initialMetrics.lineWidths[lineIdx];
-  let currentW = getLineWidth(lineIdx);//lineEle.firstChild.getBoundingClientRect().width /  getScaleRatio();
+  let currentW = getLineWidth(lineIdx);
   let diff = currentW - originalW, msg = lineIdx + '/' + wordIdx + ') \'' + lineEle.innerText + '\' ';
   if (!isShadow) {
     console.log('-'.repeat(70) + '\nwidths: ' + originalW, currentW, originalW2, 'diff=' + diff);
@@ -582,7 +582,7 @@ function update(updating = true) {
 }
 
 function scaleToFit() {
-  let scaleRatio = radius / initialMetrics.radius;
+  scaleRatio = radius / initialMetrics.radius;
   initialMetrics.textDisplay.style.transform = "scale(" + scaleRatio + ")";
   domLegend.style.transform = "scale(" + scaleRatio + ")";
   document.querySelectorAll(".progress").forEach((p, i) => {
@@ -632,10 +632,6 @@ function between(actual, min, max, range = (max - min) / 10) {
 
 function last(arr) {
   if (arr && arr.length) return arr[arr.length - 1];
-}
-
-function getScaleRatio() {
-  return radius / initialMetrics.radius;
 }
 
 function log(msg) {

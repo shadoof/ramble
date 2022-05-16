@@ -156,7 +156,7 @@ const adjustWordSpaceOld = function (lineEle) {
   let minWordSpace = minWordSpace;
   let maxWordSpace = maxWordSpace;
   let wordSpacing = window.getComputedStyle(lineEle).wordSpacing;
-  let step = 0.01, scaleRatio = getScaleRatio();
+  let step = 0.01;
   let lineIdx = parseInt((lineEle.id).slice(1));
   let origW = initialMetrics.lineWidths[lineIdx] - 2 * padding;
   let currentW = lineEle.firstChild.getBoundingClientRect().width / scaleRatio;
@@ -313,7 +313,7 @@ const getLineWidth = function (line, wordSpacing) {
   let currentSpacing = lineEle.style.wordSpacing;
   if (wordSpacing) lineEle.style.wordSpacing = wordSpacing + "em"; // set ws
   let contentSpan = lineEle.firstChild;
-  let width = !contentSpan ? 0 : contentSpan.getBoundingClientRect().width / getScaleRatio();
+  let width = !contentSpan ? 0 : contentSpan.getBoundingClientRect().width / scaleRatio;
   if (wordSpacing) lineEle.style.wordSpacing = currentSpacing; // reset ws
   return width;
 }
@@ -354,7 +354,7 @@ const getLineWidthAfterSubOld = function (newWord, wordIdx, lineIdx) {
   targetSpan.textContent = newWord; // replace
   let targetLine = targetSpan.parentElement;
   if (lineIdx) targetLine = document.getElementById("l" + lineIdx).firstChild;
-  let lineWidth = targetLine.getBoundingClientRect().width / getScaleRatio();
+  let lineWidth = targetLine.getBoundingClientRect().width / scaleRatio;
   targetSpan.textContent = origWord; // reset ???
   return lineWidth;
 }
