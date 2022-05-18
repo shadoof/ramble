@@ -1,6 +1,7 @@
 @font-face {
   font-family: 'Source Serif Pro';
-  src: url('./fonts/Source_Serif_Pro/SourceSerifPro-Regular.ttf') format('truetype');
+  src: url('./fonts/Source_Serif_Pro/source-serif-pro-v15-latin-regular.woff') format('woff'),
+       url('./fonts/Source_Serif_Pro/source-serif-pro-v15-latin-regular.woff2') format('woff2'),
 }
 
 body {
