@@ -136,34 +136,33 @@ function contextualRandom(wordIdx, oldWord, similars, opts) {
     + targetWidth + ' maxAllowedWidth=' + maxAllowedWidth);
 
   // get current line and word widths
-  let currentLineWidthCtx = textWidthCtx(text);
-  let currentLineWidthDom = textWidthDom(lineIdx);
+  let computedStyle = window.getComputedStyle(lineEle)
+  let currentLineWidthCtx = measureWidthCtx(text, computedStyle.font, computedStyle.wordSpacing);
+  let currentLineWidthDom = getLineWidth(lineIdx);
   let currentLineWidthIm = initialMetrics.contentWidths[lineIdx];
+  let currentLineWidthImCtx = initialMetrics.contentWidthsCtx[lineIdx];
   let currentLineWidthBcr = lineEle.firstChild.getBoundingClientRect().width;
-  console.log('current-width(#' + lineIdx + '): ctx=' + currentLineWidthCtx
-    + ' dom=' + currentLineWidthDom + ' im=' + currentLineWidthIm + ' bcr=' + currentLineWidthBcr);
+  console.log("r: " + scaleRatio+ ' current-width(#' + lineIdx + '): dom=' + currentLineWidthDom + ' ctx=' + currentLineWidthCtx
+    + ' im=' + currentLineWidthIm + ' imCtx=' + currentLineWidthImCtx + ' bcr=' + currentLineWidthBcr);
 
   if (currentLineWidthCtx > maxAllowedWidth) throw Error('original(#' + lineIdx + ') too long: ' + currentLineWidthCtx);
   if (currentLineWidthCtx < minAllowedWidth) throw Error('original(#' + lineIdx + ') too short: ' + currentLineWidthCtx);
+  
+  console.time('Execution Time Ctx');
+  similars.forEach(sim => {
+    let res = estWidthChangePercentage(sim, wordIdx, ['max', 'min', 'opt']);
+    console.log("word: "+ oldWord + " choice: " + sim + " result: ", res);
+  });
+  console.timeEnd('Execution Time Ctx');
+
+  console.time('Execution Time Dom');
+  similars.forEach(sim => { 
+    let res = widthChangePercentage(sim, wordIdx, ['max', 'min', 'opt']);
+    console.log("word: "+ oldWord + " choice: " + sim + " result Dom: ", res);
+  })
+  console.timeEnd('Execution Time Dom');
 
   return RiTa.random(similars);
-}
-
-function textWidthCtx(text, wordSpacingEm = 0) { // scale = 1
-  let width = measureCtx.measureText(text).width;
-  let numSpaces = text.split(' ').length - 1;
-  return width + (numSpaces * wordSpacingEm * initialMetrics.fontSize);
-}
-
-function textWidthDom(lineIdx, wordSpacing = 0) {
-  // return value in scaleRatio = 1 (initial state)
-  let lineEle = document.getElementById("l" + lineIdx);
-  if (typeof wordSpacing === 'string') throw Error('str-ws');
-  let currentSpacing = lineEle.style.wordSpacing;
-  lineEle.style.wordSpacing = wordSpacing + "em"; // set ws
-  let width = lineEle.firstChild.getBoundingClientRect().width / scaleRatio;
-  lineEle.style.wordSpacing = currentSpacing; // reset ws
-  return width;
 }
 
 function doLayout() {
@@ -187,7 +186,6 @@ function doLayout() {
   let opts = { offset, fontFamily, lineHeightScale, wordSpace: initialWordSpace, padding };
   let lines = layoutCircularLines(sources[state.domain], initRadius, opts);
   initialMetrics = createCircularDOM(domDisplay, initRadius, lines);
-  initialMetrics.contentWidths = getInitialContentWidths(lines.length);
 
   progressBarsBaseMatrix = [
     [1, 0, 0, 1, 0, 0], // bg
@@ -201,8 +199,10 @@ function doLayout() {
     color: visBandColors, trailColor: visBandColors[4], strokeWidth: visBandWidth
   });
 
-  scaleToFit(); // size to window 
   adjustAllWordSpacing(adjustInitialWordspacing);
+  initialMetrics.contentWidths = getInitialContentWidths(lines.length); 
+  initialMetrics.contentWidthsCtx = getInitialContentWidths(lines.length, true);
+  scaleToFit(); // size to window 
 }
 
 function adjustAllWordSpacing(isDynamic) {

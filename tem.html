@@ -8,6 +8,7 @@
             src: url('./fonts/Source_Serif_Pro/SourceSerifPro-Regular.ttf') format('truetype');
         }
     </style>
+    <script src="helpers.js"></script>
 </head>
 
 <body>
@@ -62,7 +63,7 @@
             console.log("ctx.widthWs: " + ctxBound.widthWs);
             console.log("ctx.mathWs: " + ctxBound.widthWsM);
             console.log("rexts", div.firstElementChild.getClientRects()[0].width);
-            console.log("dom: " + (div.firstElementChild.getBoundingClientRect().right - div.firstElementChild.getBoundingClientRect().left))
+            console.log("dom: " + getLineWidth(document.getElementById("e")))
         });
     </script>
 </body>
