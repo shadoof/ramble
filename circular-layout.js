@@ -26,8 +26,6 @@ const layoutCircularLines = function (words, radius, opts = {}) {
   }
   while (result.words.length);
 
-  //if (opts.forceFontSize) fontSize = opts.forceFontSize;
-
   let answer = result.rects.map((r, i) => ({
     fontSize, wordSpacing: wordSpace, bounds: r, text: result.text[i], fontFamily
   }));
@@ -92,6 +90,7 @@ const createCircularDOM = function (target, initialRadius, lines) {
     textDisplay,
     radius: initialRadius
   };
+
   domLegend = createLegend(initialMetrics);
 
   return initialMetrics;
@@ -100,7 +99,6 @@ const createCircularDOM = function (target, initialRadius, lines) {
 // adjust word-spacing to get as close to target-width given min/max
 // start at current word-spacing and takes small steps toward target
 const adjustWordSpace = function (lineEle, targetWidth, opts) {
-  //console.log('adjustWordSpace',lineEle, targetWidth, opts);
   // calculation in scale=1, not current scale
 
   if (!initialMetrics) throw Error('requires initialMetrics');
@@ -121,7 +119,7 @@ const adjustWordSpace = function (lineEle, targetWidth, opts) {
     + '"\n  width=' + currentWidth + '\n  target=' + targetWidth
     + '\n  wspace=' + wordSpacingEm + '\n  step=' + step);*/
 
-  let closeEnough = radius / 100, hitMin = false, hitMax = false;
+  let closeEnough = radius / 100; hitMin = false, hitMax = false;
   while (Math.abs(currentWidth - targetWidth) > closeEnough) {
 
     lineEle.style.wordSpacing = wordSpacingEm + "em";
@@ -129,20 +127,21 @@ const adjustWordSpace = function (lineEle, targetWidth, opts) {
     wordSpacingEm = clamp(wordSpacingEm + step, minWordSpace, maxWordSpace);
     if (wordSpacingEm === minWordSpace) hitMin = true;
     if (wordSpacingEm === maxWordSpace) hitMax = true;
-    if (hitMin || hitMax) {
-      console.log('[WARN] @'+lineIdx+' Wordspace at max: ' + wordSpacingEm);
-      break;
-    }
+    if (hitMax || hitMin) break;
   }
 
-  if (/*!restore && */highlightWs && (hitMin || hitMax)) { // debugging only
+  if (highlightWs && (hitMin || hitMax)) { // debugging
     if (lineEle.firstChild) {
-      if (hitMax) lineEle.firstChild.classList.add("max-word-spacing");
-      if (hitMin) lineEle.firstChild.classList.add("min-word-spacing");
+      if (hitMax) {
+        console.log('[WARN] @' + lineIdx + ' Wordspace at max: ' + wordSpacingEm);
+        lineEle.firstChild.classList.add("max-word-spacing");
+      }
+      else {
+        console.log('[WARN] @' + lineIdx + ' Wordspace at min: ' + wordSpacingEm);
+        lineEle.firstChild.classList.add("min-word-spacing");
+      }
     }
   }
-
-  //  if (restore) lineEle.style.wordSpacing = originalWordSpacing + "em";
 
   return wordSpacingEm;
 }
