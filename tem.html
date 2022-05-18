@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+
+<head>
+    <meta charset="utf-8">
+    <style>
+        @font-face {
+            font-family: 'Source Serif Pro';
+            src: url('./fonts/Source_Serif_Pro/SourceSerifPro-Regular.ttf') format('truetype');
+        }
+    </style>
+    <script src="helpers.js"></script>
+</head>
+
+<body>
+    <div id="e" style=" font-size: 20.0000001 px;
+    font-family: 'Source Serif Pro';
+    word-spacing: 0.1em;">
+        <span></span>
+    </div>
+    <canvas id="c" width="2000px" height="400px">
+
+    </canvas>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            let div = document.getElementById("e");
+            let str = "This is a test line. The upper text is rendered in a span element and the lower one is rendered on canvas. A large positive or negative word-spacing value will make the sentences the styling is applied to unreadable."
+            div.firstElementChild.textContent = str;
+            div.firstElementChild.style.background = "yellow"
+            let style = window.getComputedStyle(div);
+            let f = style.font;
+            let ws = parseFloat(style.wordSpacing.replace("px",""));
+            console.log("ws :", ws);
+            let ctx = document.getElementById("c").getContext('2d');
+            console.log("font: " + f);
+            ctx.font = f;
+            let me = ctx.measureText(str)
+            let offset = [0,0];
+            let ctxBound = {
+                top: offset[1] - me.actualBoundingBoxAscent,
+                right: offset[0] + me.actualBoundingBoxRight,
+                bottom: offset[1] + me.actualBoundingBoxDescent,
+                left: offset[0] - me.actualBoundingBoxLeft,
+                height: Math.abs(me.actualBoundingBoxAscent) + 
+               Math.abs(me.actualBoundingBoxDescent),
+                widthM: Math.abs(me.actualBoundingBoxLeft) + 
+              Math.abs(me.actualBoundingBoxRight),
+                width: me.width,
+                widthWs: me.width + ws * (str.split(" ").length - 1),
+                widthWsM: Math.abs(me.actualBoundingBoxLeft) + 
+              Math.abs(me.actualBoundingBoxRight) + ws * (str.split(" ").length - 1)
+            }
+            ctx.fillStyle = "black";
+            ctx.fillText(str, ctxBound.left, ctxBound.height);
+            ctx.strokeStyle = "red";
+            ctx.strokeRect(ctxBound.left, ctxBound.bottom, ctxBound.width, ctxBound.height);
+            ctx.strokeStyle = "green";
+            ctx.strokeRect(ctxBound.left, ctxBound.bottom, ctxBound.widthM, ctxBound.height);
+            ctx.strokeStyle = "blue";
+            ctx.strokeRect(ctxBound.left, ctxBound.bottom, ctxBound.widthWs, ctxBound.height);
+            ctx.strokeStyle = "purple";
+            ctx.strokeRect(ctxBound.left, ctxBound.bottom, ctxBound.widthWsM, ctxBound.height);
+            console.log("PixelRatio: " + devicePixelRatio)
+            console.log("ctx.widthWs: " + ctxBound.widthWs);
+            console.log("ctx.mathWs: " + ctxBound.widthWsM);
+            console.log("rexts", div.firstElementChild.getClientRects()[0].width);
+            console.log("dom: " + getLineWidth(document.getElementById("e")))
+        });
+    </script>
+</body>

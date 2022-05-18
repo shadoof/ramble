@@ -92,14 +92,6 @@ const createCircularDOM = function (target, initialRadius, lines) {
     textDisplay,
     radius: initialRadius
   };
-
-  let measureCanvas = document.createElement("canvas");
-  measureCanvas.id = "measure-ctx";
-  target.append(measureCanvas);
-
-  measureCtx = measureCanvas.getContext('2d');
-  measureCtx.font = fontSize + 'px ' + fontFamily
-  //console.log('measureCtx.font', measureCtx.font);
   domLegend = createLegend(initialMetrics);
 
   return initialMetrics;
@@ -164,7 +156,7 @@ const adjustWordSpaceOld = function (lineEle) {
   let minWordSpace = minWordSpace;
   let maxWordSpace = maxWordSpace;
   let wordSpacing = window.getComputedStyle(lineEle).wordSpacing;
-  let step = 0.01, scaleRatio = getScaleRatio();
+  let step = 0.01;
   let lineIdx = parseInt((lineEle.id).slice(1));
   let origW = initialMetrics.lineWidths[lineIdx] - 2 * padding;
   let currentW = lineEle.firstChild.getBoundingClientRect().width / scaleRatio;
@@ -243,12 +235,11 @@ const fitToBox = function (words, maxWidth, fontSize, fontName, wordSpacing) {
 // TODO: should measure with the DOM, not canvas
 const measureWidth = function (text, fontSizePx = 12, fontName = fontFamily, wordSpacing = 0) {
   // caculation in scale=1, not current scale
-  canvasCtx = canvasCtx || document.createElement("canvas").getContext("2d");
-  canvasCtx.font = fontSizePx + 'px ' + fontName;
+  measureCtx = measureCtx || document.createElement("canvas").getContext("2d");
+  measureCtx.font = fontSizePx + 'px ' + fontName;
   let spaceCount = text ? (text.split(" ").length - 1) : 0;
-  return canvasCtx.measureText(text).width + (spaceCount * (wordSpacing * fontSizePx));
+  return measureCtx.measureText(text).width + (spaceCount * (wordSpacing * fontSizePx));
 }
-let canvasCtx; // don't recreate canvas
 
 const chordLength_old = function (rad, d) {
   return 2 * Math.sqrt(rad * rad - (rad - d) * (rad - d));
@@ -314,56 +305,4 @@ const lineWidths = function (center, rad, lh) {
     }
     return result;
   }
-}
-
-const getLineWidth = function (line, wordSpacing) {
-  // return value in scaleRatio = 1 (initial state)
-  let lineEle = line instanceof HTMLElement ? line : document.getElementById("l" + line);
-  let currentSpacing = lineEle.style.wordSpacing;
-  if (wordSpacing) lineEle.style.wordSpacing = wordSpacing + "em"; // set ws
-  let contentSpan = lineEle.firstChild;
-  let width = !contentSpan ? 0 : contentSpan.getBoundingClientRect().width / getScaleRatio();
-  if (wordSpacing) lineEle.style.wordSpacing = currentSpacing; // reset ws
-  return width;
-}
-
-const getLineWidthsAfterSubX = function (newWord, wordIdx) {
-  // return value in scaleRatio = 1 (initial state), not current scale
-  let targetSpan = document.getElementById("w" + wordIdx);
-  let lineEle = targetSpan.parentElement;
-  let origWord = targetSpan.textContent;
-
-  targetSpan.textContent = newWord; // replace
-
-  let minWidth = getLineWidth(lineEle, minWordSpace);
-  let maxWidth = getLineWidth(lineEle, maxWordSpace);
-
-  targetSpan.textContent = origWord; // reset
-
-  return { min: minWidth, max: maxWidth };
-}
-
-const getLineWidthAfterSub = function (newWord, wordIdx, wordSpacing) {
-  // return value in scaleRatio = 1 (initial state), not current scale
-  let targetSpan = document.getElementById("w" + wordIdx);
-  let lineEle = targetSpan.parentElement;
-  let origWord = targetSpan.textContent;
-
-  targetSpan.textContent = newWord; // replace
-  let lineWidth = getLineWidth(lineEle, wordSpacing);
-  targetSpan.textContent = origWord; // reset
-
-  return lineWidth;
-}
-
-const getLineWidthAfterSubOld = function (newWord, wordIdx, lineIdx) {
-  // return value in scaleRatio = 1 (initial state), not current scale (width on brower window)
-  let targetSpan = document.getElementById("w" + wordIdx);
-  let origWord = targetSpan.textContent;
-  targetSpan.textContent = newWord; // replace
-  let targetLine = targetSpan.parentElement;
-  if (lineIdx) targetLine = document.getElementById("l" + lineIdx).firstChild;
-  let lineWidth = targetLine.getBoundingClientRect().width / getScaleRatio();
-  targetSpan.textContent = origWord; // reset ???
-  return lineWidth;
 }
