@@ -170,7 +170,7 @@ const widthChangePercentage = function (newWord, wordIdx, fields = ['max', 'min'
 
   if (fields.includes('opt')) {
     let originWs = style.wordSpacing;
-    adjustWordSpace(lineEle, targetWidth);
+    let wordSpaceEm = adjustWordSpace(lineEle, targetWidth);
     let finalWidth = lineEle.firstChild.getBoundingClientRect().width / scaleRatio;
     let finalWs = parseFloat(window.getComputedStyle(lineEle).wordSpacing.replace("px", ""));
     lineEle.style.wordSpacing = originWs;
@@ -182,6 +182,11 @@ const widthChangePercentage = function (newWord, wordIdx, fields = ['max', 'min'
   wordEle.textContent = originalWord; // restore the original text
 
   return result;
+}
+
+function getWordSpaceEm(lineEle) {
+  let wordSpacingPx = window.getComputedStyle(lineEle).wordSpacing.replace('px', '');
+  return parseFloat(wordSpacingPx) / initialMetrics.fontSize; // px => em
 }
 
 

@@ -366,8 +366,7 @@ function restore() {
 
     history[shadowTextName()][idx].pop(); // stay in sync
 
-    // do replacement
-    updateDOM(next, idx);
+    updateDOM(next, idx); // do replacement
 
     if ((logging && verbose) || stepMode) {
       console.log(`${numMods()}] @${lineIdFromWordId(idx)}.${idx} `
@@ -475,11 +474,6 @@ function swapDomain() {
   }
 }
 
-function shadowTextName(domain) {
-  domain = domain || state.domain;
-  return domain === 'rural' ? 'urban' : 'rural';
-}
-
 function updateDOM(next, idx) {
 
   let { outgoing } = state;
@@ -535,9 +529,9 @@ function trunc(arr, len = 100) {
   return arr.substring(0, len) + '...';
 }
 
-function getWordSpaceEm(lineEle) {
-  let wordSpacingPx = window.getComputedStyle(lineEle).wordSpacing.replace('px', '');
-  return parseFloat(wordSpacingPx) / initialMetrics.fontSize; // px => em
+function shadowTextName(domain) {
+  domain = domain || state.domain;
+  return domain === 'rural' ? 'urban' : 'rural';
 }
 
 function lineIdFromWordId(idx) {

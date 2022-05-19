@@ -1,12 +1,14 @@
 /*
-  parameter: words, radius, opts = {}
+  Layout lines within radius, adjusting font-size as needed
+  @params words, radius, opts = {
     opts.offset : object: { x: x, y: y };
     opts.padding: float;
     opts.fontFamily: css str
     opts.fontSize: float, for init guess;
     opts.lineHeightScale: float;
     opts.wordSpacing: float, in em
-  @return: array of lines
+  }
+  @return [fontSize, wordSpacing, bounds, text, fontFamily]
 */
 const layoutCircularLines = function (words, radius, opts = {}) {
 
@@ -103,16 +105,13 @@ const adjustWordSpace = function (lineEle, targetWidth, opts) {
 
   if (!initialMetrics) throw Error('requires initialMetrics');
 
-  if (highlightWs) ["max-word-spacing", "min-word-spacing"]
-    .forEach(c => { if (lineEle.firstChild) lineEle.firstChild.classList.remove(c) });
+  if (highlightWs) ["max-word-spacing", "min-word-spacing"].forEach
+    (c => lineEle.firstChild && lineEle.firstChild.classList.remove(c));
 
-  //let restore = opts && opts.restore;
   let radius = initialMetrics.radius;
-  let fontSize = initialMetrics.fontSize;
   let lineIdx = parseInt((lineEle.id).slice(1));
   let currentWidth = getLineWidth(lineIdx);
-  let wordSpacingPx = window.getComputedStyle(lineEle).wordSpacing.replace('px', '');
-  let wordSpacingEm = (parseFloat(wordSpacingPx) / fontSize); // px => em
+  let wordSpacingEm = getWordSpaceEm(lineEle); // px => em
   let step = currentWidth > targetWidth ? -0.01 : 0.01;
   //let originalWordSpacing = wordSpacingEm;
   /*console.log('adjustWordSpace: "' + lineEle.textContent
@@ -144,39 +143,6 @@ const adjustWordSpace = function (lineEle, targetWidth, opts) {
   }
 
   return wordSpacingEm;
-}
-
-const adjustWordSpaceOld = function (lineEle) {
-  // calculation in scale=1, not current scale
-
-  if (highlightWs) ["max-word-spacing", "min-word-spacing"]
-    .forEach(c => lineEle.classList.remove(c));
-
-  let minWordSpace = minWordSpace;
-  let maxWordSpace = maxWordSpace;
-  let wordSpacing = window.getComputedStyle(lineEle).wordSpacing;
-  let step = 0.01;
-  let lineIdx = parseInt((lineEle.id).slice(1));
-  let origW = initialMetrics.lineWidths[lineIdx] - 2 * padding;
-  let currentW = lineEle.firstChild.getBoundingClientRect().width / scaleRatio;
-  let ws = parseFloat(wordSpacing.replace('px', '')) / initialMetrics.fontSize; // px => em
-
-  // try to get within 5 pixels of current width ?
-  for (let tries = 0; Math.abs(origW - currentW) > 0.00555555 * initialMetrics.radius && tries < 200; tries++) {
-    ws += (origW > currentW) ? step : -step;
-    lineEle.style.wordSpacing = ws + "em";
-    currentW = lineEle.firstChild.getBoundingClientRect().width / scaleRatio; // scale=1
-  }
-
-  if (highlightWs) { // debugging only
-    if (ws >= maxWordSpace) line.classList.add("max-word-spacing");
-    if (ws >= minWordSpace) line.classList.add("min-word-spacing");
-  }
-
-  // set word-spacing on line to clamped value
-  lineEle.style.wordSpacing = clamp(ws, minWordSpace, maxWordSpace) + "em";
-
-  return ws;
 }
 
 /*
@@ -238,27 +204,6 @@ const measureWidth = function (text, fontSizePx = 12, fontName = fontFamily, wor
   measureCtx.font = fontSizePx + 'px ' + fontName;
   let spaceCount = text ? (text.split(" ").length - 1) : 0;
   return measureCtx.measureText(text).width + (spaceCount * (wordSpacing * fontSizePx));
-}
-
-const chordLength_old = function (rad, d) {
-  return 2 * Math.sqrt(rad * rad - (rad - d) * (rad - d));
-}
-
-const lineWidths_old = function (center, rad, lh) {
-  let result = [];
-  let num = Math.floor((rad * 2) / lh);
-  let gap = ((rad * 2) - (lh * num)) / 2;
-  for (let i = 0; i < num; i++) {
-    let d = gap + lh / 2 + (i * lh); // distance from top to the middle of the textline
-    let cl = chordLength(rad, d > rad ? d + lh : d);
-    let x = center.x - cl / 2;
-    let y = center.y - (rad - d + lh / 2);
-    if (cl) {
-      //console.log(i, d, d > r, cl);
-      result.push([x, y, cl, lh]);
-    }
-  }
-  return result;
 }
 
 const chordLength = function (rad, dis) {
