@@ -329,7 +329,7 @@ function postReplace(e) {
       console.log(`${numMods()}) @${lineIdFromWordId(idx)}.${idx} `
         + `${dword}->${dnext}(${domain.substring(0, 1)}), `
         + `${sword}->${snext}(${shadow.substring(0, 1)}) `
-        + `[${pos}] elapsed=${ms} delay=${delayMs} ws=${adjustedWs}`);
+        + `[${pos}] elapsed=${ms} delay=${delayMs} ws=${adjustedWs.toFixed(3)}`);
     }
   }
   else {
