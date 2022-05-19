@@ -91,9 +91,9 @@ let domDisplay = document.querySelector('#display');
 let measureDiv = document.querySelector('#measure-line');
 let displayContainer = document.querySelector("#display-container");
 let measureCanvas = document.querySelector("#measure-ctx");
+let displayBounds = domDisplay.getBoundingClientRect();
 let measureCtx = measureCanvas.getContext('2d');
 measureCtx.setTransform(1, 0, 0, 1, 0, 0); // scale = 1
-let displayBounds = domDisplay.getBoundingClientRect();
 
 let reader, worker, spans, initialMetrics, scaleRatio;
 let fontFamily = window.getComputedStyle(domDisplay).fontFamily;
@@ -117,7 +117,7 @@ ramble();// go
 // would result in line more than 5% off the target-width
 function contextualRandom(wordIdx, oldWord, similars, opts) {
 
-  let dbug = true;//false;
+  let dbug = false;
   let isShadow = opts && opts.isShadow;
   if (isShadow) return RiTa.random(similars);
 
@@ -141,10 +141,10 @@ function contextualRandom(wordIdx, oldWord, similars, opts) {
     + '"\nminAllowed=' + minAllowedWidth + ' target=' + targetWidth
     + ' current=' + currentLineWidth + ' maxAllowed=' + maxAllowedWidth);
 
-  if (currentLineWidth > maxAllowedWidth) throw Error
+  if (currentLineWidth > maxAllowedWidth) console.warn
     ('original(#' + lineIdx + ') too long: ' + currentLineWidth);
 
-  if (currentLineWidth < minAllowedWidth) throw Error
+  if (currentLineWidth < minAllowedWidth) console.warn
     ('original(#' + lineIdx + ') too short: ' + currentLineWidth);
 
   //console.time('Execution Time Ctx');
@@ -154,7 +154,7 @@ function contextualRandom(wordIdx, oldWord, similars, opts) {
       + oldWord + ", option: " + sim + ", result: ", res.min[1] + '-' + res.max[1]);
     let minWidth = res.min[1], maxWidth = res.max[1];
     if (maxWidth < minAllowedWidth || minWidth > maxAllowedWidth) {
-      console.log('-- reject: ' + sim, res);
+      if (dbug) console.log('-- *** reject: ' + sim, res);
       return false;
     }
     return true; // allowed
@@ -162,11 +162,11 @@ function contextualRandom(wordIdx, oldWord, similars, opts) {
 
   //console.timeEnd('Execution Time Ctx');
   if (!options.length) {
-    console.log('-- reverting to random');
+    if (dbug) console.log('-- reverting to random');
     options = similars;
   }
   else {
-    console.log('-- remaining: [' + options + ']');
+    if (dbug) console.log('-- opts(' + options.length + '): [' + options + ']');
   }
 
   if (0) {

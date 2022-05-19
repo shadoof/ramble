@@ -2,10 +2,11 @@
 importScripts('lib/rita.js');
 importScripts('cache.js');
 
+const maxResults = 20;
 const lex = RiTa.lexicon();
+const similarCache = typeof cache !== 'undefined' ? cache : {};
 
-let similarCache = typeof cache !== 'undefined' ? cache : {};
-let eventHandlers = {
+const eventHandlers = {
   init: function (data, worker) {
     const num = Object.entries(data.overrides).length;
     console.log('[INFO] Found ' + num + ' cache overrides');
@@ -40,21 +41,22 @@ this.onmessage = function (e) {
 function findSimilars(idx, word, pos, state, timestamp) {
 
   let { ignores, sources } = state;
+
   //console.log('findSimilars:', ignores, sources);
-  let limit = -1;
   if (word in similarCache) {
-    return similarCache[word]; // from cache
+    return randomSubset(similarCache[word]);
   }
   else {
-    let rhymes = RiTa.rhymes(word, { pos, limit });
-    let sounds = RiTa.soundsLike(word, { pos, limit });
-    let spells = RiTa.spellsLike(word, { pos, limit });
-    let sims = new Set([...rhymes, ...sounds, ...spells]);
+    let limit = 20, shuffle = true;
+    let rhymes = RiTa.rhymes(word, { pos, limit, shuffle });
+    let sounds = RiTa.soundsLike(word, { pos, limit, shuffle });
+    let spells = RiTa.spellsLike(word, { pos, limit, shuffle });
+    let sims = Array.from(new Set([...rhymes, ...sounds, ...spells]));
 
-    sims = [...sims].filter(sim =>
-      !ignores.includes(sim)
-      && !word.includes(sim)
-      && !sim.includes(word)
+    sims = randomSubset(sims).filter(cand =>
+      !ignores.includes(cand)
+      && !word.includes(cand)
+      && !cand.includes(word)
       && isReplaceable(word, state));
 
     if (sims.length) {
@@ -66,17 +68,22 @@ function findSimilars(idx, word, pos, state, timestamp) {
     }
   }
 
-  let inSource = sources.rural[idx] === word || sources.urban[idx] === word && sources.pos[idx] === pos;
+  let inSource = sources.rural[idx] === word
+    || sources.urban[idx] === word && sources.pos[idx] === pos;
+
   if (inSource && !sourceMisses.has(word + '/' + pos)) {
     sourceMisses.add(word + '/' + pos)
     console.warn('[WARN] No similars for: "' + word + '"/' + pos
       + (inSource ? ' *** [In Source] ' + JSON.stringify(Array.from(sourceMisses)) : ''));
   }
-  //if (inSource) throw Error('[WARN] No similars for: "' + word + '"/' + pos);
 
   return [];
 }
 let sourceMisses = new Set();
+
+function randomSubset(sims) {
+  return shuffle(sims).slice(0, Math.min(maxResults, sims.length));
+}
 
 function isReplaceable(word, state) {
   //console.log(state);
@@ -92,4 +99,16 @@ function trunc(arr, len = 100) {
     : arr;
   if (arr.length <= len) return arr;
   return arr.substring(0, len) + '...';
+}
+
+function shuffle(arr) {
+  let newArray = arr.slice(),
+    len = newArray.length,
+    i = len;
+  while (i--) {
+    let p = Math.floor(RiTa.random(len)), t = newArray[i];
+    newArray[i] = newArray[p];
+    newArray[p] = t;
+  }
+  return newArray;
 }

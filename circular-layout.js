@@ -108,13 +108,13 @@ const adjustWordSpace = function (lineEle, targetWidth, opts) {
   if (highlightWs) ["max-word-spacing", "min-word-spacing"].forEach
     (c => lineEle.firstChild && lineEle.firstChild.classList.remove(c));
 
-  let radius = initialMetrics.radius;
+  let radius = initialMetrics.radius; // unused?
   let lineIdx = parseInt((lineEle.id).slice(1));
   let currentWidth = getLineWidth(lineIdx);
   let wordSpacingEm = getWordSpaceEm(lineEle); // px => em
-  let step = 0.01;
   let left = wordSpacingEm, right = wordSpacingEm;
-  let  hitMin = false, hitMax = false;
+  let hitMin = false, hitMax = false;
+  let step = 0.01;
 
   // left
   while (currentWidth > targetWidth && !(hitMax || hitMin)) {
@@ -125,7 +125,6 @@ const adjustWordSpace = function (lineEle, targetWidth, opts) {
     if (left === maxWordSpace) hitMax = true;
     if (hitMax || hitMin) break;
   }
-  //
 
   hitMin = false, hitMax = false;
   let lw = currentWidth;
@@ -135,13 +134,14 @@ const adjustWordSpace = function (lineEle, targetWidth, opts) {
     right = clamp(right + step, minWordSpace, maxWordSpace);
     lineEle.style.wordSpacing = right + "em";
     currentWidth = getLineWidth(lineIdx);
-    if (right === minWordSpace) hitMin = true;
+    if (right === minWordSpace) hitMin = true;  
     if (right === maxWordSpace) hitMax = true;
     if (hitMax || hitMin) break;
   }
 
   hitMin = false, hitMax = false;
-  let finalWs = Math.abs(lw - targetWidth) > Math.abs(currentWidth - targetWidth) ? right : left;
+  let finalWs = Math.abs(lw - targetWidth) >
+    Math.abs(currentWidth - targetWidth) ? right : left;
 
   if (finalWs === minWordSpace) hitMin = true;
   if (finalWs === maxWordSpace) hitMax = true;
