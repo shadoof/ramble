@@ -71,7 +71,7 @@ const getInitialContentWidths = function (n, useCtx) {
   @return {
       min: array[percentage, width] distance to target width with minimal word spacing,
       max: array[percentage, width] distance to target width with max word spacing
-      opt: array[percentage, width, ws(num in px)] distance to target width after ws adjustment
+      opt: array[percentage, width, wsPx(num in px), wsEm] distance to target width after ws adjustment
   }
   @param: newWord: str, the word  to change to
           wordId: int, the id of the word to be changed
@@ -104,7 +104,6 @@ const estWidthChangePercentage = function (newWord, wordIdx, fields = ['max', 'm
 
   if (fields.includes('opt')) {
     let currentWsPx = parseFloat(style.wordSpacing.replace("px", "").trim())
-    let numOfSpace = newtxt.split(" ").length - 1; // unused?
     let step = 0.01 * initialMetrics.fontSize;
     let currentWidth = measureWidthCtx(newtxt, style.font, currentWsPx + "px");
     let left = currentWsPx, right = currentWsPx;
@@ -112,7 +111,6 @@ const estWidthChangePercentage = function (newWord, wordIdx, fields = ['max', 'm
       left -= step;
       currentWidth = measureWidthCtx(newtxt, style.font, left + "px")
     }
-    currentWidth = measureWidthCtx(newtxt, style.font, currentWsPx + "px");
     let lw = currentWidth;
     while (currentWidth < targetWidth) {
       right += step;
@@ -120,7 +118,7 @@ const estWidthChangePercentage = function (newWord, wordIdx, fields = ['max', 'm
     }
     let finalWidth = Math.abs(lw - targetWidth) >= Math.abs(currentWidth - targetWidth) ? currentWidth : lw;
     let finalWs = Math.abs(lw - targetWidth) >= Math.abs(currentWidth - targetWidth) ? right : left;
-    result.opt = [((finalWidth - targetWidth) / finalWidth) * 100, finalWidth, finalWs]
+    result.opt = [((finalWidth - targetWidth) / finalWidth) * 100, finalWidth, finalWs, finalWs / initialMetrics.fontSize]
   }
 
   return result;
@@ -131,7 +129,7 @@ const estWidthChangePercentage = function (newWord, wordIdx, fields = ['max', 'm
   @return {
       min: array[percentage, width] distance to target width with minimal word spacing,
       max: array[percentage, width] distance to target width with max word spacing
-      opt: array[percentage, width, ws(num in px)] distance to target width after ws adjustment
+      opt: array[percentage, width, wsPx(num in px), wsEm(num in em)] distance to target width after ws adjustment
   }
   @param: newWord: str, the word  to change to
           wordId: int, the id of the word to be changed
@@ -176,7 +174,7 @@ const widthChangePercentage = function (newWord, wordIdx, fields = ['max', 'min'
     lineEle.style.wordSpacing = originWs;
     spanContainer.classList.remove("max-word-spacing");
     spanContainer.classList.remove("min-word-spacing");
-    result.opt = [((finalWidth - targetWidth) / targetWidth) * 100, finalWidth, finalWs]
+    result.opt = [((finalWidth - targetWidth) / targetWidth) * 100, finalWidth, finalWs, finalWs / initialMetrics.fontSize]
   }
 
   wordEle.textContent = originalWord; // restore the original text

@@ -92,6 +92,7 @@ let measureDiv = document.querySelector('#measure-line');
 let displayContainer = document.querySelector("#display-container");
 let measureCanvas = document.querySelector("#measure-ctx");
 let measureCtx = measureCanvas.getContext('2d');
+measureCtx.setTransform(1, 0, 0, 1, 0, 0); // scale = 1
 let displayBounds = domDisplay.getBoundingClientRect();
 
 let reader, worker, spans, initialMetrics, scaleRatio;
@@ -116,7 +117,7 @@ ramble();// go
 // would result in line more than 5% off the target-width
 function contextualRandom(wordIdx, oldWord, similars, opts) {
 
-  let dbug = false;
+  let dbug = true;
   let isShadow = opts && opts.isShadow;
   if (isShadow) return RiTa.random(similars);
 
