@@ -117,10 +117,11 @@ ramble();// go
 // would result in line more than 5% off the target-width
 function contextualRandom(wordIdx, oldWord, similars, opts) {
 
+  let dbug = 1;
   let isShadow = opts && opts.isShadow;
   if (isShadow) return RiTa.random(similars);
 
-  updateDelay = 10000000;
+  if (dbug) updateDelay = 10000000;
 
   let wordEle = document.querySelector(`#w${wordIdx}`);
   let lineEle = wordEle.parentElement.parentElement;
@@ -131,36 +132,39 @@ function contextualRandom(wordIdx, oldWord, similars, opts) {
   let targetWidth = initialMetrics.lineWidths[lineIdx];
   let minAllowedWidth = targetWidth * .95;
   let maxAllowedWidth = targetWidth * 1.05;
-  console.log('lineIdx=' + lineIdx + ' text: "' + text
+  if (dbug) console.log('lineIdx=' + lineIdx + ' text: "' + text
     + '"\nminAllowedWidth=' + minAllowedWidth + ' target='
     + targetWidth + ' maxAllowedWidth=' + maxAllowedWidth);
 
   // get current line and word widths
-  let computedStyle = window.getComputedStyle(lineEle)
-  let currentLineWidthCtx = measureWidthCtx(text, computedStyle.font, computedStyle.wordSpacing);
-  let currentLineWidthDom = getLineWidth(lineIdx);
-  let currentLineWidthIm = initialMetrics.contentWidths[lineIdx];
-  let currentLineWidthImCtx = initialMetrics.contentWidthsCtx[lineIdx];
-  let currentLineWidthBcr = lineEle.firstChild.getBoundingClientRect().width;
-  console.log("r: " + scaleRatio+ ' current-width(#' + lineIdx + '): dom=' + currentLineWidthDom + ' ctx=' + currentLineWidthCtx
-    + ' im=' + currentLineWidthIm + ' imCtx=' + currentLineWidthImCtx + ' bcr=' + currentLineWidthBcr);
+  let { font, wordSpacing } = window.getComputedStyle(lineEle)
+  let currentLineWidthCtx = measureWidthCtx(text, font, wordSpacing);
 
-  if (currentLineWidthCtx > maxAllowedWidth) throw Error('original(#' + lineIdx + ') too long: ' + currentLineWidthCtx);
-  if (currentLineWidthCtx < minAllowedWidth) throw Error('original(#' + lineIdx + ') too short: ' + currentLineWidthCtx);
-  
-  console.time('Execution Time Ctx');
-  similars.forEach(sim => {
-    let res = estWidthChangePercentage(sim, wordIdx, ['max', 'min', 'opt']);
-    console.log("word: "+ oldWord + " choice: " + sim + " result: ", res);
-  });
-  console.timeEnd('Execution Time Ctx');
+  if (currentLineWidthCtx > maxAllowedWidth) throw Error
+    ('original(#' + lineIdx + ') too long: ' + currentLineWidthCtx);
 
-  console.time('Execution Time Dom');
-  similars.forEach(sim => { 
-    let res = widthChangePercentage(sim, wordIdx, ['max', 'min', 'opt']);
-    console.log("word: "+ oldWord + " choice: " + sim + " result Dom: ", res);
-  })
-  console.timeEnd('Execution Time Dom');
+  if (currentLineWidthCtx < minAllowedWidth) throw Error
+    ('original(#' + lineIdx + ') too short: ' + currentLineWidthCtx);
+
+  if (1) {
+    //console.time('Execution Time Ctx');
+    similars.forEach(sim => {
+      let res = estWidthChangePercentage(sim, wordIdx, ['max', 'min', 'opt']);
+      console.log("@" + lineIdx + '.' + wordIdx + " word: "
+        + oldWord + ", option: " + sim + ", result: ", res);
+    });
+    //console.timeEnd('Execution Time Ctx');
+  }
+
+  if (0) {
+    console.time('Execution Time Dom');
+    similars.forEach(sim => {
+      let res = widthChangePercentage(sim, wordIdx, ['max', 'min', 'opt']);
+      console.log("@" + lineIdx + '.' + wordIdx + " word: "
+        + oldWord + ", option: " + sim + ", result-DOM: ", res);
+    })
+    console.timeEnd('Execution Time Dom');
+  }
 
   return RiTa.random(similars);
 }
@@ -200,7 +204,7 @@ function doLayout() {
   });
 
   adjustAllWordSpacing(adjustInitialWordspacing);
-  initialMetrics.contentWidths = getInitialContentWidths(lines.length); 
+  initialMetrics.contentWidths = getInitialContentWidths(lines.length);
   initialMetrics.contentWidthsCtx = getInitialContentWidths(lines.length, true);
   scaleToFit(); // size to window 
 }
@@ -569,7 +573,8 @@ function updateDOM(next, idx) {
 
   if (highlights) wordEle.classList.add(outgoing ? 'outgoing' : 'incoming');
   let wordSpace = adjustWordSpace(lineEle, initialMetrics.lineWidths[lineIdx]);
-  //console.log('@' + lineIdx + '.'+idx+' wordSpace=' + wordSpace);//+'\n  '+ wordEle.parentElement.innerHTML);
+  console.log('@' + lineIdx + '.' + idx + ' wordSpace=' + wordSpace
+    + '/' + wordSpace * initialMetrics.fontSize + 'em');//+'\n  '+ wordEle.parentElement.innerHTML);
 }
 
 function update(updating = true) {
