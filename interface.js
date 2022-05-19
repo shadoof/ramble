@@ -159,6 +159,15 @@ function download(data, filename, type = 'json') {
 }
 
 function createProgressBars(opts = {}) {
+
+  progressBarsBaseMatrix = [
+    [1, 0, 0, 1, 0, 0], // bg
+    [1, 0, 0, 1, 0, 0], // free
+    [-1, 0, 0, 1, initialMetrics.radius * 2, 0], //shared
+    [-1, 0, 0, 1, initialMetrics.radius * 2, 0], //urban
+    [1, 0, 0, 1, 0, 0], //rural
+  ];
+
   // progress bars dict
   const pbars = [];
   let progress = document.querySelectorAll(".progress");
@@ -178,6 +187,7 @@ function createProgressBars(opts = {}) {
     });
     pbars.push(pbar);
   });
+
   return pbars;
 }
 
@@ -230,7 +240,7 @@ function updateProgressBar(p, i, m, r) {
     let nstr = n * r + ",";
     str += nstr;
   })
-  str = str.substring(0,str.length - 1);
+  str = str.substring(0, str.length - 1);
   str += ")";
   //console.log(str);
   p.style.transform = str;

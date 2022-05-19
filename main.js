@@ -112,12 +112,11 @@ ramble();// go
 
 /////////////////////////////////////////////////////////
 
-
 // look at each similar, ignore those that, with min or max word-spacing
 // would result in line more than 5% off the target-width
 function contextualRandom(wordIdx, oldWord, similars, opts) {
 
-  let dbug = 1;
+  let dbug = false;
   let isShadow = opts && opts.isShadow;
   if (isShadow) return RiTa.random(similars);
 
@@ -132,35 +131,34 @@ function contextualRandom(wordIdx, oldWord, similars, opts) {
   let targetWidth = initialMetrics.lineWidths[lineIdx];
   let minAllowedWidth = targetWidth * .95;
   let maxAllowedWidth = targetWidth * 1.05;
-  if (dbug) console.log('lineIdx=' + lineIdx + ' text: "' + text
-    + '"\nminAllowedWidth=' + minAllowedWidth + ' target='
-    + targetWidth + ' maxAllowedWidth=' + maxAllowedWidth);
 
   // get current line and word widths
   let { font, wordSpacing } = window.getComputedStyle(lineEle)
-  let currentLineWidthCtx = measureWidthCtx(text, font, wordSpacing);
+  let currentLineWidth = measureWidthCtx(text, font, wordSpacing);
 
-  if (currentLineWidthCtx > maxAllowedWidth) throw Error
-    ('original(#' + lineIdx + ') too long: ' + currentLineWidthCtx);
+  if (dbug) console.log('lineIdx=' + lineIdx + ' text: "' + text
+    + '"\nminAllowed=' + minAllowedWidth + ' target=' + targetWidth
+    + ' current=' + currentLineWidth + ' maxAllowed=' + maxAllowedWidth);
 
-  if (currentLineWidthCtx < minAllowedWidth) throw Error
-    ('original(#' + lineIdx + ') too short: ' + currentLineWidthCtx);
+  if (currentLineWidth > maxAllowedWidth) throw Error
+    ('original(#' + lineIdx + ') too long: ' + currentLineWidth);
 
-  if (1) {
-    //console.time('Execution Time Ctx');
-    similars.forEach(sim => {
-      let res = estWidthChangePercentage(sim, wordIdx, ['max', 'min', 'opt']);
-      console.log("@" + lineIdx + '.' + wordIdx + " word: "
-        + oldWord + ", option: " + sim + ", result: ", res);
-    });
-    //console.timeEnd('Execution Time Ctx');
-  }
+  if (currentLineWidth < minAllowedWidth) throw Error
+    ('original(#' + lineIdx + ') too short: ' + currentLineWidth);
+
+  //console.time('Execution Time Ctx');
+  similars.forEach(sim => {
+    let res = estWidthChangePercentage(sim, wordIdx, ['max', 'min', 'opt']);
+    if (dbug) console.log("@" + lineIdx + '.' + wordIdx + " word: "
+      + oldWord + ", option: " + sim + ", result: ", res);
+  });
+  //console.timeEnd('Execution Time Ctx');
 
   if (0) {
     console.time('Execution Time Dom');
     similars.forEach(sim => {
       let res = widthChangePercentage(sim, wordIdx, ['max', 'min', 'opt']);
-      console.log("@" + lineIdx + '.' + wordIdx + " word: "
+      if (dbug) console.log("@" + lineIdx + '.' + wordIdx + " word: "
         + oldWord + ", option: " + sim + ", result-DOM: ", res);
     })
     console.timeEnd('Execution Time Dom');
@@ -186,26 +184,21 @@ function doLayout() {
 
   // layout lines in circular display
   let initRadius = Math.max(radius, 450);
-  let offset = { x: displayBounds.x + initRadius, y: displayBounds.y + initRadius - 5 };
+  let offset = { x: displayBounds.x + initRadius, y: displayBounds.y + initRadius };
   let opts = { offset, fontFamily, lineHeightScale, wordSpace: initialWordSpace, padding };
   let lines = layoutCircularLines(sources[state.domain], initRadius, opts);
   initialMetrics = createCircularDOM(domDisplay, initRadius, lines);
 
-  progressBarsBaseMatrix = [
-    [1, 0, 0, 1, 0, 0], // bg
-    [1, 0, 0, 1, 0, 0], // free
-    [-1, 0, 0, 1, initRadius * 2, 0], //shared
-    [-1, 0, 0, 1, initRadius * 2, 0], //urban
-    [1, 0, 0, 1, 0, 0], //rural
-  ];
   // create progress bars
   progressBars = createProgressBars({
-    color: visBandColors, trailColor: visBandColors[4], strokeWidth: visBandWidth
+    color: visBandColors,
+    trailColor: visBandColors[4],
+    strokeWidth: visBandWidth
   });
 
   adjustAllWordSpacing(adjustInitialWordspacing);
-  initialMetrics.contentWidths = getInitialContentWidths(lines.length);
-  initialMetrics.contentWidthsCtx = getInitialContentWidths(lines.length, true);
+  //initialMetrics.contentWidths = getInitialContentWidths(lines.length);
+  //initialMetrics.contentWidthsCtx = getInitialContentWidths(lines.length, true);
   scaleToFit(); // size to window 
 }
 
@@ -298,8 +291,7 @@ function replace() {
   let shadow = shadowTextName();
   let idx = RiTa.random(repids.filter(id => !reader
     || !reader.selection().includes(sources[domain][id])));
-  //idx = 261;
-  //updateDelay = 10000000; // tmp-remove
+  //idx = 261; //updateDelay = 10000000; // tmp-remove
   let dword = last(history[domain][idx]);
   let sword = last(history[shadow][idx]);
   let data = { idx, dword, sword, state, timestamp: Date.now() };
@@ -324,7 +316,7 @@ function postReplace(e) {
     // pick a random similar to replace in display text
     let dnext = contextualRandom(idx, dword, dsims);
     history[domain][idx].push(dnext);
-    updateDOM(dnext, idx);
+    let adjustedWs = updateDOM(dnext, idx);
 
     // pick a random similar to store in shadow text
     let snext = contextualRandom(idx, sword, ssims, { isShadow: true });
@@ -337,10 +329,8 @@ function postReplace(e) {
       console.log(`${numMods()}) @${lineIdFromWordId(idx)}.${idx} `
         + `${dword}->${dnext}(${domain.substring(0, 1)}), `
         + `${sword}->${snext}(${shadow.substring(0, 1)}) `
-        + `[${pos}] elapsed=${ms} delay=${delayMs}`);
+        + `[${pos}] elapsed=${ms} delay=${delayMs} ws=${adjustedWs}`);
     }
-    //console.log(`${numMods()}) ${Date.now()-ts}ms`);
-    //ts = Date.now(); // timing
   }
   else {
     console.log(`[FAIL] @${lineIdFromWordId(idx)}.${idx} `
@@ -383,9 +373,6 @@ function restore() {
       console.log(`${numMods()}] @${lineIdFromWordId(idx)}.${idx} `
         + `${domain}: ${word} -> ${next} [${pos}]`);
     }
-
-    //console.log(`${numMods()}] ${Date.now()-ts}ms`);
-    //ts = Date.now(); // perf. timing
   }
   else {
     let id = repids.find(idx => history[domain][idx].length > 1);
@@ -469,74 +456,6 @@ function unspanify() {
     ("word")).map(e => e.textContent);
 }
 
-
-/*  lengthAwareRandom(current): 
-    -- get replacement options
-    -- make random replacement (default, strictly shorter, or strictly longer than current)
-    -- calculate new width
-    -- if width is longer than ideal, we shrink the word-space until it is near ideal
-    -- if width is shorter than ideal, we grow the word-space until it is near ideal
-    -- if word-space is near min, we store the fact that we need a shorter word next time
-    -- if word-space is near max, we store the fact that we need a longer word next time
-      -- data-structure? array of needs ['shorter','longer','default'] 
- 
-    lengthAwareRandom(shadow):
-*/
-function lengthAwareRandomX(wordIdx, word, similars, opts) {
-  let isShadow = opts && opts.isShadow;
-  let wordEle = document.querySelector(`#w${wordIdx}`);
-  let lineEle = wordEle.parentElement.parentElement;
-  let lineIdx = parseInt((lineEle.id).slice(1));
-  let originalW = initialMetrics.contentWidths[lineIdx];//lineWidths[lineIdx] - (2 * padding);
-  let originalW2 = initialMetrics.lineWidths[lineIdx];
-  let currentW = getLineWidth(lineIdx);
-  let diff = currentW - originalW, msg = lineIdx + '/' + wordIdx + ') \'' + lineEle.innerText + '\' ';
-  if (!isShadow) {
-    console.log('-'.repeat(70) + '\nwidths: ' + originalW, currentW, originalW2, 'diff=' + diff);
-    console.log(msg);
-    updateDelay = 300000;
-  }
-  if (diff > 0) {
-    if (!isShadow) {
-      console.log('Want shorter');
-      updateDelay = 300000;
-    }
-    filter = (w) => {
-      let lw = getLineWidthAfterSub(w, wordIdx, lineIdx);
-      if (!isShadow) console.log('  ' + w + ' -> ' + lw + ' ' + (lw < originalW));
-      return lw < originalW;
-    }
-  }
-  else if (diff < 0) {
-    if (!isShadow) {
-      console.log('Want longer');
-      updateDelay = 300000;
-    }
-    filter = (w) => {
-      let lw = getLineWidthAfterSub(w, wordIdx, lineIdx);
-      if (!isShadow) console.log('  ' + w + ' -> ' + lw + ' ' + (lw > originalW));
-      return lw > originalW;
-    }
-  }
-  else {
-    let result = RiTa.random(similars);
-    if (!isShadow) {
-      console.log(word + '->' + result);
-      console.log('post-width', getLineWidthAfterSub(result, wordIdx, lineIdx));
-      //console.log('-'.repeat(70));
-    }
-    return result;
-  }
-  let choices = similars.filter(filter);
-  if (!choices.length) choices = similars;
-  let result = RiTa.random(choices);
-  if (!isShadow) {
-    console.log(word + '->' + result);
-    console.log('post-width', getLineWidthAfterSub(result, wordIdx, lineIdx));
-  }
-  return result;
-}
-
 function swapDomain() {
   state.legs = 0;
   state.domain = shadowTextName();
@@ -564,17 +483,19 @@ function shadowTextName(domain) {
 function updateDOM(next, idx) {
 
   let { outgoing } = state;
+
   let wordEle = document.querySelector(`#w${idx}`);
   let lineEle = wordEle.parentElement.parentElement;
   let lineIdx = parseFloat(lineEle.id.slice(1));
-  //console.log('updateDOM', next, idx, lineIdx);
-  //console.log('replacing ' + wordEle.textContent + ' with ' + next);
   wordEle.textContent = next;
 
   if (highlights) wordEle.classList.add(outgoing ? 'outgoing' : 'incoming');
   let wordSpace = adjustWordSpace(lineEle, initialMetrics.lineWidths[lineIdx]);
-  console.log('@' + lineIdx + '.' + idx + ' wordSpace=' + wordSpace
-    + '/' + wordSpace * initialMetrics.fontSize + 'em');//+'\n  '+ wordEle.parentElement.innerHTML);
+
+  if (0) console.log('@' + lineIdx + '.' + idx + ' wordSpace=' + wordSpace
+    + '/' + wordSpace * initialMetrics.fontSize + 'em');
+
+  return wordSpace;
 }
 
 function update(updating = true) {
@@ -599,7 +520,8 @@ function scaleToFit() {
   progressBounds = document.getElementById("progress4")
     .getBoundingClientRect();
 
-  measureCtx.font = window.getComputedStyle(document.getElementById("l0")).font // update measure ctx
+  // update measure ctx
+  measureCtx.font = window.getComputedStyle(document.getElementById("l0")).font;
   log(`opts { scale: ${scaleRatio} font: ${measureCtx.font.replace(/,.*/, '')} }`);
   //console.log(measureCtx.font);
 }

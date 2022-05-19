@@ -10,25 +10,24 @@ const measureWidthCtx = function (text, font, wordSpacing) { // scale = 1
 
   measureCtx.font = font;
 
-  let wordSpacePx;
-  if (!wordSpacing) {
-    wordSpacePx = 0;
-  } else {
-    if (typeof wordSpacing === 'number') {
-      wordSpacePx = wordSpacing * initialMetrics.fontSize;
-    } else if (typeof wordSpacing === 'string') {
-      if (/px/.test(wordSpacing)) {
-        wordSpacePx = parseFloat(wordSpacing.replace("px", "").trim());
-      } else if (/em/.test(wordSpacing)) {
-        wordSpacePx = parseFloat(wordSpacing.replace("em", "").trim()) * initialMetrics.fontSize;
-      } else {
-        wordSpacePx = 0
-        console.error("Unable to parse wordSpacing in measureWidthCtx, using 0");
-      }
+  let wordSpacePx = wordSpacing || 0;
+ 
+  if (typeof wordSpacing === 'number') {
+    wordSpacePx = wordSpacing * initialMetrics.fontSize;
+  } 
+  else if (typeof wordSpacing === 'string') {
+    if (/px/.test(wordSpacing)) {
+      wordSpacePx = parseFloat(wordSpacing.replace("px", "").trim());
+    } else if (/em/.test(wordSpacing)) {
+      wordSpacePx = parseFloat(wordSpacing.replace("em", "").trim()) * initialMetrics.fontSize;
     } else {
-      throw Error("Invalid wordSpacing arugment in measureWidthCtx");
+      wordSpacePx = 0;
+      console.error("Unable to parse wordSpacing, using 0");
     }
+  } else {
+    throw Error("Invalid wordSpacing arg");
   }
+  
   let width = measureCtx.measureText(text).width;
   let numSpaces = text.split(' ').length - 1;
 
@@ -50,60 +49,6 @@ const getLineWidth = function (line, wordSpacing = undefined) {
     / (typeof scaleRatio === 'number' ? scaleRatio : 1);
   if (wordSpacing) lineEle.style.wordSpacing = currentSpacing; // reset ws
   return width;
-}
-
-/*
-  Get line width after a subsitution, return the minWidth 
-  (with min word space) and maxWidth (with max word space)
-  @param: newWord: the word to replace
-          wordIdx: the index of the word to be replaced
-*/
-const getLineWidthAfterSubX = function (newWord, wordIdx) {
-  // return value in scaleRatio = 1 (initial state), not current scale
-
-  let targetSpan = document.getElementById("w" + wordIdx);
-  let lineEle = targetSpan.parentElement;
-  let origWord = targetSpan.textContent;
-
-  targetSpan.textContent = newWord; // replace
-
-  let minWidth = getLineWidth(lineEle, minWordSpace);
-  let maxWidth = getLineWidth(lineEle, maxWordSpace);
-
-  targetSpan.textContent = origWord; // reset
-
-  return { min: minWidth, max: maxWidth };
-}
-
-/*
-  Get line width after a subsitution, with the current or a set word space
-  @param: newWord: the word to replace
-          wordIdx: the index of the word to be replaced
-          wordSpacing: (optional, number in em)
-*/
-const getLineWidthAfterSub = function (newWord, wordIdx, wordSpacing) {
-  // return value in scaleRatio = 1 (initial state), not current scale
-  let targetSpan = document.getElementById("w" + wordIdx);
-  let lineEle = targetSpan.parentElement;
-  let origWord = targetSpan.textContent;
-
-  targetSpan.textContent = newWord; // replace
-  let lineWidth = getLineWidth(lineEle, wordSpacing);
-  targetSpan.textContent = origWord; // reset
-
-  return lineWidth;
-}
-
-const getLineWidthAfterSubOld = function (newWord, wordIdx, lineIdx) {
-  // return value in scaleRatio = 1 (initial state), not current scale (width on brower window)
-  let targetSpan = document.getElementById("w" + wordIdx);
-  let origWord = targetSpan.textContent;
-  targetSpan.textContent = newWord; // replace
-  let targetLine = targetSpan.parentElement;
-  if (lineIdx) targetLine = document.getElementById("l" + lineIdx).firstChild;
-  let lineWidth = targetLine.getBoundingClientRect().width / scaleRatio;
-  targetSpan.textContent = origWord; // reset ???
-  return lineWidth;
 }
 
 const getInitialContentWidths = function (n, useCtx) {
@@ -136,8 +81,9 @@ const getInitialContentWidths = function (n, useCtx) {
 const estWidthChangePercentage = function (newWord, wordIdx, fields = ['max', 'min']) {
 
   let result = {};
-  let originalWord = document.getElementById("w" + wordIdx).textContent;
-  let spanContainer = document.getElementById("w" + wordIdx).parentElement;
+  let wordEle = document.getElementById("w" + wordIdx);
+  let originalWord = wordEle.textContent;
+  let spanContainer = wordEle.parentElement;
   let lineEle = spanContainer.parentElement;
   let lineIdx = parseInt(lineEle.id.slice(1));
   let targetWidth = initialMetrics.lineWidths[lineIdx];
