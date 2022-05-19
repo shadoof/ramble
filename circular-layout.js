@@ -112,22 +112,39 @@ const adjustWordSpace = function (lineEle, targetWidth, opts) {
   let lineIdx = parseInt((lineEle.id).slice(1));
   let currentWidth = getLineWidth(lineIdx);
   let wordSpacingEm = getWordSpaceEm(lineEle); // px => em
-  let step = currentWidth > targetWidth ? -0.01 : 0.01;
-  //let originalWordSpacing = wordSpacingEm;
-  /*console.log('adjustWordSpace: "' + lineEle.textContent
-    + '"\n  width=' + currentWidth + '\n  target=' + targetWidth
-    + '\n  wspace=' + wordSpacingEm + '\n  step=' + step);*/
+  let step = 0.01;
+  let left = wordSpacingEm, right = wordSpacingEm;
+  let  hitMin = false, hitMax = false;
 
-  let closeEnough = radius / 100; hitMin = false, hitMax = false;
-  while (Math.abs(currentWidth - targetWidth) > closeEnough) {
-
-    lineEle.style.wordSpacing = wordSpacingEm + "em";
+  // left
+  while (currentWidth > targetWidth && !(hitMax || hitMin)) {
+    left = clamp(left - step, minWordSpace, maxWordSpace);
+    lineEle.style.wordSpacing = left + "em";
     currentWidth = getLineWidth(lineIdx);
-    wordSpacingEm = clamp(wordSpacingEm + step, minWordSpace, maxWordSpace);
-    if (wordSpacingEm === minWordSpace) hitMin = true;
-    if (wordSpacingEm === maxWordSpace) hitMax = true;
+    if (left === minWordSpace) hitMin = true;
+    if (left === maxWordSpace) hitMax = true;
     if (hitMax || hitMin) break;
   }
+  //
+
+  hitMin = false, hitMax = false;
+  let lw = currentWidth;
+
+  //right
+  while (currentWidth < targetWidth && !(hitMax || hitMin)) {
+    right = clamp(right + step, minWordSpace, maxWordSpace);
+    lineEle.style.wordSpacing = right + "em";
+    currentWidth = getLineWidth(lineIdx);
+    if (right === minWordSpace) hitMin = true;
+    if (right === maxWordSpace) hitMax = true;
+    if (hitMax || hitMin) break;
+  }
+
+  hitMin = false, hitMax = false;
+  let finalWs = Math.abs(lw - targetWidth) > Math.abs(currentWidth - targetWidth) ? right : left;
+
+  if (finalWs === minWordSpace) hitMin = true;
+  if (finalWs === maxWordSpace) hitMax = true;
 
   if (highlightWs && (hitMin || hitMax)) { // debugging
     if (lineEle.firstChild) {
@@ -142,7 +159,7 @@ const adjustWordSpace = function (lineEle, targetWidth, opts) {
     }
   }
 
-  return wordSpacingEm;
+  return finalWs;
 }
 
 /*
@@ -200,7 +217,6 @@ const fitToBox = function (words, maxWidth, fontSize, fontName, wordSpacing) {
 // TODO: should measure with the DOM, not canvas
 const measureWidth = function (text, fontSizePx = 12, fontName = fontFamily, wordSpacing = 0) {
   // caculation in scale=1, not current scale
-  measureCtx = measureCtx || document.createElement("canvas").getContext("2d");
   measureCtx.font = fontSizePx + 'px ' + fontName;
   let spaceCount = text ? (text.split(" ").length - 1) : 0;
   return measureCtx.measureText(text).width + (spaceCount * (wordSpacing * fontSizePx));
