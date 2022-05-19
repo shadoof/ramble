@@ -106,18 +106,18 @@ const estWidthChangePercentage = function (newWord, wordIdx, fields = ['max', 'm
     let currentWsPx = parseFloat(style.wordSpacing.replace("px", "").trim())
     let step = 0.01 * initialMetrics.fontSize;
     let currentWidth = measureWidthCtx(newtxt, style.font, currentWsPx + "px");
-    let left = currentWsPx, right = currentWsPx;
-    while (currentWidth > targetWidth) {
-      left -= step;
-      currentWidth = measureWidthCtx(newtxt, style.font, left + "px")
+    let direction = currentWidth >= targetWidth ? -1 : 1;
+    let bound1 = currentWsPx, bound2, w1;
+    while((direction > 0 ? currentWidth < targetWidth : currentWidth > targetWidth)){
+      bound1 += step * direction;
+      currentWidth = measureWidthCtx(newtxt, style.font, bound1 + "px");
     }
-    let lw = currentWidth;
-    while (currentWidth < targetWidth) {
-      right += step;
-      currentWidth = measureWidthCtx(newtxt, style.font, right + "px")
-    }
-    let finalWidth = Math.abs(lw - targetWidth) >= Math.abs(currentWidth - targetWidth) ? currentWidth : lw;
-    let finalWs = Math.abs(lw - targetWidth) >= Math.abs(currentWidth - targetWidth) ? right : left;
+    w1 = currentWidth
+    bound2 = bound1 - (step * direction);
+    currentWidth = measureWidthCtx(newtxt, style.font, bound2 + "px");
+    
+    let finalWidth = Math.abs(w1 - targetWidth) >= Math.abs(currentWidth - targetWidth) ? currentWidth : w1;
+    let finalWs = Math.abs(w1 - targetWidth) >= Math.abs(currentWidth - targetWidth) ? bound2 : bound1;
     result.opt = [((finalWidth - targetWidth) / finalWidth) * 100, finalWidth, finalWs, finalWs / initialMetrics.fontSize]
   }
 
@@ -174,7 +174,7 @@ const widthChangePercentage = function (newWord, wordIdx, fields = ['max', 'min'
     lineEle.style.wordSpacing = originWs;
     spanContainer.classList.remove("max-word-spacing");
     spanContainer.classList.remove("min-word-spacing");
-    result.opt = [((finalWidth - targetWidth) / targetWidth) * 100, finalWidth, finalWs, finalWs / initialMetrics.fontSize]
+    result.opt = [((finalWidth - targetWidth) / targetWidth) * 100, finalWidth, finalWs, wordSpaceEm]
   }
 
   wordEle.textContent = originalWord; // restore the original text
