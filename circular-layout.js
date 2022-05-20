@@ -108,43 +108,32 @@ const adjustWordSpace = function (lineEle, targetWidth, opts) {
   if (highlightWs) ["max-word-spacing", "min-word-spacing"].forEach
     (c => lineEle.firstChild && lineEle.firstChild.classList.remove(c));
 
-  let radius = initialMetrics.radius; // unused?
   let lineIdx = parseInt((lineEle.id).slice(1));
   let currentWidth = getLineWidth(lineIdx);
   let wordSpacingEm = getWordSpaceEm(lineEle); // px => em
-  let left = wordSpacingEm, right = wordSpacingEm;
+  wordSpacingEm = parseFloat(wordSpacingEm.toFixed(2));
+  if (targetWidth === currentWidth) return wordSpacingEm;
+  let bound1 = wordSpacingEm, bound2, w1;
   let hitMin = false, hitMax = false;
   let step = 0.01;
+  let direction = currentWidth > targetWidth ? -1 : 1;
 
-  // left
-  while (currentWidth > targetWidth && !(hitMax || hitMin)) {
-    left = clamp(left - step, minWordSpace, maxWordSpace);
-    lineEle.style.wordSpacing = left + "em";
-    currentWidth = getLineWidth(lineIdx);
-    if (left === minWordSpace) hitMin = true;
-    if (left === maxWordSpace) hitMax = true;
-    if (hitMax || hitMin) break;
+  while((direction > 0 ? currentWidth < targetWidth : currentWidth > targetWidth)) {
+    bound1 = clamp(bound1 + (step * direction), minWordSpace, maxWordSpace);
+    currentWidth = getLineWidth(lineIdx, bound1);
+    if (bound1 <= minWordSpace || bound1 >= maxWordSpace) break;
   }
 
-  hitMin = false, hitMax = false;
-  let lw = currentWidth;
+  w1 = currentWidth;
+  bound2 = bound1 - (step * direction);
+  currentWidth = getLineWidth(lineIdx, bound2);
 
-  //right
-  while (currentWidth < targetWidth && !(hitMax || hitMin)) {
-    right = clamp(right + step, minWordSpace, maxWordSpace);
-    lineEle.style.wordSpacing = right + "em";
-    currentWidth = getLineWidth(lineIdx);
-    if (right === minWordSpace) hitMin = true;  
-    if (right === maxWordSpace) hitMax = true;
-    if (hitMax || hitMin) break;
-  }
+  let finalWs = Math.abs(w1 - targetWidth) > Math.abs(currentWidth - targetWidth) ? bound2 : bound1;
+  
+  if (finalWs <= minWordSpace) hitMin = true;
+  if (finalWs >= maxWordSpace) hitMax = true;
 
-  hitMin = false, hitMax = false;
-  let finalWs = Math.abs(lw - targetWidth) >
-    Math.abs(currentWidth - targetWidth) ? right : left;
-
-  if (finalWs === minWordSpace) hitMin = true;
-  if (finalWs === maxWordSpace) hitMax = true;
+  lineEle.style.wordSpacing = finalWs+"em";
 
   if (highlightWs && (hitMin || hitMax)) { // debugging
     if (lineEle.firstChild) {
