@@ -11,7 +11,6 @@ const measureWidthCtx = function (text, font, wordSpacing) { // scale = 1
   measureCtx.font = font;
 
   let wordSpacePx = wordSpacing || 0;
- 
   if (typeof wordSpacing === 'number') {
     wordSpacePx = wordSpacing * initialMetrics.fontSize;
   } 
@@ -78,7 +77,7 @@ const getInitialContentWidths = function (n, useCtx) {
           field: arr, return field, ['max', 'min', 'opt'] 
           // only get the neccessary ones for the best performance
 */
-const estWidthChangePercentage = function (newWord, wordIdx, fields = ['max', 'min']) {
+const widthChangePercentage = function (newWord, wordIdx, fields = ['max', 'min']) {
 
   let result = {};
   let wordEle = document.getElementById("w" + wordIdx);
@@ -135,9 +134,9 @@ const estWidthChangePercentage = function (newWord, wordIdx, fields = ['max', 'm
           wordId: int, the id of the word to be changed
           field: arr, return field, ['max', 'min', 'opt'] 
           // only get the neccessary ones for the best performance 
-          // but this is generally slower than estWidthChangePercentage
+          // but this is generally slower than widthChangePercentage
 */
-const widthChangePercentage = function (newWord, wordIdx, fields = ['max', 'min']) {
+const widthChangePercentageDom = function (newWord, wordIdx, fields = ['max', 'min']) {
 
   let result = {};
   let wordEle = document.getElementById("w" + wordIdx)
