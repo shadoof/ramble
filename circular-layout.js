@@ -121,21 +121,21 @@ const adjustWordSpace = function (lineEle, targetWidth, opts) {
     left = clamp(left - step, minWordSpace, maxWordSpace);
     lineEle.style.wordSpacing = left + "em";
     currentWidth = getLineWidth(lineIdx);
-    if (left === minWordSpace) hitMin = true;
-    if (left === maxWordSpace) hitMax = true;
+    if (left <= minWordSpace) hitMin = true;
+    if (left >= maxWordSpace) hitMax = true;
     if (hitMax || hitMin) break;
   }
 
   hitMin = false, hitMax = false;
   let lw = currentWidth;
 
-  //right
+  // right
   while (currentWidth < targetWidth && !(hitMax || hitMin)) {
     right = clamp(right + step, minWordSpace, maxWordSpace);
     lineEle.style.wordSpacing = right + "em";
     currentWidth = getLineWidth(lineIdx);
-    if (right === minWordSpace) hitMin = true;  
-    if (right === maxWordSpace) hitMax = true;
+    if (right <= minWordSpace) hitMin = true;  
+    if (right >= maxWordSpace) hitMax = true;
     if (hitMax || hitMin) break;
   }
 
@@ -143,8 +143,8 @@ const adjustWordSpace = function (lineEle, targetWidth, opts) {
   let finalWs = Math.abs(lw - targetWidth) >
     Math.abs(currentWidth - targetWidth) ? right : left;
 
-  if (finalWs === minWordSpace) hitMin = true;
-  if (finalWs === maxWordSpace) hitMax = true;
+  if (finalWs <= minWordSpace) hitMin = true;
+  if (finalWs >= maxWordSpace) hitMax = true;
 
   if (highlightWs && (hitMin || hitMax)) { // debugging
     if (lineEle.firstChild) {
