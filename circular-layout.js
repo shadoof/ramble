@@ -140,11 +140,11 @@ const adjustWordSpace = function (lineEle, targetWidth, opts) {
 
   if (highlightWs && lineEle.firstChild && (hitMin || hitMax)) { // debugging
     if (hitMax) {
-      console.log('[WARN] @' + lineIdx + ' Wordspace at max: ' + wordSpacingEm);
+      console.log('[WARN] @' + lineIdx + ' Wordspace at max: ' + finalWs);
       lineEle.firstChild.classList.add("max-word-spacing");
     }
     else {
-      console.log('[WARN] @' + lineIdx + ' Wordspace at min: ' + wordSpacingEm);
+      console.log('[WARN] @' + lineIdx + ' Wordspace at min: ' + finalWs);
       lineEle.firstChild.classList.add("min-word-spacing");
     }
   }
