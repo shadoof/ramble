@@ -111,14 +111,16 @@ const adjustWordSpace = function (lineEle, targetWidth, opts) {
   let lineIdx = parseInt((lineEle.id).slice(1));
   let currentWidth = getLineWidth(lineIdx);
   let wordSpacingEm = getWordSpaceEm(lineEle); // px => em
-  wordSpacingEm = parseFloat(wordSpacingEm.toFixed(2));
+
+  wordSpacingEm = parseFloat(wordSpacingEm.toFixed(2)); // why?
+
   if (targetWidth === currentWidth) return wordSpacingEm;
+
   let bound1 = wordSpacingEm, bound2, w1;
-  let hitMin = false, hitMax = false;
-  let step = 0.01;
+  let hitMin = false, hitMax = false, step = 0.01;
   let direction = currentWidth > targetWidth ? -1 : 1;
 
-  while((direction > 0 ? currentWidth < targetWidth : currentWidth > targetWidth)) {
+  while ((direction > 0 ? currentWidth < targetWidth : currentWidth > targetWidth)) {
     bound1 = clamp(bound1 + (step * direction), minWordSpace, maxWordSpace);
     currentWidth = getLineWidth(lineIdx, bound1);
     if (bound1 <= minWordSpace || bound1 >= maxWordSpace) break;
@@ -128,23 +130,22 @@ const adjustWordSpace = function (lineEle, targetWidth, opts) {
   bound2 = bound1 - (step * direction);
   currentWidth = getLineWidth(lineIdx, bound2);
 
-  let finalWs = Math.abs(w1 - targetWidth) > Math.abs(currentWidth - targetWidth) ? bound2 : bound1;
-  
+  let finalWs = Math.abs(w1 - targetWidth) >
+    Math.abs(currentWidth - targetWidth) ? bound2 : bound1;
+
   if (finalWs <= minWordSpace) hitMin = true;
   if (finalWs >= maxWordSpace) hitMax = true;
 
-  lineEle.style.wordSpacing = finalWs+"em";
+  lineEle.style.wordSpacing = finalWs + "em";
 
-  if (highlightWs && (hitMin || hitMax)) { // debugging
-    if (lineEle.firstChild) {
-      if (hitMax) {
-        console.log('[WARN] @' + lineIdx + ' Wordspace at max: ' + wordSpacingEm);
-        lineEle.firstChild.classList.add("max-word-spacing");
-      }
-      else {
-        console.log('[WARN] @' + lineIdx + ' Wordspace at min: ' + wordSpacingEm);
-        lineEle.firstChild.classList.add("min-word-spacing");
-      }
+  if (highlightWs && lineEle.firstChild && (hitMin || hitMax)) { // debugging
+    if (hitMax) {
+      console.log('[WARN] @' + lineIdx + ' Wordspace at max: ' + wordSpacingEm);
+      lineEle.firstChild.classList.add("max-word-spacing");
+    }
+    else {
+      console.log('[WARN] @' + lineIdx + ' Wordspace at min: ' + wordSpacingEm);
+      lineEle.firstChild.classList.add("min-word-spacing");
     }
   }
 
@@ -178,7 +179,6 @@ const fitToLineWidths = function (offset, radius, words, metrics) {
 */
 const fitToBox = function (words, maxWidth, fontSize, fontName, wordSpacing) {
   // caculation in scale=1, not current scale
-  //console.log('fitToBox', words, width, fontSize);
   let i = 1, line = {
     text: words[0],
     width: measureWidth(words[0], fontSize, fontName, wordSpacing)
@@ -194,7 +194,8 @@ const fitToBox = function (words, maxWidth, fontSize, fontName, wordSpacing) {
     line.width += nextWidth;
   }
   words = words.slice(i); // remove used words
-  if (RiTa.isPunct(words[0])) { // punct can't start a line
+
+  if (RiTa.isPunct(words[0])) { // punct shouldn't start a line
     line.text += words.shift();
   }
 
@@ -203,7 +204,6 @@ const fitToBox = function (words, maxWidth, fontSize, fontName, wordSpacing) {
   };
 }
 
-// TODO: should measure with the DOM, not canvas
 const measureWidth = function (text, fontSizePx = 12, fontName = fontFamily, wordSpacing = 0) {
   // caculation in scale=1, not current scale
   measureCtx.font = fontSizePx + 'px ' + fontName;
@@ -216,13 +216,13 @@ const chordLength = function (rad, dis) {
 }
 
 const lineWidths = function (center, rad, lh) {
-  let numOfLine = Math.floor((2 * rad) / lh);
+  let numOfLine = Math.floor((2 * rad) / lh), result;
   let gap = ((2 * rad) - (numOfLine * lh)) / (numOfLine + 1);
   if (numOfLine % 2 === 1) {
     let numInEachPart = (numOfLine - 1) / 2;
     let halfLh = lh / 2;
     let middleCl = chordLength(rad, halfLh);
-    let result = [[center.x - middleCl / 2, center.y - halfLh, middleCl, lh]];
+    result = [[center.x - middleCl / 2, center.y - halfLh, middleCl, lh]];
     for (let i = 0; i < numInEachPart - 1; i++) {
       let d = halfLh + ((i + 1) * (gap + lh));
       let cl = chordLength(rad, d);
@@ -234,13 +234,15 @@ const lineWidths = function (center, rad, lh) {
       let cl = chordLength(rad, d2);
       if (cl) result.push([center.x - cl / 2, center.y + d, cl, lh]);
     }
-    return result;
-  } else {
+  }
+  else {
     let numInEachPart = (numOfLine / 2) - 1;
     let halfGap = gap / 2;
     let middleCl = chordLength(rad, lh + halfGap);
-    let result = [[center.x - middleCl / 2, center.y - (halfGap + lh), middleCl, lh],
-    [center.x - middleCl / 2, center.y + (halfGap), middleCl, lh]];
+    result = [
+      [center.x - middleCl / 2, center.y - (halfGap + lh), middleCl, lh],
+      [center.x - middleCl / 2, center.y + (halfGap), middleCl, lh]
+    ];
     for (let i = 0; i < numInEachPart - 1; i++) {
       let d = (halfGap + lh) + ((i + 1) * (gap + lh));
       let cl = chordLength(rad, d);
@@ -252,6 +254,6 @@ const lineWidths = function (center, rad, lh) {
       let cl = chordLength(rad, d2);
       if (cl) result.push([center.x - cl / 2, center.y + d, cl, lh]);
     }
-    return result;
   }
+  return result;
 }
