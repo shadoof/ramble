@@ -306,9 +306,10 @@ function replace() {
   let sword = last(history[shadow][idx]);
   let data = { idx, dword, sword, state, timestamp: Date.now() };
 
-  let lidx = lineIdFromWordId(idx); // tmp-remove
-  let le = document.getElementById('l' + lidx);
-  le.firstChild.classList.add("min-word-spacing");
+  // let lidx = lineIdFromWordId(idx); // tmp-remove
+  // let le = document.getElementById('l' + lidx);
+  // le.firstChild.classList.add("min-word-spacing");
+  // causing flickering hightlighting, I don't think this is necessary? -JC
 
   worker.postMessage({ event: 'lookup', data }); // do similar search
 }

@@ -166,13 +166,14 @@ const widthChangePercentageDom = function (newWord, wordIdx, fields = ['max', 'm
   }
 
   if (fields.includes('opt')) {
+    let originalClass = spanContainer.classList;
     let originWs = style.wordSpacing;
     let wordSpaceEm = adjustWordSpace(lineEle, targetWidth);
     let finalWidth = lineEle.firstChild.getBoundingClientRect().width / scaleRatio;
     let finalWs = parseFloat(window.getComputedStyle(lineEle).wordSpacing.replace("px", ""));
     lineEle.style.wordSpacing = originWs;
-    spanContainer.classList.remove("max-word-spacing");
-    spanContainer.classList.remove("min-word-spacing");
+    spanContainer.className = "";
+    if (originalClass.length > 0) originalClass.forEach(c => {spanContainer.classList.add(c)});
     result.opt = [((finalWidth - targetWidth) / targetWidth) * 100, finalWidth, finalWs, wordSpaceEm]
   }
 
